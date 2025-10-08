@@ -14,3 +14,8 @@ By integrating account management with an online compiler, the project offers bo
 - Online Python code editor and compiler  
 - Instant code execution in the browser  
 - Simple and responsive web interface  
+
+
+### Resources used
+- PostgreqSQL with Vercel Deployment
+- Pyodide assembly for Python Compiler Creation
