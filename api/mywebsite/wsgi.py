@@ -1,12 +1,3 @@
-"""
-WSGI config for mywebsite project.
-
-It exposes the WSGI callable as a module-level variable named ``app``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
-"""
-
 import os
 import sys
 from pathlib import Path
