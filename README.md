@@ -2,7 +2,7 @@
 
 ### Abstract
 
-This project is a web-based Python compiler created by **Logesh M.S (12-A2)**.  
+This project is a web-based Python compiler created by **Logesh M.S (12-A2)** using Django .  
 It allows users to create an account and securely log in to access an online Python coding environment.  
 The website enables users to write, execute, and test Python programs directly from their browser, removing the need for any local setup or installation.
 
