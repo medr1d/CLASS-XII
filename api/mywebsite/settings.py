@@ -29,7 +29,25 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-this')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# ALLOWED_HOSTS configuration
+ALLOWED_HOSTS = []
+
+# Get ALLOWED_HOSTS from environment variable
+allowed_hosts_env = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+if allowed_hosts_env:
+    ALLOWED_HOSTS.extend([host.strip() for host in allowed_hosts_env.split(',') if host.strip()])
+
+# For Vercel deployment, allow all .vercel.app domains
+if os.getenv('VERCEL'):
+    ALLOWED_HOSTS.extend([
+        '.vercel.app',
+        'localhost',
+        '127.0.0.1',
+    ])
+
+# If no hosts are specified and DEBUG is True, allow all hosts (development only)
+if not ALLOWED_HOSTS and DEBUG:
+    ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
