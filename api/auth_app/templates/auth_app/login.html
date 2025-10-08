@@ -1,0 +1,229 @@
+{% extends 'auth_app/base.html' %}
+
+{% block title %}Sign In - CLASS 12 PYTHON ASSEMBLY{% endblock %}
+
+{% block content %}
+<div class="auth-header">
+    <h1>→ Sign In</h1>
+    <p>welcome back to your learning environment</p>
+</div>
+
+<div class="auth-body">
+    <!-- Display messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                <strong>
+                    {% if message.tags == 'error' %}
+                        [ERROR]:
+                    {% elif message.tags == 'success' %}
+                        [SUCCESS]:
+                    {% endif %}
+                </strong>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" id="loginForm">
+        {% csrf_token %}
+        
+        <!-- Email Field -->
+        <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" 
+                   class="form-control" 
+                   id="email" 
+                   name="email" 
+                   placeholder="user@domain.com"
+                   required
+                   maxlength="254"
+                   autocomplete="email">
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group position-relative">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" 
+                   class="form-control" 
+                   id="password" 
+                   name="password" 
+                   placeholder="your password"
+                   required
+                   autocomplete="current-password">
+            <button type="button" 
+                    class="password-toggle position-absolute top-50 end-0 translate-middle-y me-3" 
+                    id="togglePassword">
+                <span id="eyeIcon">👁</span>
+            </button>
+        </div>
+
+        <!-- Remember Me -->
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me">
+            <label class="form-check-label" for="rememberMe">
+                Keep me signed in
+            </label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn">
+            Sign In
+        </button>
+    </form>
+
+    <!-- Links -->
+    <div class="text-center mt-4">
+        <p style="margin-bottom: 15px; color: var(--text-muted);">
+            Don't have an account? 
+            <a href="{% url 'auth_app:signup' %}" class="text-link">Create one here</a>
+        </p>
+        <p style="margin-bottom: 0; color: var(--text-muted);">
+            <a href="#" class="text-link" id="demoLink">
+                Try demo account
+            </a>
+        </p>
+    </div>
+</div>
+
+<!-- Demo Modal -->
+<div id="demoModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: var(--secondary-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 30px; max-width: 400px; margin: 20px; color: var(--text-primary); font-family: 'Courier New', monospace;">
+        <h3 style="margin: 0 0 20px 0; color: var(--accent-color); letter-spacing: 1px;">
+            → Demo Account
+        </h3>
+        <p style="margin-bottom: 20px; color: var(--text-secondary);">
+            Try the platform with these test credentials:
+        </p>
+        <div style="background: var(--tertiary-bg); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 3px solid var(--success-color);">
+            <strong>Email:</strong> demo@python.dev<br>
+            <strong>Password:</strong> demo123
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">
+            Note: Create this account first if it doesn't exist
+        </p>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-outline" onclick="closeDemoModal()" style="flex: 1;">
+                Cancel
+            </button>
+            <button class="btn" onclick="fillDemoCredentials()" style="flex: 1;">
+                Use Demo
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordField = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            eyeIcon.textContent = '🙈';
+        } else {
+            passwordField.type = 'password';
+            eyeIcon.textContent = '👁';
+        }
+    });
+    
+    // Form submission with loading state
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        const form = this;
+        setFormLoading(form, true);
+        
+        // Basic client-side validation
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        
+        if (!email || !password) {
+            e.preventDefault();
+            setFormLoading(form, false);
+            alert('[ERROR]: Please fill in all fields');
+            return false;
+        }
+        
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            e.preventDefault();
+            setFormLoading(form, false);
+            alert('[ERROR]: Please enter a valid email address');
+            return false;
+        }
+    });
+    
+    // Auto-focus email field
+    document.getElementById('email').focus();
+    
+    // Demo modal functionality
+    document.getElementById('demoLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('demoModal').style.display = 'flex';
+    });
+});
+
+// Function to fill demo credentials
+function fillDemoCredentials() {
+    document.getElementById('email').value = 'demo@python.dev';
+    document.getElementById('password').value = 'demo123';
+    closeDemoModal();
+    
+    // Focus submit button
+    setTimeout(function() {
+        document.querySelector('.btn').focus();
+    }, 100);
+}
+
+// Close demo modal
+function closeDemoModal() {
+    document.getElementById('demoModal').style.display = 'none';
+}
+
+// Close modal on outside click
+document.getElementById('demoModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDemoModal();
+    }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl+Enter to submit form
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+    }
+    
+    // Escape to close modal
+    if (e.key === 'Escape') {
+        closeDemoModal();
+    }
+});
+
+// Add typing effect to placeholder
+function addTypingEffect() {
+    const emailInput = document.getElementById('email');
+    const originalPlaceholder = emailInput.placeholder;
+    let i = 0;
+    
+    emailInput.placeholder = '';
+    
+    function type() {
+        if (i < originalPlaceholder.length) {
+            emailInput.placeholder += originalPlaceholder.charAt(i);
+            i++;
+            setTimeout(type, 100);
+        }
+    }
+    
+    setTimeout(type, 500);
+}
+
+// Trigger typing effect after form elements are animated
+setTimeout(addTypingEffect, 800);
+</script>
+{% endblock %}

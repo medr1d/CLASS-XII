@@ -1,0 +1,14 @@
+This is a sample text file.
+
+Welcome to the text file content viewer!
+
+Here are some sample lines:
+- Line 1: Hello World
+- Line 2: This is a text file
+- Line 3: You can edit this content
+- Line 4: Add more text here
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+End of text file content.

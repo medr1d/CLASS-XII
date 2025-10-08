@@ -1,0 +1,1 @@
+# Auth app init file

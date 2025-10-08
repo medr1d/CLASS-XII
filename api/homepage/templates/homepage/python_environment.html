@@ -1,0 +1,2733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLASS 12 PYTHON ASSEMBLY</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4GQ8NQ38P5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-4GQ8NQ38P5');
+    </script>
+    
+    <!-- Custom Python favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3e%3cdefs%3e%3clinearGradient id='a' x1='0.427' y1='0.204' x2='0.573' y2='0.796'%3e%3cstop offset='0' stop-color='%23387eb8'/%3e%3cstop offset='1' stop-color='%236ab6e7'/%3e%3c/linearGradient%3e%3clinearGradient id='b' x1='0.427' y1='0.204' x2='0.573' y2='0.796'%3e%3cstop offset='0' stop-color='%23ffe052'/%3e%3cstop offset='1' stop-color='%23ffc331'/%3e%3c/linearGradient%3e%3c/defs%3e%3cpath d='M15.885 2.1c-7.1 0-6.651 3.07-6.651 3.07l.008 3.181h6.747v.955H6.988S2 8.8 2 16.005s4.988 7.206 4.988 7.206h2.976v-4.194s-.161-4.988 4.906-4.988h6.629s4.747.081 4.747-4.588V5.2S26.083 2.1 15.885 2.1z' fill='url(%23a)'/%3e%3cellipse cx='12.218' cy='6.318' rx='1.333' ry='1.298' fill='%23fff'/%3e%3cpath d='M16.115 29.9c7.1 0 6.651-3.07 6.651-3.07l-.008-3.181h-6.747v-.955h8.001S30 23.2 30 15.995s-4.988-7.206-4.988-7.206h-2.976v4.194s.161 4.988-4.906 4.988h-6.629s-4.747-.081-4.747 4.588v4.241S5.917 29.9 16.115 29.9z' fill='url(%23b)'/%3e%3cellipse cx='19.782' cy='25.682' rx='1.333' ry='1.298' fill='%23fff'/%3e%3c/svg%3e">
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: 
+                linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #000000 50%, #0a0a0a 75%, #000000 100%),
+                radial-gradient(circle at 25% 25%, rgba(0, 136, 0, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(0, 136, 0, 0.02) 0%, transparent 50%);
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 136, 0, 0.01) 2px,
+                    rgba(0, 136, 0, 0.01) 4px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 136, 0, 0.005) 2px,
+                    rgba(0, 136, 0, 0.005) 4px
+                );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 350px 1fr 350px;
+            height: 100vh;
+            gap: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s;
+        }
+
+        .container.ready {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .container.ready .file-manager {
+            animation: slideInLeft 0.8s ease-out 0.2s both;
+        }
+
+        .container.ready .main-area {
+            animation: slideInUp 0.8s ease-out 0.4s both;
+        }
+
+        .container.ready .file-viewers {
+            animation: slideInRight 0.8s ease-out 0.6s both;
+        }
+
+        /* Loading Screen Styles - Enhanced 8-bit Boot Sequence */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: #008800;
+            overflow: hidden;
+        }
+
+        .loading-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 136, 0, 0.05) 2px,
+                rgba(0, 136, 0, 0.05) 4px
+            );
+            animation: scanlines 2s linear infinite;
+            pointer-events: none;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease-out, visibility 1s;
+        }
+
+        .loading-title {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 
+                0 0 10px #008800,
+                0 0 20px #008800,
+                0 0 40px #008800;
+            animation: bootSequence 3s ease-in-out infinite;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+
+
+        @keyframes pixelGlow {
+            0% { 
+                text-shadow: 
+                    2px 2px 0px #004400,
+                    4px 4px 0px #002200,
+                    0 0 20px #008800,
+                    0 0 40px #008800;
+                transform: scale(1);
+            }
+            100% { 
+                text-shadow: 
+                    2px 2px 0px #006600,
+                    4px 4px 0px #004400,
+                    0 0 30px #00aa00,
+                    0 0 60px #00aa00;
+                transform: scale(1.02);
+            }
+        }
+
+        .retro-computer {
+            width: 80px;
+            height: 60px;
+            border: 3px solid #008800;
+            border-radius: 4px;
+            position: relative;
+            margin-bottom: 20px;
+            background: #000;
+            animation: computerBoot 2s ease-in-out infinite;
+        }
+
+        .retro-computer::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 15px;
+            background: #008800;
+            opacity: 0.1;
+            animation: screenFlicker 1.5s ease-in-out infinite;
+        }
+
+        .retro-computer::after {
+            content: '█';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #008800;
+            font-size: 16px;
+            animation: pixelBlink 1s infinite;
+        }
+
+        .loading-dots {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            background: #008800;
+            margin: 0 3px;
+            animation: dotPulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 10px #008800;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: 0s; }
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+        .loading-dot:nth-child(4) { animation-delay: 0.6s; }
+        .loading-dot:nth-child(5) { animation-delay: 0.8s; }
+
+        .loading-text {
+            font-size: 1.2em;
+            opacity: 0.8;
+            animation: typeWriter 2s steps(20) infinite;
+            border-right: 2px solid #008800;
+            white-space: nowrap;
+            overflow: hidden;
+            max-width: fit-content;
+        }
+
+        .loading-progress {
+            margin-top: 20px;
+            font-size: 0.9em;
+            opacity: 0.6;
+            animation: progressFade 1.5s ease-in-out infinite alternate;
+        }
+
+        .boot-sequence {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            right: 10%;
+            color: #008800;
+            font-size: 12px;
+            animation: bootText 3s ease-in-out;
+            opacity: 0.7;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 4px;
+            background: rgba(0, 136, 0, 0.2);
+            border: 1px solid #008800;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                #008800 50%, 
+                transparent 100%);
+            width: 0%;
+            animation: progressLoad 3s ease-in-out infinite;
+            box-shadow: 0 0 10px #008800;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+
+        @keyframes bootSequence {
+            0%, 100% { 
+                opacity: 1; 
+                text-shadow: 
+                    0 0 10px #008800,
+                    0 0 20px #008800,
+                    0 0 40px #008800;
+            }
+            50% { 
+                opacity: 0.7; 
+                text-shadow: 
+                    0 0 5px #008800,
+                    0 0 10px #008800,
+                    0 0 20px #008800;
+            }
+        }
+
+        @keyframes computerBoot {
+            0%, 100% { 
+                border-color: #008800; 
+                box-shadow: 0 0 20px rgba(0, 136, 0, 0.5);
+            }
+            50% { 
+                border-color: #006600; 
+                box-shadow: 0 0 40px rgba(0, 136, 0, 0.8);
+            }
+        }
+
+        @keyframes screenFlicker {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 0.3; }
+        }
+
+        @keyframes pixelBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes dotPulse {
+            0%, 100% { 
+                transform: scale(1); 
+                opacity: 0.5;
+                box-shadow: 0 0 10px #008800;
+            }
+            50% { 
+                transform: scale(1.5); 
+                opacity: 1;
+                box-shadow: 0 0 20px #008800;
+            }
+        }
+
+        @keyframes typeWriter {
+            0% { width: 0; }
+            50% { width: 100%; }
+            100% { width: 0; }
+        }
+
+        @keyframes progressFade {
+            0% { opacity: 0.4; }
+            100% { opacity: 0.8; }
+        }
+
+        @keyframes bootText {
+            0% { opacity: 0; transform: translateY(20px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+
+        @keyframes progressLoad {
+            0% { width: 0%; transform: translateX(-100%); }
+            50% { width: 100%; transform: translateX(0%); }
+            100% { width: 0%; transform: translateX(100%); }
+        }
+
+        /* Panel Entrance Animations */
+        @keyframes slideInLeft {
+            0% { 
+                opacity: 0; 
+                transform: translateX(-100px);
+            }
+            100% { 
+                opacity: 1; 
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            0% { 
+                opacity: 0; 
+                transform: translateX(100px);
+            }
+            100% { 
+                opacity: 1; 
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            0% { 
+                opacity: 0; 
+                transform: translateY(50px);
+            }
+            100% { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+
+        /* CRT Monitor Effects */
+        @keyframes crtScanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100%); }
+        }
+
+        @keyframes crtGlow {
+            0% { 
+                opacity: 0.8;
+                filter: blur(0.5px);
+            }
+            100% { 
+                opacity: 1;
+                filter: blur(0.3px);
+            }
+        }
+
+        @keyframes terminalBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #008800; }
+        }
+
+        /* UI Element Animations */
+        @keyframes selectedPulse {
+            0%, 100% { 
+                box-shadow: 0 0 15px rgba(0, 136, 0, 0.3);
+                border-color: #008800;
+            }
+            50% { 
+                box-shadow: 0 0 25px rgba(0, 136, 0, 0.6);
+                border-color: #006600;
+            }
+        }
+
+        .file-manager {
+            background: 
+                linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+            border-right: 1px solid #333;
+            padding: 10px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #00ff00 #111;
+            position: relative;
+            z-index: 2;
+            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.05);
+        }
+
+        .file-manager::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 20px,
+                rgba(0, 136, 0, 0.02) 20px,
+                rgba(0, 136, 0, 0.02) 21px
+            );
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .file-manager h3 {
+            color: #008800;
+            margin-bottom: 15px;
+            font-size: 14px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            text-shadow: 0 0 10px #008800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .file-manager::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .file-manager::-webkit-scrollbar-track {
+            background: #111;
+            border-radius: 4px;
+        }
+
+        .file-manager::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #008800, #006600);
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(0, 136, 0, 0.5);
+        }
+
+        .file-manager::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #006600, #008800);
+        }
+
+        .file-list {
+            list-style: none;
+        }
+
+        .file-item {
+            padding: 8px 10px;
+            margin: 2px 0;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            word-break: break-all;
+            position: relative;
+            border: 1px solid transparent;
+        }
+
+        .file-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                rgba(0, 136, 0, 0.1) 0%, 
+                rgba(0, 136, 0, 0.2) 50%, 
+                rgba(0, 136, 0, 0.1) 100%);
+            transition: width 0.3s ease;
+            z-index: -1;
+        }
+
+        .file-item:hover {
+            background: #222;
+            border-color: #008800;
+            color: #008800;
+            text-shadow: 0 0 5px #008800;
+            transform: translateX(5px);
+        }
+
+        .file-item:hover::before {
+            width: 100%;
+        }
+
+        .file-item.selected {
+            background: #333;
+            border-color: #008800;
+            color: #008800;
+            text-shadow: 0 0 10px #008800;
+            box-shadow: 0 0 15px rgba(0, 136, 0, 0.3);
+            animation: selectedPulse 2s ease-in-out infinite;
+        }
+
+        .file-controls {
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 8px;
+            background: #222;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .file-button {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(0, 255, 0, 0.2) 50%,
+                transparent 100%);
+            transition: left 0.5s ease;
+        }
+
+        .file-button:hover {
+            background: #444;
+            border-color: #00ff00;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .file-button:hover::before {
+            left: 100%;
+        }
+
+        .file-button:active {
+            transform: translateY(0);
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+        }
+
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            background: #000;
+        }
+
+        .editor-section {
+            flex: 1;
+            padding: 0;
+            border-bottom: 1px solid #333;
+            position: relative;
+        }
+
+        .editor-container {
+            position: relative;
+            height: calc(100% - 50px);
+            overflow: hidden;
+            border: 1px solid #333;
+            border-radius: 3px;
+            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.1);
+        }
+
+        .editor-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 100px,
+                rgba(0, 136, 0, 0.02) 100px,
+                rgba(0, 136, 0, 0.02) 101px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .syntax-highlight-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            padding: 15px;
+            margin: 0;
+            border: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: normal;
+            font-style: normal;
+            line-height: 1.5;
+            letter-spacing: 0;
+            word-spacing: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            word-break: normal;
+            overflow-wrap: break-word;
+            text-rendering: auto;
+            -webkit-font-smoothing: auto;
+            -moz-osx-font-smoothing: auto;
+            font-variant: normal;
+            font-stretch: normal;
+            /* Disable pointer events by default */
+            pointer-events: none;
+            z-index: 2;
+            overflow: auto;
+            background: #000;
+            color: #fff;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .syntax-highlight-overlay::-webkit-scrollbar {
+            display: none;
+        }
+
+        .editor-textarea {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            color: transparent;
+            caret-color: #008800;
+            border: 0;
+            margin: 0;
+            padding: 15px;
+            /* Use exact same font stack as overlay */
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: normal;
+            font-style: normal;
+            line-height: 1.5;
+            letter-spacing: 0;
+            word-spacing: 0;
+            /* Exact same text rendering */
+            resize: none;
+            outline: none;
+            tab-size: 4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            word-break: normal;
+            overflow-wrap: break-word;
+            text-rendering: auto;
+            -webkit-font-smoothing: auto;
+            -moz-osx-font-smoothing: auto;
+            font-variant: normal;
+            font-stretch: normal;
+            /* Positioning and behavior */
+            z-index: 3;
+            box-sizing: border-box;
+            overflow: auto;
+            /* Custom scrollbar for textarea - enhanced green */
+            scrollbar-width: thin;
+            scrollbar-color: #008800 #111;
+            transition: all 0.3s ease;
+        }
+
+        .editor-textarea:focus {
+            caret-color: #008800;
+            filter: drop-shadow(0 0 5px rgba(0, 136, 0, 0.5));
+        }
+
+        .editor-textarea::selection {
+            background: rgba(0, 136, 0, 0.3);
+        }
+
+        .editor-textarea::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        .editor-textarea::-webkit-scrollbar-track {
+            background: #111;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .editor-textarea::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #008800, #006600);
+            border-radius: 6px;
+            border: 2px solid #111;
+            box-shadow: 0 0 10px rgba(0, 136, 0, 0.5);
+        }
+
+        .editor-textarea::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #006600, #008800);
+            box-shadow: 0 0 15px rgba(0, 136, 0, 0.8);
+        }
+
+        .editor-textarea::-webkit-scrollbar-corner {
+            background: #111;
+        }
+
+        /* Fullscreen Mode Styles */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 9998;
+            display: none;
+            flex-direction: column;
+        }
+
+        .fullscreen-overlay.active {
+            display: flex;
+        }
+
+        .fullscreen-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin: 20px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .fullscreen-editor .editor-header {
+            background: #111;
+            border-bottom: 1px solid #333;
+        }
+
+        .fullscreen-editor .editor-container {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+        }
+
+        .fullscreen-editor .editor-textarea,
+        .fullscreen-editor .syntax-highlight-overlay {
+            height: 100%;
+        }
+
+        .editor-header {
+            background: #111;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .editor-header h2 {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .editor-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .expand-button {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 5px 8px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .expand-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(0, 255, 0, 0.2) 50%,
+                transparent 100%);
+            transition: left 0.3s ease;
+        }
+
+        .expand-button:hover {
+            background: #555;
+            border-color: #00ff00;
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+            transform: scale(1.1);
+        }
+
+        .expand-button:hover::before {
+            left: 100%;
+        }
+
+        .expand-button:active {
+            background: #222;
+            transform: scale(0.95);
+        }
+
+        /* Enhanced 8-bit Python Syntax Highlighting */
+        .python-keyword { 
+            color: #ff6b6b; 
+            font-weight: bold; 
+            text-shadow: 0 0 5px #ff6b6b;
+            transition: all 0.3s ease;
+        }
+        .python-string { 
+            color: #4ecdc4; 
+            text-shadow: 0 0 3px #4ecdc4;
+        }
+        .python-comment { 
+            color: #95e1d3; 
+            font-style: italic; 
+            opacity: 0.8;
+            text-shadow: 0 0 2px #95e1d3;
+        }
+        .python-number { 
+            color: #fce38a; 
+            text-shadow: 0 0 3px #fce38a;
+        }
+        .python-function { 
+            color: #c7ceea; 
+            text-shadow: 0 0 3px #c7ceea;
+            transition: all 0.3s ease;
+        }
+        .python-operator { 
+            color: #ff8a80; 
+            font-weight: bold;
+            text-shadow: 0 0 2px #ff8a80;
+        }
+        .python-builtin { 
+            color: #81c784; 
+            cursor: help; 
+            pointer-events: auto;
+            text-shadow: 0 0 5px #81c784;
+            transition: all 0.3s ease;
+        }
+        .python-builtin:hover {
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            transform: scale(1.05);
+        }
+        .python-default { 
+            color: #fff; 
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Python Function Tooltip Styles */
+        .python-tooltip {
+            position: absolute;
+            background: #2a2a2a;
+            border: 1px solid #00ff00;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            max-width: 300px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 255, 0, 0.3);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .python-tooltip.show {
+            opacity: 1;
+        }
+
+        .python-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 10px;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 6px solid #00ff00;
+        }
+
+        .terminal-section {
+            height: 300px;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .terminal-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 0, 0.03) 2px,
+                rgba(0, 255, 0, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+            animation: crtScanlines 2s linear infinite;
+        }
+
+        .terminal-section::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, 
+                rgba(0, 255, 0, 0.1) 0%, 
+                rgba(0, 255, 0, 0.05) 50%, 
+                rgba(0, 0, 0, 0.3) 100%);
+            pointer-events: none;
+            z-index: 1;
+            animation: crtGlow 3s ease-in-out infinite alternate;
+        }
+
+        .terminal-header {
+            background: #111;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .terminal-header h2 {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .execute-button {
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .execute-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(0, 255, 0, 0.3) 50%,
+                transparent 100%);
+            transition: left 0.4s ease;
+        }
+
+        .execute-button:hover {
+            background: #00ff00;
+            color: #000;
+            border-color: #00ff00;
+            text-shadow: none;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        .execute-button:hover::before {
+            left: 100%;
+        }
+
+        .execute-button:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .execute-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .terminal-output {
+            flex: 1;
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: none;
+            resize: none;
+            outline: none;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 0 5px #00ff00;
+            scrollbar-width: thin;
+            scrollbar-color: #00ff00 #111;
+        }
+
+        .terminal-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-output::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        .terminal-output::-webkit-scrollbar-thumb {
+            background: #00ff00;
+            border-radius: 4px;
+            box-shadow: 0 0 5px #00ff00;
+        }
+
+        .terminal-output.error {
+            color: #ff4444;
+            text-shadow: 0 0 5px #ff4444;
+        }
+
+        .terminal-cursor::after {
+            content: '█';
+            animation: terminalBlink 1s infinite;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .terminal-typing {
+            overflow: hidden;
+            border-right: 2px solid #00ff00;
+            white-space: nowrap;
+            margin: 0 auto;
+            animation: 
+                typing 2s steps(40, end),
+                blink-caret 0.75s step-end infinite;
+        }
+
+        .terminal-input-line {
+            display: none;
+            color: #0f0;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .terminal-prompt {
+            color: #0f0;
+        }
+
+        .file-viewers {
+            background: 
+                linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+            border-left: 1px solid #333;
+            padding: 10px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #00ff00 #111;
+            position: relative;
+            z-index: 2;
+            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.05);
+        }
+
+        .file-viewers::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                -45deg,
+                transparent,
+                transparent 20px,
+                rgba(0, 255, 0, 0.02) 20px,
+                rgba(0, 255, 0, 0.02) 21px
+            );
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .file-viewers::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .file-viewers::-webkit-scrollbar-track {
+            background: #111;
+            border-radius: 4px;
+        }
+
+        .file-viewers::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #00ff00, #00cc00);
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+        }
+
+        .file-viewers::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #00cc00, #00ff00);
+        }
+
+        .file-viewer {
+            margin-bottom: 20px;
+        }
+
+        .file-viewer h3 {
+            color: #00ff00;
+            margin-bottom: 10px;
+            font-size: 12px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            text-shadow: 0 0 5px #00ff00;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .file-content {
+            background: 
+                linear-gradient(135deg, #0a0a0a 0%, #111 100%);
+            border: 1px solid #333;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.3;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            scrollbar-width: thin;
+            scrollbar-color: #00ff00 #0a0a0a;
+            border-radius: 3px;
+            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .file-content:hover {
+            border-color: #00ff00;
+            box-shadow: 
+                inset 0 0 10px rgba(0, 255, 0, 0.2),
+                0 0 15px rgba(0, 255, 0, 0.3);
+        }
+
+        .file-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .file-content::-webkit-scrollbar-track {
+            background: #0a0a0a;
+            border-radius: 3px;
+        }
+
+        .file-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #00ff00, #00cc00);
+            border-radius: 3px;
+            box-shadow: 0 0 3px rgba(0, 255, 0, 0.5);
+        }
+
+        .binary-hex {
+            color: #888;
+            font-size: 10px;
+        }
+
+        .status-bar {
+            background: 
+                linear-gradient(90deg, #111 0%, #0a0a0a 50%, #111 100%);
+            padding: 5px 15px;
+            border-top: 1px solid #333;
+            font-size: 11px;
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+            position: relative;
+            z-index: 2;
+        }
+
+        .status-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                #00ff00 50%, 
+                transparent 100%);
+            animation: statusGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes statusGlow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animated {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .success {
+            color: #0f0;
+        }
+
+        .error {
+            color: #f44;
+        }
+
+        .focus-mode .background-blur {
+            filter: blur(5px) brightness(0.3);
+            transition: all 0.3s ease;
+        }
+
+        .focus-mode .editor-section {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            width: 85%;
+            height: 80%;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+
+        .focus-mode .editor-section textarea {
+            height: calc(100% - 100px);
+        }
+
+        .focus-mode::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Enhanced 8-bit Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="boot-sequence">
+            > INITIALIZING PYTHON TERMINAL v3.11.4<br>
+            > LOADING PYODIDE WEBASSEMBLY ENGINE...<br>
+            > SETTING UP VIRTUAL FILE SYSTEM...<br>
+            > CONFIGURING SECURITY RESTRICTIONS...<br>
+        </div>
+        
+        <div class="loading-title">PYTHON TERMINAL</div>
+        
+        <div class="retro-computer"></div>
+        
+        <div class="loading-dots">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
+        
+        <div class="loading-text" id="loading-text">INITIALIZING ENVIRONMENT</div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        
+        <div class="loading-progress" id="loading-progress">Loading Pyodide WebAssembly</div>
+    </div>
+
+    <div class="container" id="main-container">
+        <!-- File Manager -->
+        <div class="file-manager">
+            <h3>Client-Side Script Manager</h3>
+            
+            <div class="file-controls">
+                <input type="text" id="filename-input" class="file-input" placeholder="script_name" maxlength="50">
+                <button onclick="saveScript()" class="file-button">Save Script to Browser</button>
+                <button onclick="deleteScript()" class="file-button">Delete Script</button>
+                <button onclick="newScript()" class="file-button">New Script</button>
+            </div>
+
+            <ul class="file-list" id="file-list">
+                <!-- Client-side scripts will be populated here -->
+            </ul>
+            
+            <div style="margin-top: 20px; padding: 10px; background: #222; border-radius: 3px; font-size: 11px;">
+                <strong>File Access Rules:</strong><br>
+                • Only text.txt, tester.csv, binary.dat can be accessed<br>
+                • All scripts run in browser (client-side)<br>
+                • Scripts saved to browser storage only
+            </div>
+        </div>
+
+        <!-- Main Editor and Terminal -->
+        <div class="main-area">
+            <!-- Code Editor -->
+            <div class="editor-section">
+                <div class="editor-header">
+                    <h2>Python Code Editor (Client-Side)</h2>
+                    <div class="editor-controls">
+                        <span id="current-file">untitled_script</span>
+                        <button id="focus-btn" class="focus-button" onclick="toggleFocusMode()" title="Focus Mode">FOCUS</button>
+                    </div>
+                </div>
+                <div class="editor-container">
+                    <div id="syntax-highlight" class="syntax-highlight-overlay"></div>
+                    <textarea 
+                        id="code_content" 
+                        class="editor-textarea" 
+                        spellcheck="false"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        placeholder="# Python Terminal - Client-Side Execution
+# Available files: text.txt, tester.csv, binary.dat
+# File access restrictions are enforced
+
+print('Hello, Python Terminal!')
+print('This code runs in your browser!')
+
+# Example 1: Read allowed files
+try:
+    with open('text.txt', 'r') as f:
+        data = f.read()
+        print('text.txt content:', data[:50] + '...' if len(data) > 50 else data)
+except FileNotFoundError:
+    print('text.txt not found')
+
+# Example 2: Interactive input (uses browser prompt)
+name = input('What is your name? ')
+print(f'Hello, {name}!')
+
+# Example 3: Try to access restricted file (will show error)
+try:
+    with open('secret.txt', 'r') as f:
+        data = f.read()
+except PermissionError as e:
+    print('Security restriction:', e)"
+                    >{{ code_content }}</textarea>
+                </div>
+            </div>
+
+            <!-- Terminal Output -->
+            <div class="terminal-section">
+                <div class="terminal-header">
+                    <h2>Python Terminal (Client-Side)</h2>
+                    <button onclick="executeCode()" class="execute-button" id="run-btn">Run Code (Ctrl+Enter)</button>
+                    <button onclick="clearTerminal()" class="execute-button">Clear Terminal</button>
+                </div>
+                <div class="terminal-output" id="terminal-output">
+                    Initializing Python environment...<br>
+                    Python terminal ready! Your code will run in the browser.
+                    <div id="input-container" style="display: none;">
+                        <span class="terminal-prompt" id="input-prompt"></span>
+                        <input type="text" id="terminal-input" class="terminal-input-line">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Viewers -->
+        <div class="file-viewers">
+            <div class="file-viewer">
+                <h3>text.txt</h3>
+                <div class="file-content" id="text-content">Loading from Pyodide...</div>
+            </div>
+
+            <div class="file-viewer">
+                <h3>tester.csv</h3>
+                <div class="file-content" id="csv-content">Loading from Pyodide...</div>
+            </div>
+
+            <div class="file-viewer">
+                <h3>binary.dat</h3>
+                <div class="file-content" id="binary-content">Loading from Pyodide...</div>
+                <div class="file-content binary-hex" id="binary-hex" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span id="status">Python Terminal Environment Ready</span>
+    </div>
+
+    <script>
+        let selectedScript = '';
+        let currentScript = 'untitled_script';
+        let pyodide = null;
+        let isInitialized = false;
+        let isWaitingForInput = false;
+        let inputResolver = null;
+
+        // Update loading progress
+        function updateLoadingProgress(message) {
+            const progressElement = document.getElementById('loading-progress');
+            if (progressElement) {
+                progressElement.textContent = message;
+            }
+        }
+
+        // Show main interface and hide loading screen
+        function showMainInterface() {
+            const loadingScreen = document.getElementById('loading-screen');
+            const mainContainer = document.getElementById('main-container');
+            
+            if (loadingScreen && mainContainer) {
+                loadingScreen.classList.add('hidden');
+                mainContainer.classList.add('ready');
+            }
+        }
+
+        // Initialize Pyodide with progress updates
+        async function initPyodide() {
+            if (isInitialized) return;
+            
+            try {
+                updateLoadingProgress("Loading Pyodide WebAssembly...");
+                pyodide = await loadPyodide();
+                
+                updateLoadingProgress("Setting up virtual file system...");
+                await setupVirtualFiles();
+                
+                updateLoadingProgress("Configuring file restrictions...");
+                // Override open function to restrict file access
+                await pyodide.runPython(`
+import builtins
+original_open = builtins.open
+
+def restricted_open(filename, mode='r', *args, **kwargs):
+    allowed_files = ['text.txt', 'tester.csv', 'binary.dat']
+    if filename not in allowed_files:
+        raise PermissionError(f"Access denied: Cannot open '{filename}'. Only {allowed_files} are allowed.")
+    return original_open(filename, mode, *args, **kwargs)
+
+builtins.open = restricted_open
+                `);
+                
+                updateLoadingProgress("Environment ready!");
+                updateTerminal("Welcome to python interactive, by Logesh M.s\n\n");
+                
+                isInitialized = true;
+                
+                // Show main interface after a brief delay
+                setTimeout(() => {
+                    showMainInterface();
+                }, 500);
+                
+            } catch (error) {
+                updateLoadingProgress("Error loading environment");
+                updateTerminal("❌ Error loading Python environment: " + error.message + "\n");
+                // Still show the interface even if there's an error
+                setTimeout(() => {
+                    showMainInterface();
+                }, 1000);
+            }
+        }
+
+        // Setup virtual files with actual server data
+        async function setupVirtualFiles() {
+            // Load files from Django server initially to populate Pyodide filesystem
+            try {
+                const response = await fetch('/python/get-files/');
+                const filesData = await response.json();
+                
+                // Write files to Pyodide's virtual filesystem
+                pyodide.FS.writeFile('text.txt', filesData.text_content || 'Hello from text.txt!\nThis is a sample text file.');
+                pyodide.FS.writeFile('tester.csv', filesData.csv_content || 'name,age,city\nJohn,25,NYC\nJane,30,LA');
+                pyodide.FS.writeFile('binary.dat', filesData.binary_content || 'Binary data example');
+                
+                // Store binary content and hex data for display
+                globalThis.binaryContent = filesData.binary_content || 'Binary data example';
+                globalThis.binaryHexData = filesData.binary_hex || 'No hex data available';
+                
+                // Load file viewers with initial content
+                updateFileViewers();
+                
+            } catch (error) {
+                // Fallback to default content if server fetch fails
+                pyodide.FS.writeFile('text.txt', 'Hello from text.txt!\nThis is a sample text file.');
+                pyodide.FS.writeFile('tester.csv', 'name,age,city\nJohn,25,NYC\nJane,30,LA');
+                pyodide.FS.writeFile('binary.dat', 'Binary data example');
+                globalThis.binaryContent = 'Binary data example';
+                globalThis.binaryHexData = 'No hex data available (server error)';
+                updateFileViewers();
+            }
+            
+            // Create input system using global variables and polling
+            globalThis.inputState = {
+                waiting: false,
+                result: null,
+                ready: false
+            };
+            
+            globalThis.startInput = function(prompt) {
+                globalThis.inputState.waiting = true;
+                globalThis.inputState.result = null;
+                globalThis.inputState.ready = false;
+                
+                showTerminalInput(prompt, function(result) {
+                    globalThis.inputState.result = result;
+                    globalThis.inputState.ready = true;
+                    globalThis.inputState.waiting = false;
+                });
+            };
+            
+            globalThis.checkInput = function() {
+                return globalThis.inputState.ready;
+            };
+            
+            globalThis.getInputResult = function() {
+                const result = globalThis.inputState.result;
+                // Reset state
+                globalThis.inputState.waiting = false;
+                globalThis.inputState.result = null;
+                globalThis.inputState.ready = false;
+                return result || "";
+            };
+            
+            // Make these available to Python
+            pyodide.globals.set("startInput", globalThis.startInput);
+            pyodide.globals.set("checkInput", globalThis.checkInput);
+            pyodide.globals.set("getInputResult", globalThis.getInputResult);
+            
+            // Add file refresh function for Python to call
+            globalThis.refreshFileList = function() {
+                loadScriptList();
+            };
+            pyodide.globals.set("refreshFileList", globalThis.refreshFileList);
+            
+            await pyodide.runPython(`
+import builtins
+import js
+
+# Store original open function
+_original_open = builtins.open
+
+# Create a wrapper that automatically refreshes file list after writes
+class AutoRefreshFileWrapper:
+    def __init__(self, file_obj, mode, filename):
+        self.file_obj = file_obj
+        self.mode = mode
+        self.filename = filename
+        self.is_write_mode = 'w' in mode or 'a' in mode
+        
+    def __enter__(self):
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        result = self.file_obj.__exit__(exc_type, exc_val, exc_tb)
+        # Auto-refresh if this was a write operation
+        if self.is_write_mode:
+            try:
+                js.refreshFileList()
+                print(f"File list auto-refreshed after modifying {self.filename}")
+            except:
+                pass
+        return result
+        
+    def write(self, data):
+        result = self.file_obj.write(data)
+        return result
+        
+    def close(self):
+        result = self.file_obj.close()
+        # Auto-refresh on close if it was a write mode
+        if self.is_write_mode:
+            try:
+                js.refreshFileList()
+                print(f"File list auto-refreshed after closing {self.filename}")
+            except:
+                pass
+        return result
+        
+    # Delegate all other attributes to the wrapped file object
+    def __getattr__(self, name):
+        return getattr(self.file_obj, name)
+
+def enhanced_open(filename, mode='r', *args, **kwargs):
+    file_obj = _original_open(filename, mode, *args, **kwargs)
+    # Only wrap write operations for auto-refresh
+    if 'w' in mode or 'a' in mode:
+        return AutoRefreshFileWrapper(file_obj, mode, filename)
+    else:
+        return file_obj
+
+# Replace built-in open with auto-refresh version
+builtins.open = enhanced_open
+
+def refresh_files():
+    """Manually refresh the file list"""
+    js.refreshFileList()
+    print("File list refreshed!")
+
+def write_file(filename, content, mode='w'):
+    """Helper function to write files and auto-refresh"""
+    with _original_open(filename, mode) as f:
+        f.write(content)
+    refresh_files()
+    return f"✅ Wrote to {filename} and refreshed file list"
+
+def simple_input(prompt=''):
+    """Non-blocking input function"""
+    try:
+        # Print the prompt
+        print(prompt, end='', flush=True)
+        
+        # Start the input process
+        js.startInput(str(prompt))
+        
+        # For now, return a placeholder and tell user what to do
+        print("\\n[Input field shown below - type your answer and press Enter]")
+        return "[Input pending - check terminal below]"
+        
+    except Exception as e:
+        print(f"Input error: {e}")
+        return ""
+
+def check_input():
+    """Check if input is ready"""
+    return js.checkInput()
+
+def get_input():
+    """Get the input result"""
+    if js.checkInput():
+        return js.getInputResult()
+    else:
+        return None
+
+def refresh_files():
+    """Manually refresh the file list"""
+    js.refreshFileList()
+    print("File list refreshed!")
+
+# Replace built-in input
+builtins.input = simple_input
+builtins.check_input = check_input
+builtins.get_input = get_input
+builtins.refresh_files = refresh_files
+builtins.write_file = write_file
+
+print("✅ Enhanced input and file system ready!")
+print("Usage:")
+print("1. Call input('prompt') - this shows the input field")
+print("2. Type your answer in the input field and press Enter")
+print("3. Use get_input() to retrieve your answer")
+print("4. Use write_file(filename, content) for auto-refresh")
+print("5. Use refresh_files() to manually refresh the file list")
+print("Example:")
+print("  input('What is your name? ')")
+print("  # Type in the input field below")
+print("  name = get_input()  # Gets your typed answer")
+print("  write_file('text.txt', 'Hello World!')  # Auto-refreshes")
+
+# Verify files exist
+try:
+    with open('text.txt', 'r') as f:
+        content = f.read()
+        print(f"✅ text.txt loaded ({len(content)} characters)")
+    with open('tester.csv', 'r') as f:
+        content = f.read()
+        print(f"✅ tester.csv loaded ({len(content)} characters)")
+    with open('binary.dat', 'r') as f:
+        content = f.read()
+        print(f"✅ binary.dat loaded ({len(content)} characters)")
+except Exception as e:
+    print(f"❌ Error setting up files: {e}")
+            `);
+        }
+
+        // Show terminal input prompt - fixed positioning
+        function showTerminalInput(prompt, resolver) {
+            console.log('showTerminalInput called with prompt:', prompt);
+            
+            const terminal = document.getElementById('terminal-output');
+            const inputContainer = document.getElementById('input-container');
+            const inputPrompt = document.getElementById('input-prompt');
+            const terminalInput = document.getElementById('terminal-input');
+            
+            console.log('Elements found:', {
+                terminal: !!terminal,
+                inputContainer: !!inputContainer,
+                inputPrompt: !!inputPrompt,
+                terminalInput: !!terminalInput
+            });
+            
+            if (!terminal || !inputContainer || !inputPrompt || !terminalInput) {
+                console.error('Missing required elements!');
+                resolver(''); // Resolve with empty string to avoid hanging
+                return;
+            }
+            
+            // FIXED: Add the prompt to terminal first, then position input at the end
+            updateTerminal(prompt);
+            
+            // Ensure terminal is scrolled to bottom before showing input
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            // Show input line at the very end
+            inputPrompt.textContent = '';
+            terminalInput.value = '';
+            inputContainer.style.display = 'block';
+            terminalInput.style.display = 'inline';
+            
+            // Force focus and scroll to input
+            setTimeout(() => {
+                terminalInput.focus();
+                terminal.scrollTop = terminal.scrollHeight;
+            }, 50);
+            
+            isWaitingForInput = true;
+            inputResolver = resolver;
+            
+            console.log('Input setup complete, waiting for user input');
+            
+            // Handle input submission
+            terminalInput.onkeydown = function(e) {
+                if (e.key === 'Enter') {
+                    console.log('Enter pressed, value:', terminalInput.value);
+                    const value = terminalInput.value;
+                    
+                    // Show the input in terminal
+                    updateTerminal(value + '\n');
+                    
+                    // Hide input line
+                    inputContainer.style.display = 'none';
+                    isWaitingForInput = false;
+                    
+                    // Resolve the promise
+                    if (inputResolver) {
+                        console.log('Resolving with value:', value);
+                        inputResolver(value);
+                        inputResolver = null;
+                    }
+                }
+            };
+        }
+
+        // Client-side script management
+        function saveScript() {
+            const scriptName = document.getElementById('filename-input').value.trim();
+            if (!scriptName) {
+                updateStatus('Please enter a script name', 'error');
+                return;
+            }
+
+            // Validate file extension
+            const allowedExtensions = ['.py', '.txt', '.csv', '.dat'];
+            const hasValidExtension = allowedExtensions.some(ext => scriptName.toLowerCase().endsWith(ext));
+            
+            if (!hasValidExtension) {
+                updateStatus('File name must end with .py, .txt, .csv, or .dat', 'error');
+                return;
+            }
+
+            const code = document.getElementById('code_content').value;
+            
+            // Determine if it's a Python script or data file
+            const isPythonScript = scriptName.toLowerCase().endsWith('.py');
+            const storageKey = isPythonScript ? 'python_script_' + scriptName : 'data_file_' + scriptName;
+            
+            localStorage.setItem(storageKey, code);
+            updateStatus(`${isPythonScript ? 'Script' : 'Data file'} '${scriptName}' saved to browser storage`, 'success');
+            loadScriptList();
+            currentScript = scriptName;
+            document.getElementById('current-file').textContent = currentScript;
+        }
+
+        function loadScript() {
+            if (!selectedScript) {
+                updateStatus('Please select a file first', 'error');
+                return;
+            }
+
+            // Try Python script first, then data file
+            let code = localStorage.getItem('python_script_' + selectedScript);
+            if (code === null) {
+                code = localStorage.getItem('data_file_' + selectedScript);
+            }
+            
+            if (code !== null) {
+                document.getElementById('code_content').value = code;
+                currentScript = selectedScript;
+                document.getElementById('current-file').textContent = currentScript;
+                updateStatus(`File '${selectedScript}' loaded`, 'success');
+                
+                // Update syntax highlighting for the loaded content
+                updateSyntaxHighlighting();
+            } else {
+                updateStatus('File not found', 'error');
+            }
+        }
+
+        function deleteScript() {
+            if (!selectedScript) {
+                updateStatus('Please select a file first', 'error');
+                return;
+            }
+
+            if (confirm(`Delete file '${selectedScript}'?`)) {
+                // Try to delete from both possible storage keys
+                let deleted = false;
+                if (localStorage.getItem('python_script_' + selectedScript)) {
+                    localStorage.removeItem('python_script_' + selectedScript);
+                    deleted = true;
+                } else if (localStorage.getItem('data_file_' + selectedScript)) {
+                    localStorage.removeItem('data_file_' + selectedScript);
+                    deleted = true;
+                }
+                
+                if (deleted) {
+                    updateStatus(`File '${selectedScript}' deleted`, 'success');
+                    loadScriptList();
+                    selectedScript = '';
+                    
+                    // Clear editor if this was the current file
+                    if (currentScript === selectedScript) {
+                        document.getElementById('code_content').value = '';
+                        currentScript = '';
+                        document.getElementById('current-file').textContent = 'No file selected';
+                        updateSyntaxHighlighting();
+                    }
+                } else {
+                    updateStatus('File not found', 'error');
+                }
+            }
+        }
+
+        function newScript() {
+            document.getElementById('code_content').value = `# New Python Script
+# Available files: text.txt, tester.csv, binary.dat
+
+print("Hello from new script!")
+
+# Example: Read allowed file
+try:
+    with open('text.txt', 'r') as f:
+        content = f.read()
+        print("File content:", content[:100] + "..." if len(content) > 100 else content)
+except Exception as e:
+    print("Error:", e)
+
+# Example: Interactive input (browser prompt)
+try:
+    user_input = input("Enter something: ")
+    print(f"You entered: {user_input}")
+except Exception as e:
+    print("Input error:", e)
+`;
+            document.getElementById('filename-input').value = '';
+            currentScript = 'untitled_script';
+            document.getElementById('current-file').textContent = currentScript;
+            
+            // Update syntax highlighting for the new content
+            updateSyntaxHighlighting();
+            
+            updateStatus('New script created');
+        }
+
+        function selectScript(scriptName) {
+            // Remove previous selection
+            document.querySelectorAll('.file-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selection to clicked item
+            event.target.classList.add('selected');
+            selectedScript = scriptName;
+            
+            // Update filename input
+            document.getElementById('filename-input').value = scriptName;
+            
+            // Automatically load the script content (like selectFile does)
+            const code = localStorage.getItem('python_script_' + scriptName);
+            if (code !== null) {
+                document.getElementById('code_content').value = code;
+                currentScript = scriptName;
+                document.getElementById('current-file').textContent = currentScript;
+                updateStatus(`Loaded: ${scriptName} (${code.length} characters)`);
+                
+                // Update syntax highlighting for the loaded content
+                updateSyntaxHighlighting();
+            } else {
+                updateStatus(`Error: Script '${scriptName}' not found in browser storage`);
+            }
+        }
+
+        function selectDataFile(filename) {
+            // Remove previous selection
+            document.querySelectorAll('.file-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selection to clicked item
+            event.target.classList.add('selected');
+            selectedScript = filename; // Use same variable for simplicity
+            
+            // Update filename input
+            document.getElementById('filename-input').value = filename;
+            
+            // Load the data file content
+            const content = localStorage.getItem('data_file_' + filename);
+            if (content !== null) {
+                document.getElementById('code_content').value = content;
+                currentScript = filename;
+                document.getElementById('current-file').textContent = currentScript;
+                updateStatus(`Loaded: ${filename} (${content.length} characters)`);
+                
+                // Update syntax highlighting for the loaded content
+                updateSyntaxHighlighting();
+            } else {
+                updateStatus(`Error: Data file '${filename}' not found in browser storage`);
+            }
+        }
+
+        function loadScriptList() {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+            
+            // Add a section for data files (server files + user uploaded files)
+            const dataSection = document.createElement('li');
+            dataSection.innerHTML = '<strong>Data Files:</strong>';
+            dataSection.style.color = '#00ff00';
+            dataSection.style.marginBottom = '10px';
+            fileList.appendChild(dataSection);
+            
+            // Show the allowed server files
+            const allowedFiles = ['text.txt', 'tester.csv', 'binary.dat'];
+            allowedFiles.forEach(filename => {
+                const li = document.createElement('li');
+                li.className = 'file-item';
+                li.style.cursor = 'pointer';
+                li.style.padding = '5px';
+                li.style.marginLeft = '15px';
+                
+                // Get appropriate icon based on file type
+                let icon = '';
+                if (filename.endsWith('.txt')) icon = '';
+                else if (filename.endsWith('.csv')) icon = '📊';
+                else if (filename.endsWith('.dat')) icon = '🔢';
+                
+                // Try to get file content and show size
+                try {
+                    if (pyodide && pyodide.FS) {
+                        try {
+                            const content = pyodide.FS.readFile(filename, { encoding: 'utf8' });
+                            li.innerHTML = `${icon} ${filename} <span style="color: #888">(${content.length} chars)</span>`;
+                        } catch (e) {
+                            li.innerHTML = `${icon} ${filename} <span style="color: #666">(empty)</span>`;
+                        }
+                    } else {
+                        li.innerHTML = `${icon} ${filename} <span style="color: #666">(loading...)</span>`;
+                    }
+                } catch (e) {
+                    li.innerHTML = `${icon} ${filename} <span style="color: #666">(error)</span>`;
+                }
+                
+                li.onclick = () => selectFile(filename);
+                fileList.appendChild(li);
+            });
+            
+            // Show user-saved data files
+            let hasDataFiles = false;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('data_file_')) {
+                    hasDataFiles = true;
+                    const filename = key.replace('data_file_', '');
+                    const li = document.createElement('li');
+                    li.className = 'file-item';
+                    li.style.cursor = 'pointer';
+                    li.style.padding = '5px';
+                    li.style.marginLeft = '15px';
+                    
+                    // Get appropriate icon
+                    let icon = '';
+                    if (filename.endsWith('.txt')) icon = '';
+                    else if (filename.endsWith('.csv')) icon = '📊';
+                    else if (filename.endsWith('.dat')) icon = '🔢';
+                    
+                    const content = localStorage.getItem(key);
+                    li.innerHTML = `${icon} ${filename} <span style="color: #888">(${content.length} chars)</span>`;
+                    li.onclick = () => selectDataFile(filename);
+                    fileList.appendChild(li);
+                }
+            }
+            
+            // Add separator
+            const separator = document.createElement('li');
+            separator.innerHTML = '<hr style="border-color: #333; margin: 10px 0;">';
+            fileList.appendChild(separator);
+            
+            // Add section for Python scripts
+            const scriptSection = document.createElement('li');
+            scriptSection.innerHTML = '<strong>� Saved Scripts:</strong>';
+            scriptSection.style.color = '#00ff00';
+            scriptSection.style.marginBottom = '10px';
+            fileList.appendChild(scriptSection);
+            
+            // Get all saved Python scripts from localStorage
+            let hasScripts = false;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('python_script_')) {
+                    hasScripts = true;
+                    const scriptName = key.replace('python_script_', '');
+                    const li = document.createElement('li');
+                    li.className = 'file-item';
+                    li.style.cursor = 'pointer';
+                    li.style.padding = '5px';
+                    li.style.marginLeft = '15px';
+                    
+                    const content = localStorage.getItem(key);
+                    li.innerHTML = `� ${scriptName} <span style="color: #888">(${content.split('\n').length} lines)</span>`;
+                    li.onclick = () => selectScript(scriptName);
+                    fileList.appendChild(li);
+                }
+            }
+            
+            if (!hasScripts) {
+                const noScripts = document.createElement('li');
+                noScripts.style.color = '#666';
+                noScripts.style.marginLeft = '15px';
+                noScripts.textContent = 'No saved scripts';
+                fileList.appendChild(noScripts);
+            }
+        }
+
+        // Function to update file viewers with current Pyodide content
+        function updateFileViewers() {
+            if (!pyodide || !pyodide.FS) return;
+            
+            try {
+                // Update text.txt viewer
+                const textContent = pyodide.FS.readFile('text.txt', { encoding: 'utf8' });
+                document.getElementById('text-content').textContent = textContent;
+                
+                // Update tester.csv viewer
+                const csvContent = pyodide.FS.readFile('tester.csv', { encoding: 'utf8' });
+                document.getElementById('csv-content').textContent = csvContent;
+                
+                // Update binary.dat viewer with special handling
+                try {
+                    // First try to use the stored parsed content from server
+                    if (globalThis.binaryContent && globalThis.binaryContent !== 'Binary data example') {
+                        document.getElementById('binary-content').textContent = globalThis.binaryContent;
+                    } else {
+                        // Fallback to client-side parsing if needed
+                        const binaryData = pyodide.FS.readFile('binary.dat');
+                        let binaryDisplay = '';
+                        
+                        // Try to parse as pickle data using Python
+                        try {
+                            const pickleResult = pyodide.runPython(`
+import pickle
+import io
+try:
+    data = open('binary.dat', 'rb').read()
+    items = []
+    bio = io.BytesIO(data)
+    try:
+        while True:
+            item = pickle.load(bio)
+            items.append(str(item))
+    except EOFError:
+        pass
+    if items:
+        result = f"Pickle data ({len(items)} items):\\n" + "\\n".join(f"{i}: {item}" for i, item in enumerate(items))
+    else:
+        result = f"Binary file ({len(data)} bytes) - not pickle data"
+    result
+except Exception as e:
+    f"Error parsing binary data: {str(e)}"
+                            `);
+                            binaryDisplay = pickleResult;
+                            // Update the stored content
+                            globalThis.binaryContent = binaryDisplay;
+                        } catch (e) {
+                            binaryDisplay = `Binary file (${binaryData.length} bytes) - parsing error: ${e.message}`;
+                        }
+                        
+                        document.getElementById('binary-content').textContent = binaryDisplay;
+                    }
+                    
+                    // Show hex data if available
+                    if (globalThis.binaryHexData && globalThis.binaryHexData !== 'No hex data available') {
+                        document.getElementById('binary-hex').textContent = globalThis.binaryHexData;
+                        document.getElementById('binary-hex').style.display = 'block';
+                    }
+                    
+                } catch (e) {
+                    document.getElementById('binary-content').textContent = 'Error reading binary file: ' + e.message;
+                }
+                
+            } catch (error) {
+                console.log('Error updating file viewers:', error);
+                // Set default content if files don't exist
+                document.getElementById('text-content').textContent = 'File not found or empty';
+                document.getElementById('csv-content').textContent = 'File not found or empty';
+                document.getElementById('binary-content').textContent = 'File not found or empty';
+            }
+        }
+
+        // Add function to select virtual files
+        function selectFile(filename) {
+            try {
+                if (pyodide && pyodide.FS) {
+                    const content = pyodide.FS.readFile(filename, { encoding: 'utf8' });
+                    document.getElementById('code_content').value = content;
+                    document.getElementById('filename-input').value = filename;
+                    
+                    // Update current file display to show the actual filename
+                    document.getElementById('current-file').textContent = filename;
+                    
+                    updateStatus(`Loaded: ${filename} (${content.length} characters)`);
+                    
+                    // Update syntax highlighting for the loaded content
+                    updateSyntaxHighlighting();
+                    
+                    // Update file viewers to show current content
+                    updateFileViewers();
+                    
+                    // Highlight selected file
+                    document.querySelectorAll('.file-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    event.target.classList.add('selected');
+                }
+            } catch (e) {
+                updateStatus(`Error loading ${filename}: ${e.message}`);
+            }
+        }
+
+        // Add file refresh function
+        function refreshFiles() {
+            loadScriptList();
+            updateStatus('File list refreshed');
+        }
+
+        // Enhanced Code Editor Features
+        function setupCodeEditor() {
+            const codeTextarea = document.getElementById('code_content');
+            const syntaxHighlight = document.getElementById('syntax-highlight');
+            
+            // Auto-indentation after colon
+            codeTextarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const cursorPos = this.selectionStart;
+                    const textBeforeCursor = this.value.substring(0, cursorPos);
+                    const currentLine = textBeforeCursor.split('\n').pop();
+                    
+                    // Check if current line ends with colon (ignoring whitespace)
+                    if (currentLine.trim().endsWith(':')) {
+                        e.preventDefault();
+                        
+                        // Count existing indentation of current line
+                        const indentMatch = currentLine.match(/^(\s*)/);
+                        const currentIndent = indentMatch ? indentMatch[1] : '';
+                        
+                        // Add new line with additional 4 spaces
+                        const newIndent = currentIndent + '    ';
+                        const newText = this.value.substring(0, cursorPos) + '\n' + newIndent + this.value.substring(cursorPos);
+                        
+                        this.value = newText;
+                        this.selectionStart = this.selectionEnd = cursorPos + 1 + newIndent.length;
+                        
+                        // Update syntax highlighting
+                        updateSyntaxHighlighting();
+                    }
+                }
+                
+                // Tab key handling for proper indentation
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    
+                    // Insert 4 spaces instead of tab
+                    this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                    this.selectionStart = this.selectionEnd = start + 4;
+                    
+                    // Update syntax highlighting
+                    updateSyntaxHighlighting();
+                }
+            });
+            
+            // Update syntax highlighting on input
+            codeTextarea.addEventListener('input', function() {
+                updateSyntaxHighlighting();
+            });
+            
+            // Sync scrolling between textarea and overlay with bounds checking
+            codeTextarea.addEventListener('scroll', function() {
+                // Get the maximum scroll values for both elements
+                const textareaMaxScrollTop = this.scrollHeight - this.clientHeight;
+                const textareaMaxScrollLeft = this.scrollWidth - this.clientWidth;
+                const overlayMaxScrollTop = syntaxHighlight.scrollHeight - syntaxHighlight.clientHeight;
+                const overlayMaxScrollLeft = syntaxHighlight.scrollWidth - syntaxHighlight.clientWidth;
+                
+                // Constrain scroll values to prevent over-scrolling
+                const constrainedScrollTop = Math.min(this.scrollTop, Math.min(textareaMaxScrollTop, overlayMaxScrollTop));
+                const constrainedScrollLeft = Math.min(this.scrollLeft, Math.min(textareaMaxScrollLeft, overlayMaxScrollLeft));
+                
+                // Apply constrained scroll values
+                syntaxHighlight.scrollTop = constrainedScrollTop;
+                syntaxHighlight.scrollLeft = constrainedScrollLeft;
+                
+                // If textarea scrolled beyond safe bounds, correct it
+                if (this.scrollTop > constrainedScrollTop) {
+                    this.scrollTop = constrainedScrollTop;
+                }
+                if (this.scrollLeft > constrainedScrollLeft) {
+                    this.scrollLeft = constrainedScrollLeft;
+                }
+            });
+            
+            // Initial syntax highlighting
+            updateSyntaxHighlighting();
+        }
+        
+        function updateSyntaxHighlighting() {
+            const codeTextarea = document.getElementById('code_content');
+            const syntaxHighlight = document.getElementById('syntax-highlight');
+            const code = codeTextarea.value;
+            
+            // Check if current file is a Python file
+            const currentFile = document.getElementById('current-file').textContent;
+            const isPythonFile = currentFile.endsWith('.py') || currentFile === 'untitled_script';
+            
+            if (isPythonFile) {
+                // Apply Python syntax highlighting
+                const highlighted = highlightPythonSyntax(code);
+                syntaxHighlight.innerHTML = highlighted;
+                // Re-setup tooltips after updating content
+                setTimeout(() => setupTooltips(), 10);
+            } else {
+                // For non-Python files, just escape HTML and display as plain text
+                const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                syntaxHighlight.innerHTML = `<span class="python-default">${escaped}</span>`;
+            }
+            
+            // Ensure both elements have the same scroll dimensions
+            setTimeout(() => {
+                // Force recalculation of scroll dimensions
+                const textareaScrollHeight = codeTextarea.scrollHeight;
+                const overlayScrollHeight = syntaxHighlight.scrollHeight;
+                
+                // If there's a difference, add padding to the shorter one
+                if (textareaScrollHeight !== overlayScrollHeight) {
+                    const maxHeight = Math.max(textareaScrollHeight, overlayScrollHeight);
+                    const heightDiff = maxHeight - Math.min(textareaScrollHeight, overlayScrollHeight);
+                    
+                    if (textareaScrollHeight < overlayScrollHeight) {
+                        // Add invisible content to textarea to match heights
+                        const lines = Math.ceil(heightDiff / (14 * 1.5)); // font-size * line-height
+                        codeTextarea.style.minHeight = maxHeight + 'px';
+                    } else if (overlayScrollHeight < textareaScrollHeight) {
+                        // Add invisible content to overlay to match heights
+                        const invisibleLines = '\n'.repeat(Math.ceil(heightDiff / (14 * 1.5)));
+                        syntaxHighlight.innerHTML += `<span style="opacity: 0;">${invisibleLines}</span>`;
+                    }
+                }
+            }, 0);
+        }
+        
+        function highlightPythonSyntax(code) {
+            // Python keywords
+            const keywords = ['def', 'class', 'if', 'elif', 'else', 'for', 'while', 'try', 'except', 'finally', 
+                             'with', 'as', 'import', 'from', 'return', 'yield', 'break', 'continue', 'pass', 
+                             'and', 'or', 'not', 'in', 'is', 'lambda', 'global', 'nonlocal', 'assert', 'del', 'raise'];
+            
+            // Python built-in functions with descriptions
+            const builtinDescriptions = {
+                'print': 'Prints objects to the text stream file',
+                'input': 'Reads a line from input, converts it to string',
+                'len': 'Returns the length of an object',
+                'range': 'Returns an immutable sequence of numbers',
+                'str': 'Converts value to a string',
+                'int': 'Converts value to an integer',
+                'float': 'Converts value to a floating point number',
+                'list': 'Creates a list object',
+                'dict': 'Creates a dictionary object',
+                'tuple': 'Creates a tuple object',
+                'set': 'Creates a set object',
+                'bool': 'Converts value to Boolean (True or False)',
+                'open': 'Opens a file and returns a file object',
+                'enumerate': 'Returns enumerate object with index and value',
+                'zip': 'Combines multiple iterables into tuples',
+                'map': 'Applies function to every item in iterable',
+                'filter': 'Filters elements based on function',
+                'sorted': 'Returns a new sorted list',
+                'max': 'Returns the largest item',
+                'min': 'Returns the smallest item',
+                'sum': 'Sums items of an iterable',
+                'any': 'Returns True if any element is true',
+                'all': 'Returns True if all elements are true',
+                'isinstance': 'Checks if object is instance of class',
+                'type': 'Returns the type of an object',
+                'hasattr': 'Checks if object has named attribute',
+                'getattr': 'Gets the value of named attribute',
+                'setattr': 'Sets the value of named attribute',
+                'abs': 'Returns absolute value of a number',
+                'round': 'Rounds a number to given precision',
+                'ord': 'Returns Unicode code point of character',
+                'chr': 'Returns character from Unicode code point'
+            };
+            
+            const builtins = Object.keys(builtinDescriptions);
+            
+            // First, escape HTML characters completely
+            let highlighted = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            // Split into lines to process line by line to avoid conflicts
+            const lines = highlighted.split('\n');
+            const processedLines = [];
+            
+            for (let line of lines) {
+                let processedLine = line;
+                
+                // Track if we're inside a string to avoid highlighting inside strings
+                let inString = false;
+                let stringChar = '';
+                let result = '';
+                let i = 0;
+                
+                // First pass: identify and mark strings
+                const stringMarkers = [];
+                i = 0;
+                while (i < processedLine.length) {
+                    const char = processedLine[i];
+                    const next2 = processedLine.substr(i, 3);
+                    
+                    if (!inString && (next2 === '"""' || next2 === "'''")) {
+                        stringMarkers.push({start: i, end: processedLine.indexOf(next2, i + 3) + 3, type: 'multiline'});
+                        i = processedLine.indexOf(next2, i + 3) + 3;
+                        continue;
+                    }
+                    
+                    if (!inString && (char === '"' || char === "'")) {
+                        let endPos = i + 1;
+                        while (endPos < processedLine.length) {
+                            if (processedLine[endPos] === char && processedLine[endPos - 1] !== '\\') {
+                                break;
+                            }
+                            endPos++;
+                        }
+                        if (endPos < processedLine.length) {
+                            stringMarkers.push({start: i, end: endPos + 1, type: 'string'});
+                            i = endPos + 1;
+                            continue;
+                        }
+                    }
+                    i++;
+                }
+                
+                // Mark strings
+                for (let j = stringMarkers.length - 1; j >= 0; j--) {
+                    const marker = stringMarkers[j];
+                    const stringContent = processedLine.substring(marker.start, marker.end);
+                    processedLine = processedLine.substring(0, marker.start) + 
+                                   `<span class="python-string">${stringContent}</span>` + 
+                                   processedLine.substring(marker.end);
+                }
+                
+                // Check for comments (only if not already inside a string span)
+                if (processedLine.includes('#') && !processedLine.includes('<span class="python-string">')) {
+                    const commentIndex = processedLine.indexOf('#');
+                    if (commentIndex >= 0) {
+                        const beforeComment = processedLine.substring(0, commentIndex);
+                        const comment = processedLine.substring(commentIndex);
+                        processedLine = beforeComment + `<span class="python-comment">${comment}</span>`;
+                    }
+                } else if (processedLine.includes('#')) {
+                    // Handle comments that might be outside string spans
+                    processedLine = processedLine.replace(/(#.*$)(?![^<]*<\/span>)/g, '<span class="python-comment">$1</span>');
+                }
+                
+                // Highlight numbers (only outside of spans)
+                processedLine = processedLine.replace(/(?<![\w>])(\b\d+\.?\d*\b)(?![\w<])/g, (match, num, offset, string) => {
+                    // Check if we're inside a span
+                    const beforeMatch = string.substring(0, offset);
+                    const openSpans = (beforeMatch.match(/<span/g) || []).length;
+                    const closeSpans = (beforeMatch.match(/<\/span>/g) || []).length;
+                    if (openSpans > closeSpans) return match; // Inside a span
+                    return `<span class="python-number">${num}</span>`;
+                });
+                
+                // Highlight keywords (only outside of spans)
+                keywords.forEach(keyword => {
+                    const regex = new RegExp(`\\b(${keyword})\\b`, 'g');
+                    processedLine = processedLine.replace(regex, (match, kw, offset, string) => {
+                        // Check if we're inside a span
+                        const beforeMatch = string.substring(0, offset);
+                        const openSpans = (beforeMatch.match(/<span/g) || []).length;
+                        const closeSpans = (beforeMatch.match(/<\/span>/g) || []).length;
+                        if (openSpans > closeSpans) return match; // Inside a span
+                        return `<span class="python-keyword">${kw}</span>`;
+                    });
+                });
+                
+                // Highlight built-in functions (only outside of spans)
+                builtins.forEach(builtin => {
+                    const regex = new RegExp(`\\b(${builtin})\\b`, 'g');
+                    processedLine = processedLine.replace(regex, (match, built, offset, string) => {
+                        // Check if we're inside a span
+                        const beforeMatch = string.substring(0, offset);
+                        const openSpans = (beforeMatch.match(/<span/g) || []).length;
+                        const closeSpans = (beforeMatch.match(/<\/span>/g) || []).length;
+                        if (openSpans > closeSpans) return match; // Inside a span
+                        const description = builtinDescriptions[built] || 'Python built-in function';
+                        return `<span class="python-builtin" data-tooltip="${description}">${built}</span>`;
+                    });
+                });
+                
+                processedLines.push(processedLine);
+            }
+            
+            return processedLines.join('\n');
+        }
+
+        // Tooltip functionality for Python functions
+        function setupTooltips() {
+            const syntaxHighlight = document.getElementById('syntax-highlight');
+            let tooltip = null;
+
+            // Create tooltip element if it doesn't exist
+            function createTooltip() {
+                if (!tooltip) {
+                    tooltip = document.createElement('div');
+                    tooltip.className = 'python-tooltip';
+                    document.body.appendChild(tooltip);
+                }
+                return tooltip;
+            }
+
+            // Show tooltip
+            function showTooltip(element, text, x, y) {
+                const tooltipEl = createTooltip();
+                tooltipEl.textContent = text;
+                tooltipEl.style.left = x + 'px';
+                tooltipEl.style.top = (y - 35) + 'px'; // Position above the element
+                tooltipEl.classList.add('show');
+            }
+
+            // Hide tooltip
+            function hideTooltip() {
+                if (tooltip) {
+                    tooltip.classList.remove('show');
+                }
+            }
+
+            // Add event listeners to syntax highlight overlay
+            syntaxHighlight.addEventListener('mouseover', function(e) {
+                if (e.target.classList.contains('python-builtin') && e.target.dataset.tooltip) {
+                    const rect = e.target.getBoundingClientRect();
+                    showTooltip(e.target, e.target.dataset.tooltip, rect.left, rect.top);
+                }
+            });
+
+            syntaxHighlight.addEventListener('mouseout', function(e) {
+                if (e.target.classList.contains('python-builtin')) {
+                    hideTooltip();
+                }
+            });
+
+            // Hide tooltip when scrolling
+            syntaxHighlight.addEventListener('scroll', hideTooltip);
+        }
+
+        // Execute Python code
+        async function executeCode() {
+            if (!isInitialized) {
+                await initPyodide();
+            }
+
+            const code = document.getElementById('code_content').value;
+            if (!code.trim()) {
+                updateTerminal("No code to execute.\n");
+                return;
+            }
+
+            updateTerminal(`\n>>> Executing code...\n`);
+            document.getElementById('run-btn').disabled = true;
+            
+            try {
+                // Set up stdout/stderr capture
+                await pyodide.runPython(`
+import sys
+from io import StringIO
+sys.stdout = StringIO()
+sys.stderr = StringIO()
+                `);
+
+                // Run user code - this needs to handle async input
+                try {
+                    const result = await pyodide.runPythonAsync(code);
+                } catch (error) {
+                    // Handle execution errors
+                    if (error.name === 'PythonError') {
+                        updateTerminal("❌ " + error.message + "\n", true);
+                    } else {
+                        throw error;
+                    }
+                }
+
+                // Get output
+                const stdout = await pyodide.runPython("sys.stdout.getvalue()");
+                const stderr = await pyodide.runPython("sys.stderr.getvalue()");
+
+                // Reset stdout/stderr
+                await pyodide.runPython(`
+sys.stdout = sys.__stdout__
+sys.stderr = sys.__stderr__
+                `);
+
+                if (stdout) {
+                    updateTerminal(stdout);
+                }
+                if (stderr) {
+                    updateTerminal("Error: " + stderr + "\n", true);
+                }
+                if (!stdout && !stderr) {
+                    updateTerminal("Code executed successfully (no output)\n");
+                }
+
+            } catch (error) {
+                updateTerminal("❌ Error: " + error.message + "\n", true);
+            }
+            
+            document.getElementById('run-btn').disabled = false;
+            
+            // Auto-refresh file list and file viewers after code execution
+            loadScriptList();
+            updateFileViewers();
+        }
+
+        function clearTerminal() {
+            document.getElementById('terminal-output').textContent = '';
+            // Show a stylish notification instead of text in terminal
+            updateStatus('Terminal cleared', 'success');
+        }
+
+        function updateTerminal(message, isError = false) {
+            const terminal = document.getElementById('terminal-output');
+            const span = document.createElement('span');
+            span.textContent = message;
+            if (isError) {
+                span.style.color = '#f44';
+            }
+            terminal.appendChild(span);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+            
+            if (type !== 'info') {
+                setTimeout(() => {
+                    status.textContent = 'Python Terminal Environment Ready';
+                    status.className = '';
+                }, 3000);
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                executeCode();
+            }
+            
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveScript();
+            }
+        });
+
+        // Update current file display when filename changes
+        document.getElementById('filename-input').addEventListener('input', function(e) {
+            if (e.target.value.trim()) {
+                currentScript = e.target.value.trim();
+                document.getElementById('current-file').textContent = currentScript;
+            }
+        });
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            setupCodeEditor();
+            setupTooltips();
+            
+            // Apply syntax highlighting to initial content after a brief delay
+            setTimeout(() => {
+                updateSyntaxHighlighting();
+            }, 100);
+            
+            loadScriptList();
+            // Start initializing Pyodide immediately
+            initPyodide();
+        });
+
+        // Fullscreen toggle functionality
+        let isFocusMode = false;
+
+        function toggleFocusMode() {
+            const focusBtn = document.getElementById('focus-btn');
+            const body = document.body;
+            
+            if (!isFocusMode) {
+                // Enter focus mode
+                body.classList.add('focus-mode');
+                document.querySelectorAll('.file-manager, .file-viewers, .terminal-section').forEach(el => {
+                    el.classList.add('background-blur');
+                });
+                focusBtn.innerHTML = 'EXIT';
+                focusBtn.title = 'Exit focus mode';
+                document.getElementById('code_content').focus();
+            } else {
+                // Exit focus mode
+                body.classList.remove('focus-mode');
+                document.querySelectorAll('.file-manager, .file-viewers, .terminal-section').forEach(el => {
+                    el.classList.remove('background-blur');
+                });
+                focusBtn.innerHTML = 'FOCUS';
+                focusBtn.title = 'Focus Mode';
+            }
+            
+            isFocusMode = !isFocusMode;
+        }
+
+
+
+
+    </script>
+</body>
+</html>

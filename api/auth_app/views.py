@@ -1,0 +1,149 @@
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.db import IntegrityError
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+import json
+import re
+
+def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect('auth_app:account')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+        
+        if not all([username, email, password, confirm_password]):
+            messages.error(request, 'All fields are required.')
+            return render(request, 'auth_app/signup.html')
+        
+        if password != confirm_password:
+            messages.error(request, 'Passwords do not match.')
+            return render(request, 'auth_app/signup.html')
+        
+        if len(password) < 6:
+            messages.error(request, 'Password must be at least 6 characters long.')
+            return render(request, 'auth_app/signup.html')
+        
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            messages.error(request, 'Username can only contain letters, numbers, and underscores.')
+            return render(request, 'auth_app/signup.html')
+        
+        try:
+            if User.objects.filter(username=username).exists():
+                messages.error(request, 'Username already exists.')
+                return render(request, 'auth_app/signup.html')
+            
+            if User.objects.filter(email=email).exists():
+                messages.error(request, 'Email already registered.')
+                return render(request, 'auth_app/signup.html')
+            
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            
+            messages.success(request, 'Account created successfully! Please log in.')
+            return redirect('auth_app:login')
+            
+        except IntegrityError:
+            messages.error(request, 'Email already registered.')
+            return render(request, 'auth_app/signup.html')
+        
+        except Exception as e:
+            messages.error(request, 'Registration failed. Please try again.')
+            return render(request, 'auth_app/signup.html')
+    
+    return render(request, 'auth_app/signup.html')
+
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('auth_app:account')
+    
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '')
+        
+        if not email or not password:
+            messages.error(request, 'Email and password are required.')
+            return render(request, 'auth_app/login.html')
+        
+        try:
+            user = User.objects.get(email=email)
+            authenticated_user = authenticate(request, username=user.username, password=password)
+            
+            if authenticated_user:
+                login(request, authenticated_user)
+                messages.success(request, f'Welcome back, {user.username}!')
+                return redirect('auth_app:account')
+            else:
+                messages.error(request, 'Invalid credentials.')
+                return render(request, 'auth_app/login.html')
+                
+        except User.DoesNotExist:
+            messages.error(request, 'No account found with this email.')
+            return render(request, 'auth_app/login.html')
+        
+        except Exception as e:
+            messages.error(request, 'Login failed. Please try again.')
+            return render(request, 'auth_app/login.html')
+    
+    return render(request, 'auth_app/login.html')
+
+
+@login_required
+def account_view(request):
+    return render(request, 'auth_app/account.html', {
+        'user': request.user
+    })
+
+def logout_view(request):
+    if request.user.is_authenticated:
+        username = request.user.username
+        logout(request)
+        messages.success(request, f'Goodbye {username}! You have been logged out successfully.')
+    
+    return redirect('auth_app:login')
+
+@require_http_methods(["GET"])
+def check_email_availability(request):
+    email = request.GET.get('email', '').strip().lower()
+    
+    if not email:
+        return JsonResponse({'available': False, 'message': 'Email is required'})
+    
+    try:
+        exists = User.objects.filter(email=email).exists()
+        return JsonResponse({
+            'available': not exists,
+            'message': 'Email is available' if not exists else 'Email is already taken'
+        })
+    except Exception:
+        return JsonResponse({'available': False, 'message': 'Error checking email availability'})
+
+@require_http_methods(["GET"])
+def check_username_availability(request):
+    username = request.GET.get('username', '').strip()
+    
+    if not username:
+        return JsonResponse({'available': False, 'message': 'Username is required'})
+    
+    try:
+        exists = User.objects.filter(username=username).exists()
+        return JsonResponse({
+            'available': not exists,
+            'message': 'Username is available' if not exists else 'Username is already taken'
+        })
+    except Exception:
+        return JsonResponse({'available': False, 'message': 'Error checking username availability'})
+
+def home_view(request):
+    return render(request, 'auth_app/index.html')

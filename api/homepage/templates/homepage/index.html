@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLASS 12 PYTHON ASSEMBLY</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4GQ8NQ38P5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-4GQ8NQ38P5');
+    </script>
+    
+    <style>
+        :root {
+            --primary-bg: #000000;
+            --secondary-bg: #1a1a1a;
+            --tertiary-bg: #2a2a2a;
+            --accent-color: #ffffff;
+            --success-color: #ffffff;
+            --warning-color: #f7b731;
+            --error-color: #e55039;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-muted: #888888;
+            --border-color: #333333;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
+            height: 100vh;
+        }
+
+        /* Simple Black Background */
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: #000000;
+        }
+
+        /* Floating Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.3;
+            }
+            90% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Additional Animated Elements */
+        .floating-dots {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .floating-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: floatDot 25s infinite linear;
+        }
+
+        @keyframes floatDot {
+            0% {
+                transform: translateY(100vh) translateX(0px) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.5;
+                transform: scale(1);
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Pulsing Grid Lines */
+        .grid-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridPulse 10s ease-in-out infinite;
+        }
+
+        @keyframes gridPulse {
+            0%, 100% {
+                opacity: 0.1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        /* Hamburger Menu Button */
+        .menu-toggle {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            z-index: 1001;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 15px;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent-color);
+            transform: scale(1.05);
+        }
+
+        .hamburger {
+            width: 24px;
+            height: 18px;
+            position: relative;
+            transform: rotate(0deg);
+            transition: 0.5s ease-in-out;
+        }
+
+        .hamburger span {
+            display: block;
+            position: absolute;
+            height: 2px;
+            width: 100%;
+            background: var(--text-primary);
+            border-radius: 1px;
+            opacity: 1;
+            left: 0;
+            transform: rotate(0deg);
+            transition: 0.25s ease-in-out;
+        }
+
+        .hamburger span:nth-child(1) { top: 0px; }
+        .hamburger span:nth-child(2), .hamburger span:nth-child(3) { top: 8px; }
+        .hamburger span:nth-child(4) { top: 16px; }
+
+        .menu-toggle.active .hamburger span:nth-child(1) {
+            top: 8px;
+            width: 0%;
+            left: 50%;
+        }
+
+        .menu-toggle.active .hamburger span:nth-child(2) {
+            transform: rotate(45deg);
+        }
+
+        .menu-toggle.active .hamburger span:nth-child(3) {
+            transform: rotate(-45deg);
+        }
+
+        .menu-toggle.active .hamburger span:nth-child(4) {
+            top: 8px;
+            width: 0%;
+            left: 50%;
+        }
+
+        /* Side Menu */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            padding: 100px 0 30px 0;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .menu-items {
+            list-style: none;
+            padding: 0 20px;
+            flex: 1;
+        }
+
+        .menu-item {
+            margin-bottom: 8px;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.active .menu-item {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .sidebar.active .menu-item:nth-child(1) { transition-delay: 0.1s; }
+        .sidebar.active .menu-item:nth-child(2) { transition-delay: 0.15s; }
+        .sidebar.active .menu-item:nth-child(3) { transition-delay: 0.2s; }
+        .sidebar.active .menu-item:nth-child(4) { transition-delay: 0.25s; }
+        .sidebar.active .menu-item:nth-child(5) { transition-delay: 0.3s; }
+        .sidebar.active .menu-item:nth-child(6) { transition-delay: 0.35s; }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 18px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .menu-link:hover::before {
+            left: 100%;
+        }
+
+        .menu-link:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 3px solid var(--accent-color);
+            transform: translateX(5px);
+        }
+
+        .menu-icon {
+            margin-right: 15px;
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .title-container {
+            position: relative;
+            margin-bottom: 50px;
+        }
+
+        .main-title {
+            font-size: clamp(48px, 8vw, 120px);
+            font-weight: 300;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-color), var(--text-primary));
+            background-size: 300% 300%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleGlow 4s ease-in-out infinite;
+            position: relative;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% {
+                background-position: 0% 50%;
+                text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            }
+            50% {
+                background-position: 100% 50%;
+                text-shadow: 0 0 50px rgba(255, 255, 255, 0.5);
+            }
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 1.5s ease 0.5s forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Geometric Shapes */
+        .geometric-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .shape {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        .shape-1 {
+            width: 200px;
+            height: 200px;
+            top: 20%;
+            right: 10%;
+            animation: floatRotate 20s infinite linear;
+        }
+
+        .shape-2 {
+            width: 150px;
+            height: 150px;
+            bottom: 20%;
+            left: 15%;
+            animation: floatRotate 25s infinite linear reverse;
+        }
+
+        .shape-3 {
+            width: 100px;
+            height: 100px;
+            top: 60%;
+            right: 25%;
+            animation: floatRotate 15s infinite linear;
+        }
+
+        @keyframes floatRotate {
+            0% {
+                transform: rotate(0deg) translateY(0px);
+                opacity: 0.1;
+            }
+            50% {
+                transform: rotate(180deg) translateY(-20px);
+                opacity: 0.3;
+            }
+            100% {
+                transform: rotate(360deg) translateY(0px);
+                opacity: 0.1;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 250px;
+            }
+
+            .menu-toggle {
+                top: 20px;
+                left: 20px;
+                padding: 12px;
+            }
+
+            .main-title {
+                letter-spacing: 4px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+                letter-spacing: 2px;
+            }
+
+            .shape-1, .shape-2, .shape-3 {
+                display: none;
+            }
+        }
+
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-bg);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Additional Complex Animations */
+        .wave-animation {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            z-index: -1;
+            background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.02));
+            animation: wave 8s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% {
+                transform: scaleY(1);
+            }
+            50% {
+                transform: scaleY(1.5);
+            }
+        }
+
+        /* Rotating Rings */
+        .rotating-rings {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 400px;
+            height: 400px;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .ring {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .ring-1 {
+            width: 200px;
+            height: 200px;
+            animation: rotateClockwise 30s linear infinite;
+        }
+
+        .ring-2 {
+            width: 300px;
+            height: 300px;
+            animation: rotateCounterClockwise 45s linear infinite;
+        }
+
+        .ring-3 {
+            width: 400px;
+            height: 400px;
+            animation: rotateClockwise 60s linear infinite;
+        }
+
+        @keyframes rotateClockwise {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes rotateCounterClockwise {
+            from { transform: translate(-50%, -50%) rotate(360deg); }
+            to { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        /* Breathing Effect for Title */
+        .title-container {
+            position: relative;
+            margin-bottom: 50px;
+            animation: breathe 6s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        /* Glitch Effect */
+        .main-title::after {
+            content: 'PYTHON ASSEMBLY';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-color), var(--text-primary));
+            background-size: 300% 300%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glitch 10s infinite;
+            opacity: 0;
+        }
+
+        @keyframes glitch {
+            0%, 95%, 100% {
+                opacity: 0;
+                transform: translateX(0);
+            }
+            96% {
+                opacity: 1;
+                transform: translateX(-2px);
+            }
+            97% {
+                opacity: 1;
+                transform: translateX(2px);
+            }
+            98% {
+                opacity: 1;
+                transform: translateX(-1px);
+            }
+            99% {
+                opacity: 1;
+                transform: translateX(1px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Simple Black Background -->
+    <div class="background-animation"></div>
+
+    <!-- Floating Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Additional Floating Dots -->
+    <div class="floating-dots" id="floatingDots"></div>
+
+    <!-- Grid Lines -->
+    <div class="grid-lines"></div>
+
+    <!-- Wave Animation -->
+    <div class="wave-animation"></div>
+
+    <!-- Rotating Rings -->
+    <div class="rotating-rings">
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
+    </div>
+
+    <!-- Geometric Shapes -->
+    <div class="geometric-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Hamburger Menu -->
+    <button class="menu-toggle" id="menuToggle">
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <ul class="menu-items">
+            <li class="menu-item">
+                <a href="/python/" class="menu-link">
+                    <span class="menu-icon">PY</span>
+                    <span>Python Environment</span>
+                </a>
+            </li>
+            {% if user.is_authenticated %}
+                <li class="menu-item">
+                    <a href="/auth/account/" class="menu-link">
+                        <span class="menu-icon">AC</span>
+                        <span>Account</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="menu-item">
+                    <a href="/auth/signup/" class="menu-link">
+                        <span class="menu-icon">SU</span>
+                        <span>Sign Up</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="/auth/login/" class="menu-link">
+                        <span class="menu-icon">SI</span>
+                        <span>Sign In</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="title-container">
+            <h1 class="main-title">PYTHON ASSEMBLY</h1>
+            <p class="subtitle">by Logesh M.s, XII - A2 2025</p>
+        </div>
+    </main>
+
+    <script>
+        // Loading Animation
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.add('fade-out');
+            }, 1000);
+        });
+
+        // Particle System
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Random positioning and animation delay
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                
+                // Random size variation
+                const size = 1 + Math.random() * 3;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Floating Dots System
+        function createFloatingDots() {
+            const dotsContainer = document.getElementById('floatingDots');
+            const dotCount = 30;
+
+            for (let i = 0; i < dotCount; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'floating-dot';
+                
+                // Random positioning and animation delay
+                dot.style.left = Math.random() * 100 + '%';
+                dot.style.animationDelay = Math.random() * 25 + 's';
+                dot.style.animationDuration = (20 + Math.random() * 10) + 's';
+                
+                // Random size variation
+                const size = 2 + Math.random() * 4;
+                dot.style.width = size + 'px';
+                dot.style.height = size + 'px';
+                
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        // Sidebar Toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            menuToggle.classList.toggle('active');
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+            
+            // Prevent body scroll when sidebar is open
+            document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+        }
+
+        function closeSidebar() {
+            menuToggle.classList.remove('active');
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Event Listeners
+        menuToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        // Close sidebar on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+                closeSidebar();
+            }
+        });
+
+        // Close sidebar when clicking on menu links
+        document.querySelectorAll('.menu-link').forEach(link => {
+            link.addEventListener('click', () => {
+                setTimeout(closeSidebar, 200);
+            });
+        });
+
+        // Smooth menu item animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        });
+
+        // Initialize particles and dots
+        createParticles();
+        createFloatingDots();
+
+        // Add subtle mouse movement effect
+        document.addEventListener('mousemove', function(e) {
+            const shapes = document.querySelectorAll('.shape');
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            shapes.forEach((shape, index) => {
+                const speed = (index + 1) * 0.5;
+                const xOffset = (x - 0.5) * speed;
+                const yOffset = (y - 0.5) * speed;
+                
+                shape.style.transform = `translate(${xOffset}px, ${yOffset}px) rotate(${index * 120}deg)`;
+            });
+        });
+
+        // Add scroll indicator for mobile
+        let ticking = false;
+        
+        function updateScrollIndicator() {
+            // Subtle effects on scroll if needed
+            ticking = false;
+        }
+
+        document.addEventListener('scroll', function() {
+            if (!ticking) {
+                requestAnimationFrame(updateScrollIndicator);
+                ticking = true;
+            }
+        });
+
+        // Performance optimization: Reduce particles on mobile
+        if (window.innerWidth <= 768) {
+            const particles = document.querySelectorAll('.particle');
+            const dots = document.querySelectorAll('.floating-dot');
+            
+            particles.forEach((particle, index) => {
+                if (index > 20) {
+                    particle.remove();
+                }
+            });
+            
+            dots.forEach((dot, index) => {
+                if (index > 15) {
+                    dot.remove();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

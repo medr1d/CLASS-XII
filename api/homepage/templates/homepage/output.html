@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Code Executor</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4GQ8NQ38P5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-4GQ8NQ38P5');
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        @keyframes typewriter {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        @keyframes scanline {
+            0% {
+                transform: translateY(-100%);
+            }
+            100% {
+                transform: translateY(100vh);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
+            }
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ffffff, transparent);
+            animation: scanline 3s linear infinite;
+            z-index: 1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid #ffffff;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 
+                0 0 50px rgba(255, 255, 255, 0.1),
+                inset 0 0 50px rgba(255, 255, 255, 0.05);
+            animation: fadeInUp 1s ease-out;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* removed internal white gradient to keep strictly monochrome solid styling */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: none;
+            border-radius: 15px;
+            z-index: -1;
+        }
+
+        h1 {
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+            animation: slideInLeft 1s ease-out 0.3s both;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 2px;
+            height: 100%;
+            background: #ffffff;
+            animation: typewriter 2s steps(20) 0.5s both;
+        }
+
+        h2 {
+            color: #000000;
+            margin-bottom: 15px;
+            margin-top: 20px;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 10px;
+            background: #ffffff;
+            border-radius: 8px;
+            text-align: center;
+            animation: slideInRight 0.8s ease-out;
+            transition: all 0.3s ease;
+        }
+
+        h2:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .main-output-section {
+            animation: fadeInUp 1s ease-out 0.6s both;
+        }
+
+        .output-box {
+            border: 2px solid #ffffff;
+            padding: 20px;
+            min-height: 200px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            position: relative;
+            transition: all 0.4s ease;
+            overflow: hidden;
+        }
+
+        /* replaced sheen gradient with subtle solid overlay to avoid gradients */
+        .output-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.02);
+            opacity: 0;
+            transition: opacity 0.45s ease;
+            pointer-events: none;
+        }
+
+        .output-box:hover::before {
+            opacity: 1;
+        }
+
+        .main-output {
+            background-color: #000000;
+            color: #ffffff;
+            min-height: 350px;
+            box-shadow: 
+                inset 0 0 30px rgba(255, 255, 255, 0.1),
+                0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .main-output:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                inset 0 0 30px rgba(255, 255, 255, 0.2),
+                0 10px 30px rgba(255, 255, 255, 0.3);
+        }
+
+        .file-output {
+            background-color: #ffffff;
+            color: #000000;
+            box-shadow: 
+                inset 0 0 20px rgba(0, 0, 0, 0.1),
+                0 0 15px rgba(255, 255, 255, 0.4);
+        }
+
+        .file-output:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 
+                inset 0 0 20px rgba(0, 0, 0, 0.2),
+                0 8px 25px rgba(255, 255, 255, 0.6);
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+            animation: fadeInUp 1s ease-out 0.9s both;
+        }
+
+        .file-container {
+            animation: slideInUp 0.8s ease-out;
+            transition: all 0.3s ease;
+        }
+
+        .file-container:nth-child(1) {
+            animation-delay: 1s;
+        }
+
+        .file-container:nth-child(2) {
+            animation-delay: 1.2s;
+        }
+
+        .file-container:nth-child(3) {
+            animation-delay: 1.4s;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .output {
+            position: relative;
+        }
+
+        .error {
+            background-color: #000000;
+            color: #ffffff;
+            border-left: 4px solid #ffffff;
+            padding-left: 15px;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .refresh-button {
+            background-color: #000000;
+            color: #ffffff;
+            border: 3px solid #ffffff;
+            padding: 15px 35px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 30px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 1s ease-out 1.6s both;
+        }
+
+        .refresh-button::before {
+            /* subtle solid sheen on hover instead of gradient sweep */
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.06);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .refresh-button:hover::before {
+            opacity: 1;
+        }
+
+        .refresh-button:hover {
+            background: linear-gradient(45deg, #ffffff, #f0f0f0, #ffffff);
+            color: #000000;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.4);
+        }
+
+        .refresh-button:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+
+        .info {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #ffffff;
+            font-size: 14px;
+            animation: fadeInUp 1s ease-out 0.3s both;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .info:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .file-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 24px;
+                letter-spacing: 2px;
+            }
+        }
+
+        /* Terminal cursor effect */
+        .terminal-cursor::after {
+            content: '█';
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Floating particles effect */
+        .container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.1), transparent),
+                radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.1), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.1), transparent);
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            animation: float 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) translateX(0px); }
+            100% { transform: translateY(-200px) translateX(-200px); }
+        }
+
+        /* Input form styles */
+        .input-section {
+            animation: fadeInUp 1s ease-out 0.4s both;
+            margin-bottom: 30px;
+        }
+
+        .input-form {
+            background-color: #000000;
+            border: 2px solid #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            color: #ffffff;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-textarea {
+            width: 100%;
+            height: 120px;
+            background-color: #000000;
+            color: #ffffff;
+            border: 1px solid #ffffff;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            outline: none;
+            margin-bottom: 15px;
+        }
+
+        .input-textarea:focus {
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .execute-button {
+            background-color: #000000;
+            color: #ffffff;
+            border: 2px solid #ffffff;
+            padding: 12px 25px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .execute-button:hover {
+            background-color: #ffffff;
+            color: #000000;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .input-help {
+            color: #ffffff;
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="terminal-cursor">Python Code Executor</h1>
+        <div class="info">Edit files in your project folder and provide input below to run interactive scripts</div>
+        
+        <div class="input-section">
+            <div class="input-form">
+                <form method="post">
+                    {% csrf_token %}
+                    <label class="input-label" for="input_data">Input for main.py (one input per line):</label>
+                    <textarea 
+                        name="input_data" 
+                        id="input_data" 
+                        class="input-textarea" 
+                        placeholder="Enter inputs for your Python script here...
+For your current main.py script, enter:
+3
+apple
+banana
+cherry">{{ input_data }}</textarea>
+                    <button type="submit" class="execute-button">▶ Execute with Input</button>
+                    <div class="input-help">
+                        💡 Tip: Each line you enter will be used as input when your script calls input(). 
+                        For your pickle script, first enter the number of elements, then each element on separate lines.
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="main-output-section">
+            <h2 style="background: #000000; color: #ffffff; border: 2px solid #ffffff;">main.py Output</h2>
+            <div class="output-box main-output">
+                {% if error %}
+                    <div class="error">ERROR:
+{{ error }}</div>
+                {% elif output %}
+                    <div class="output">{{ output }}</div>
+                {% else %}
+                    <div class="output">No output from main.py</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="file-grid">
+            <div class="file-container">
+                <h2>binary.dat</h2>
+                <div class="output-box file-output">
+                    <div class="output">{{ binary_content }}</div>
+                </div>
+            </div>
+            
+            <div class="file-container">
+                <h2>tester.csv</h2>
+                <div class="output-box file-output">
+                    <div class="output">{{ csv_content }}</div>
+                </div>
+            </div>
+            
+            <div class="file-container">
+                <h2>text.txt</h2>
+                <div class="output-box file-output">
+                    <div class="output">{{ text_content }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="refresh-button" onclick="location.reload()">⟳ Refresh All Content</button>
+    </div>
+</body>
+</html>

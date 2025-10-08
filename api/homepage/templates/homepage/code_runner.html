@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Code Runner</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4GQ8NQ38P5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-4GQ8NQ38P5');
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #00ff00;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            border: 1px solid #333;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(90deg, #1a1a1a, #2a2a2a);
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .header h1 {
+            color: #00ff00;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            font-size: 2em;
+        }
+
+        .main-content {
+            display: flex;
+            height: 80vh;
+        }
+
+        .code-section {
+            flex: 1;
+            padding: 20px;
+            border-right: 1px solid #333;
+        }
+
+        .output-section {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .section-title {
+            color: #00ffff;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+
+        .run-button {
+            background: linear-gradient(45deg, #00aa00, #00ff00);
+            color: #000;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .run-button:hover {
+            background: linear-gradient(45deg, #00ff00, #00aa00);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.4);
+        }
+
+        .output-box {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+        }
+
+        .output {
+            color: #ffffff;
+        }
+
+        .error {
+            color: #ff4444;
+        }
+
+        .prompt {
+            color: #00ffff;
+        }
+
+        .scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .terminal-effect {
+            position: relative;
+        }
+
+        .terminal-effect::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 0, 0.03) 2px,
+                rgba(0, 255, 0, 0.03) 4px
+            );
+            pointer-events: none;
+        }
+
+        .example-code {
+            margin-top: 15px;
+            padding: 10px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .example-code span {
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container terminal-effect">
+        <div class="header">
+            <h1>🐍 Python Code Runner Terminal</h1>
+            <p style="color: #888; margin-top: 5px;">Execute Python code and see beautiful output in real-time</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="code-section">
+                <div class="section-title">📝 Code Input</div>
+                <form method="post">
+                    {% csrf_token %}
+                    <textarea name="code" placeholder="# Enter your Python code here...
+# Example:
+print('Hello, World!')
+for i in range(5):
+    print(f'Number: {i}')
+
+import math
+print(f'Pi = {math.pi}')
+" class="scrollbar">{{ code }}</textarea>
+                    <button type="submit" class="run-button">▶ Execute Code</button>
+                </form>
+                
+                <div class="example-code">
+                    <span>Try some examples:</span><br>
+                    • print("Hello World")<br>
+                    • import datetime; print(datetime.datetime.now())<br>
+                    • [x**2 for x in range(10)]<br>
+                    • import random; print(random.randint(1, 100))
+                </div>
+            </div>
+            
+            <div class="output-section">
+                <div class="section-title">💻 Output Terminal</div>
+                <div class="output-box scrollbar">
+                    {% if output or error %}
+                        <div class="prompt">>>> Executing Python code...</div>
+                        {% if output %}
+                            <div class="output">{{ output }}</div>
+                        {% endif %}
+                        {% if error %}
+                            <div class="error">ERROR:
+{{ error }}</div>
+                        {% endif %}
+                        <div class="prompt">>>> Execution completed.</div>
+                    {% else %}
+                        <div class="prompt">>>> Python Code Runner Ready</div>
+                        <div style="color: #666;">Enter your Python code on the left and click 'Execute Code' to see the output here.</div>
+                        <div style="color: #666; margin-top: 10px;">This terminal will display:</div>
+                        <div style="color: #888;">• Standard output in white</div>
+                        <div style="color: #888;">• Error messages in red</div>
+                        <div style="color: #888;">• System prompts in cyan</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

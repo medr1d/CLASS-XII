@@ -1,0 +1,321 @@
+{% extends 'auth_app/base.html' %}
+
+{% block title %}Sign Up - CLASS 12 PYTHON ASSEMBLY{% endblock %}
+
+{% block content %}
+<div class="auth-header">
+    <h1>→ Create Account</h1>
+    <p>join the learning environment</p>
+</div>
+
+<div class="auth-body">
+    <!-- Display messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                <strong>
+                    {% if message.tags == 'error' %}
+                        [ERROR]:
+                    {% elif message.tags == 'success' %}
+                        [SUCCESS]:
+                    {% endif %}
+                </strong>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" id="signupForm">
+        {% csrf_token %}
+        
+        <!-- Username Field -->
+        <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="username" 
+                   name="username" 
+                   placeholder="your_username"
+                   required
+                   pattern="[a-zA-Z0-9_]+"
+                   title="Username can only contain letters, numbers, and underscores"
+                   minlength="3"
+                   maxlength="150">
+            <div id="usernameValidation" class="form-validation"></div>
+        </div>
+
+        <!-- Email Field -->
+        <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" 
+                   class="form-control" 
+                   id="email" 
+                   name="email" 
+                   placeholder="user@example.com"
+                   required
+                   maxlength="254">
+            <div id="emailValidation" class="form-validation"></div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" 
+                   class="form-control" 
+                   id="password" 
+                   name="password" 
+                   placeholder="secure password"
+                   required
+                   minlength="6">
+            <div id="passwordValidation" class="form-validation"></div>
+        </div>
+
+        <!-- Confirm Password Field -->
+        <div class="form-group">
+            <label class="form-label" for="confirm_password">Confirm Password</label>
+            <input type="password" 
+                   class="form-control" 
+                   id="confirm_password" 
+                   name="confirm_password" 
+                   placeholder="repeat password"
+                   required
+                   minlength="6">
+            <div id="confirmPasswordValidation" class="form-validation"></div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn">
+            Create Account
+        </button>
+    </form>
+
+    <!-- Login Link -->
+    <div class="text-center mt-4">
+        <p style="margin-bottom: 0; color: var(--text-muted);">
+            Already have an account? 
+            <a href="{% url 'auth_app:login' %}" class="text-link">Sign in here</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let usernameTimeout;
+    let emailTimeout;
+    
+    // Real-time username validation
+    document.getElementById('username').addEventListener('input', function() {
+        const username = this.value.trim();
+        const validation = document.getElementById('usernameValidation');
+        
+        clearTimeout(usernameTimeout);
+        
+        if (username.length < 3) {
+            validation.innerHTML = '→ Must be at least 3 characters';
+            validation.style.color = 'var(--error-color)';
+            return;
+        }
+        
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            validation.innerHTML = '→ Letters, numbers, and underscores only';
+            validation.style.color = 'var(--error-color)';
+            return;
+        }
+        
+        validation.innerHTML = '→ Checking availability...';
+        validation.style.color = 'var(--text-muted)';
+        
+        usernameTimeout = setTimeout(function() {
+            fetch('{% url "auth_app:check_username" %}?username=' + encodeURIComponent(username))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.available) {
+                        validation.innerHTML = '✓ ' + data.message;
+                        validation.style.color = 'var(--success-color)';
+                    } else {
+                        validation.innerHTML = '✗ ' + data.message;
+                        validation.style.color = 'var(--error-color)';
+                    }
+                })
+                .catch(() => {
+                    validation.innerHTML = '⚠ Error checking availability';
+                    validation.style.color = 'var(--warning-color)';
+                });
+        }, 500);
+    });
+    
+    // Real-time email validation
+    document.getElementById('email').addEventListener('input', function() {
+        const email = this.value.trim().toLowerCase();
+        const validation = document.getElementById('emailValidation');
+        
+        clearTimeout(emailTimeout);
+        
+        if (!email) {
+            validation.innerHTML = '';
+            return;
+        }
+        
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            validation.innerHTML = '→ Please enter a valid email address';
+            validation.style.color = 'var(--error-color)';
+            return;
+        }
+        
+        validation.innerHTML = '→ Checking availability...';
+        validation.style.color = 'var(--text-muted)';
+        
+        emailTimeout = setTimeout(function() {
+            fetch('{% url "auth_app:check_email" %}?email=' + encodeURIComponent(email))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.available) {
+                        validation.innerHTML = '✓ ' + data.message;
+                        validation.style.color = 'var(--success-color)';
+                    } else {
+                        validation.innerHTML = '✗ ' + data.message;
+                        validation.style.color = 'var(--error-color)';
+                    }
+                })
+                .catch(() => {
+                    validation.innerHTML = '⚠ Error checking availability';
+                    validation.style.color = 'var(--warning-color)';
+                });
+        }, 500);
+    });
+    
+    // Password strength validation
+    document.getElementById('password').addEventListener('input', function() {
+        const password = this.value;
+        const validation = document.getElementById('passwordValidation');
+        
+        if (password.length === 0) {
+            validation.innerHTML = '';
+            return;
+        }
+        
+        if (password.length < 6) {
+            validation.innerHTML = '→ Must be at least 6 characters';
+            validation.style.color = 'var(--error-color)';
+        } else {
+            let strength = 0;
+            let message = '';
+            
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            if (strength <= 2) {
+                message = '🛡 Weak password';
+                validation.style.color = 'var(--error-color)';
+            } else if (strength <= 3) {
+                message = '🛡 Good password';
+                validation.style.color = 'var(--warning-color)';
+            } else {
+                message = '🛡 Strong password';
+                validation.style.color = 'var(--success-color)';
+            }
+            
+            validation.innerHTML = message;
+        }
+        
+        // Revalidate confirm password if it has content
+        const confirmField = document.getElementById('confirm_password');
+        if (confirmField.value) {
+            confirmField.dispatchEvent(new Event('input'));
+        }
+    });
+    
+    // Confirm password validation
+    document.getElementById('confirm_password').addEventListener('input', function() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = this.value;
+        const validation = document.getElementById('confirmPasswordValidation');
+        
+        if (confirmPassword.length === 0) {
+            validation.innerHTML = '';
+            return;
+        }
+        
+        if (password === confirmPassword) {
+            validation.innerHTML = '✓ Passwords match';
+            validation.style.color = 'var(--success-color)';
+        } else {
+            validation.innerHTML = '✗ Passwords do not match';
+            validation.style.color = 'var(--error-color)';
+        }
+    });
+    
+    // Form submission with loading state
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+        const form = this;
+        setFormLoading(form, true);
+        
+        // Client-side validation before submission
+        const username = document.getElementById('username').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            setFormLoading(form, false);
+            alert('[ERROR]: Passwords do not match');
+            return false;
+        }
+        
+        if (password.length < 6) {
+            e.preventDefault();
+            setFormLoading(form, false);
+            alert('[ERROR]: Password must be at least 6 characters long');
+            return false;
+        }
+        
+        if (username.length < 3) {
+            e.preventDefault();
+            setFormLoading(form, false);
+            alert('[ERROR]: Username must be at least 3 characters long');
+            return false;
+        }
+    });
+    
+    // Auto-focus username field
+    document.getElementById('username').focus();
+});
+
+// Add typing effect to placeholders
+function addTypingEffectToField(fieldId, delay = 0) {
+    setTimeout(() => {
+        const field = document.getElementById(fieldId);
+        const originalPlaceholder = field.placeholder;
+        let i = 0;
+        
+        field.placeholder = '';
+        
+        function type() {
+            if (i < originalPlaceholder.length) {
+                field.placeholder += originalPlaceholder.charAt(i);
+                i++;
+                setTimeout(type, 80);
+            }
+        }
+        
+        type();
+    }, delay);
+}
+
+// Trigger typing effects
+setTimeout(() => {
+    addTypingEffectToField('username', 0);
+    addTypingEffectToField('email', 800);
+    addTypingEffectToField('password', 1600);
+    addTypingEffectToField('confirm_password', 2400);
+}, 1000);
+</script>
+{% endblock %}
