@@ -35,13 +35,20 @@ Try creating an account at:
         return HttpResponse(response_text, content_type="text/plain")
         
     except Exception as e:
+        import os
         error_text = f"""Migration Error:
 {str(e)}
 
 Debug Info:
-- Database URL configured: {'Yes' if settings.DATABASES.get('default', {}).get('HOST') else 'No'}
 - Environment: {'Production' if not settings.DEBUG else 'Development'}
+- DATABASE_URL from env: {os.getenv('DATABASE_URL', 'NOT SET')}
+- DB_HOST from env: {os.getenv('DB_HOST', 'NOT SET')}
+- DB_NAME from env: {os.getenv('DB_NAME', 'NOT SET')}
+- DB_USER from env: {os.getenv('DB_USER', 'NOT SET')}
+- Current DB HOST in settings: {settings.DATABASES.get('default', {}).get('HOST', 'NOT SET')}
+- Current DB NAME in settings: {settings.DATABASES.get('default', {}).get('NAME', 'NOT SET')}
 
-Make sure your Neon database environment variables are set in Vercel.
+Make sure your Neon database environment variables are set in Vercel with these exact names:
+DATABASE_URL, DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT
         """
         return HttpResponse(error_text, content_type="text/plain")
