@@ -1326,8 +1326,8 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 1000;
-            width: 85%;
-            height: 80%;
+            width: 95%;
+            height: 85%;
             box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
         }
 
@@ -1344,6 +1344,202 @@
             bottom: 0;
             background: rgba(0, 0, 0, 0.5);
             z-index: 999;
+        }
+
+        /* Notebook Mode Styles */
+        .notebook-mode .main-area {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .notebook-container {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+            padding: 20px;
+            background: #0a0a0a;
+        }
+
+        .notebook-mode .notebook-container {
+            display: flex;
+        }
+
+        .notebook-mode .editor-section {
+            display: none;
+        }
+
+        .notebook-mode .terminal-section {
+            display: none;
+        }
+
+        .notebook-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 136, 0, 0.1);
+            border: 1px solid #008800;
+            border-radius: 5px;
+        }
+
+        .notebook-title {
+            color: #00ff00;
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+
+        .notebook-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nb-btn {
+            background: rgba(0, 136, 0, 0.2);
+            border: 1px solid #008800;
+            color: #00ff00;
+            padding: 8px 16px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .nb-btn:hover {
+            background: rgba(0, 136, 0, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+
+        .notebook-cell {
+            margin-bottom: 15px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: #111;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .notebook-cell.selected {
+            border-color: #008800;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+        }
+
+        .cell-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+        }
+
+        .cell-type {
+            color: #888;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .cell-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .cell-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 3px;
+            font-size: 11px;
+            transition: color 0.2s;
+        }
+
+        .cell-btn:hover {
+            color: #00ff00;
+        }
+
+        .cell-input {
+            position: relative;
+        }
+
+        .cell-textarea {
+            width: 100%;
+            min-height: 80px;
+            background: #0a0a0a;
+            border: none;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            padding: 12px;
+            resize: vertical;
+            outline: none;
+            line-height: 1.4;
+        }
+
+        .cell-textarea::placeholder {
+            color: #444;
+        }
+
+        .markdown-cell .cell-textarea {
+            color: #ccc;
+        }
+
+        .cell-output {
+            border-top: 1px solid #333;
+            background: #050505;
+            padding: 12px;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            min-height: 30px;
+            white-space: pre-wrap;
+            display: none;
+        }
+
+        .cell-output.has-output {
+            display: block;
+        }
+
+        .cell-execution-count {
+            color: #666;
+            font-size: 11px;
+            margin-right: 8px;
+        }
+
+        .add-cell-btn {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 136, 0, 0.1);
+            border: 2px dashed #333;
+            color: #666;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .add-cell-btn:hover {
+            border-color: #008800;
+            color: #00ff00;
+            background: rgba(0, 136, 0, 0.2);
+        }
+
+        .notebook-stats {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 10px;
+            color: #888;
+            font-size: 11px;
         }
     </style>
 </head>
@@ -1410,6 +1606,7 @@
                     <h2>Python Code Editor (Client-Side)</h2>
                     <div class="editor-controls">
                         <span id="current-file">untitled_script</span>
+                        <button id="notebook-btn" class="focus-button" onclick="toggleNotebookMode()" title="Jupyter-style Notebook Mode">NOTEBOOK</button>
                         <button id="focus-btn" class="focus-button" onclick="toggleFocusMode()" title="Focus Mode">FOCUS</button>
                     </div>
                 </div>
@@ -1464,6 +1661,311 @@ except PermissionError as e:
                         <span class="terminal-prompt" id="input-prompt"></span>
                         <input type="text" id="terminal-input" class="terminal-input-line">
                     </div>
+                </div>
+            </div>
+
+            <!-- Notebook Container -->
+            <div class="notebook-container" id="notebook-container">
+                <div class="notebook-header">
+                    <div class="notebook-title">🐍 Python Notebook (Jupyter-style)</div>
+                    <div class="notebook-controls">
+                        <button class="nb-btn" onclick="addNotebookCell('code')">+ Code</button>
+                        <button class="nb-btn" onclick="addNotebookCell('markdown')">+ Markdown</button>
+                        <button class="nb-btn" onclick="runAllCells()">Run All</button>
+                        <button class="nb-btn" onclick="clearAllOutputs()">Clear Outputs</button>
+                        <button class="nb-btn" onclick="exportNotebook()">Export</button>
+                    </div>
+                </div>
+                
+                <div id="notebook-cells">
+                    <!-- Initial code cell -->
+                    <div class="notebook-cell code-cell" data-cell-id="1" data-cell-type="code">
+                        <div class="cell-header">
+                            <div class="cell-type">
+                                <span class="cell-execution-count">In [1]:</span>
+                                Code Cell
+                            </div>
+                            <div class="cell-controls">
+                                <button class="cell-btn" onclick="runCell(this)" title="Run Cell">▶</button>
+                                <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
+                                <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
+                                <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
+                            </div>
+                        </div>
+                        <div class="cell-input">
+                            <textarea class="cell-textarea" placeholder="# Welcome to Notebook Mode!
+# This is a Jupyter-style notebook interface
+# Press Shift+Enter to run a cell
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Create a simple plot
+x = np.linspace(0, 10, 100)
+y = np.sin(x)
+
+plt.figure(figsize=(8, 4))
+plt.plot(x, y, 'b-', linewidth=2)
+plt.title('Sine Wave')
+plt.xlabel('x')
+plt.ylabel('sin(x)')
+plt.grid(True, alpha=0.3)
+plt.show()"># 🐍 Welcome to Python Notebook Mode!
+# This is a Jupyter-style notebook interface powered by Pyodide
+# Press Shift+Enter to run cells, use the buttons to add/manage cells
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+print("🎉 Python Notebook is ready!")
+print(f"📊 Available libraries: NumPy, Matplotlib, Pandas, SciPy, Scikit-learn")
+print(f"🔧 Running Python {'.'.join(map(str, __import__('sys').version_info[:3]))} in browser")
+
+# Create a beautiful visualization
+x = np.linspace(0, 4*np.pi, 200)
+y1 = np.sin(x) 
+y2 = np.cos(x)
+
+plt.figure(figsize=(10, 6))
+plt.plot(x, y1, 'b-', linewidth=2, label='sin(x)', alpha=0.8)
+plt.plot(x, y2, 'r--', linewidth=2, label='cos(x)', alpha=0.8)
+plt.fill_between(x, y1, alpha=0.2, color='blue')
+plt.title('📈 Trigonometric Functions Visualization', fontsize=14, fontweight='bold')
+plt.xlabel('x (radians)')
+plt.ylabel('f(x)')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()</textarea>
+                        </div>
+                        <div class="cell-output" id="output-1"></div>
+                    </div>
+
+                    <!-- Data Analysis Example -->
+                    <div class="notebook-cell code-cell" data-cell-id="2" data-cell-type="code">
+                        <div class="cell-header">
+                            <div class="cell-type">
+                                <span class="cell-execution-count">In [2]:</span>
+                                Code Cell
+                            </div>
+                            <div class="cell-controls">
+                                <button class="cell-btn" onclick="runCell(this)" title="Run Cell">▶</button>
+                                <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
+                                <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
+                                <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
+                                <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
+                            </div>
+                        </div>
+                        <div class="cell-input">
+                            <textarea class="cell-textarea"># 📊 Data Analysis with Pandas and NumPy
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Generate sample data
+np.random.seed(42)
+dates = pd.date_range('2024-01-01', periods=100)
+data = {
+    'date': dates,
+    'temperature': 20 + 10 * np.sin(np.arange(100) * 2 * np.pi / 365) + np.random.normal(0, 2, 100),
+    'humidity': 50 + 20 * np.cos(np.arange(100) * 2 * np.pi / 365) + np.random.normal(0, 5, 100),
+    'sales': np.random.poisson(50, 100) + np.arange(100) * 0.5
+}
+
+df = pd.DataFrame(data)
+print("📈 Sample Dataset:")
+print(df.head())
+print(f"\n📋 Dataset info: {len(df)} rows, {len(df.columns)} columns")
+print(f"🔍 Statistics:\n{df.describe().round(2)}")
+
+# Create subplots
+fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+fig.suptitle('🎯 Multi-Variable Analysis Dashboard', fontsize=16)
+
+# Temperature trend
+axes[0,0].plot(df.index, df['temperature'], 'tab:orange', alpha=0.7)
+axes[0,0].set_title('🌡️ Temperature Trend')
+axes[0,0].set_ylabel('°C')
+axes[0,0].grid(True, alpha=0.3)
+
+# Humidity vs Temperature
+scatter = axes[0,1].scatter(df['temperature'], df['humidity'], 
+                           c=df['sales'], cmap='viridis', alpha=0.6)
+axes[0,1].set_title('💧 Humidity vs Temperature')
+axes[0,1].set_xlabel('Temperature (°C)')
+axes[0,1].set_ylabel('Humidity (%)')
+plt.colorbar(scatter, ax=axes[0,1], label='Sales')
+
+# Sales histogram
+axes[1,0].hist(df['sales'], bins=20, color='skyblue', alpha=0.7, edgecolor='black')
+axes[1,0].set_title('💰 Sales Distribution')
+axes[1,0].set_xlabel('Sales Count')
+axes[1,0].set_ylabel('Frequency')
+
+# Correlation heatmap data
+corr_data = df[['temperature', 'humidity', 'sales']].corr()
+im = axes[1,1].imshow(corr_data, cmap='coolwarm', aspect='auto')
+axes[1,1].set_title('🔗 Correlation Matrix')
+axes[1,1].set_xticks(range(len(corr_data.columns)))
+axes[1,1].set_yticks(range(len(corr_data.columns)))
+axes[1,1].set_xticklabels(corr_data.columns, rotation=45)
+axes[1,1].set_yticklabels(corr_data.columns)
+
+plt.tight_layout()
+plt.show()</textarea>
+                        </div>
+                        <div class="cell-output" id="output-2"></div>
+                    </div>
+
+                    <!-- Machine Learning Example -->
+                    <div class="notebook-cell code-cell" data-cell-id="3" data-cell-type="code">
+                        <div class="cell-header">
+                            <div class="cell-type">
+                                <span class="cell-execution-count">In [3]:</span>
+                                Code Cell
+                            </div>
+                            <div class="cell-controls">
+                                <button class="cell-btn" onclick="runCell(this)" title="Run Cell">▶</button>
+                                <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
+                                <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
+                                <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
+                                <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
+                            </div>
+                        </div>
+                        <div class="cell-input">
+                            <textarea class="cell-textarea"># 🤖 Machine Learning with Scikit-learn
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+import numpy as np
+import matplotlib.pyplot as plt
+
+print("🎯 Creating ML Classification Example...")
+
+# Generate synthetic dataset
+X, y = make_classification(n_samples=1000, n_features=4, n_informative=3, 
+                          n_redundant=1, n_clusters_per_class=1, random_state=42)
+
+feature_names = ['Feature_A', 'Feature_B', 'Feature_C', 'Feature_D']
+
+# Split the data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+print(f"📊 Dataset: {X.shape[0]} samples, {X.shape[1]} features")
+print(f"🏋️ Training set: {X_train.shape[0]} samples")
+print(f"🧪 Test set: {X_test.shape[0]} samples")
+
+# Train Random Forest model
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+
+# Make predictions
+y_pred = rf_model.predict(X_test)
+
+# Calculate accuracy
+accuracy = (y_pred == y_test).mean()
+print(f"\n🎯 Model Accuracy: {accuracy:.3f}")
+
+# Feature importance visualization
+plt.figure(figsize=(10, 6))
+
+# Feature importance plot
+plt.subplot(1, 2, 1)
+importance = rf_model.feature_importances_
+indices = np.argsort(importance)[::-1]
+plt.title('🔍 Feature Importance')
+plt.bar(range(len(importance)), importance[indices], color='lightcoral', alpha=0.8)
+plt.xticks(range(len(importance)), [feature_names[i] for i in indices], rotation=45)
+plt.ylabel('Importance Score')
+
+# Confusion matrix visualization
+plt.subplot(1, 2, 2)
+cm = confusion_matrix(y_test, y_pred)
+plt.imshow(cm, interpolation='nearest', cmap='Blues')
+plt.title('📊 Confusion Matrix')
+plt.colorbar()
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+
+# Add text annotations
+thresh = cm.max() / 2.
+for i, j in np.ndindex(cm.shape):
+    plt.text(j, i, format(cm[i, j], 'd'),
+             ha="center", va="center",
+             color="white" if cm[i, j] > thresh else "black")
+
+plt.tight_layout()
+plt.show()
+
+print(f"\n📈 Classification Report:")
+print(classification_report(y_test, y_pred))</textarea>
+                        </div>
+                        <div class="cell-output" id="output-3"></div>
+                    </div>
+
+                    <!-- Markdown Example -->
+                    <div class="notebook-cell markdown-cell" data-cell-id="4" data-cell-type="markdown">
+                        <div class="cell-header">
+                            <div class="cell-type">
+                                <span class="cell-execution-count"></span>
+                                Markdown Cell
+                            </div>
+                            <div class="cell-controls">
+                                <button class="cell-btn" onclick="runCell(this)" title="Run Cell">▶</button>
+                                <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
+                                <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
+                                <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">C</button>
+                                <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
+                            </div>
+                        </div>
+                        <div class="cell-input">
+                            <textarea class="cell-textarea"># 📚 Python Notebook Features
+
+This notebook demonstrates the **full power** of Python in the browser using Pyodide! 
+
+## 🎯 Key Features
+
+- **Jupyter-style Interface**: Familiar cell-based editing
+- **Full Python 3.11**: Complete Python environment in your browser
+- **Rich Libraries**: NumPy, Pandas, Matplotlib, SciPy, Scikit-learn
+- **Interactive Plotting**: Beautiful visualizations with Matplotlib
+- **Data Science Ready**: Perfect for analysis and machine learning
+- **No Installation**: Everything runs client-side in WebAssembly
+
+## 🚀 Getting Started
+
+1. **Code Cells**: Write and execute Python code
+2. **Markdown Cells**: Add formatted documentation (like this!)
+3. **Keyboard Shortcuts**: `Shift+Enter` to run cells
+4. **Cell Management**: Add, delete, move, and convert cells
+5. **Export**: Save your work as a `.ipynb` file
+
+## 💡 Pro Tips
+
+- Use `plt.show()` to display plots
+- All computations happen in your browser
+- Your work is automatically saved in browser storage
+- Perfect for **Class XII Computer Science** projects!
+
+```python
+# Quick example - try this in a code cell:
+import this  # The Zen of Python
+```
+
+Happy coding! 🐍✨</textarea>
+                        </div>
+                        <div class="cell-output" id="output-4"></div>
+                    </div>
+                </div>
+                
+                <button class="add-cell-btn" onclick="addNotebookCell('code')">
+                    + Add Cell
+                </button>
+                
+                <div class="notebook-stats">
+                    <div>Cells: <span id="cell-count">4</span></div>
+                    <div>Mode: Notebook</div>
                 </div>
             </div>
         </div>
@@ -1540,7 +2042,7 @@ except PermissionError as e:
                 
                 updateLoadingProgress("Installing additional packages...");
                 // Use micropip to install more packages
-                await pyodide.runPython(`
+                await pyodide.runPythonAsync(`
 import micropip
 await micropip.install(['seaborn', 'requests', 'pillow'])
                 `);
@@ -2792,6 +3294,303 @@ sys.stderr = sys.__stderr__
             
             isFocusMode = !isFocusMode;
         }
+
+        // Notebook Mode Functionality
+        let isNotebookMode = false;
+        let cellCounter = 4;  // Starting with 4 example cells
+        let executionCounter = 1;
+
+        function toggleNotebookMode() {
+            const notebookBtn = document.getElementById('notebook-btn');
+            const body = document.body;
+            
+            if (!isNotebookMode) {
+                // Enter notebook mode
+                body.classList.add('notebook-mode');
+                notebookBtn.innerHTML = 'EDITOR';
+                notebookBtn.title = 'Switch to Editor Mode';
+                updateCellCount();
+                
+                // Focus first cell
+                const firstCell = document.querySelector('.cell-textarea');
+                if (firstCell) firstCell.focus();
+            } else {
+                // Exit notebook mode
+                body.classList.remove('notebook-mode');
+                notebookBtn.innerHTML = 'NOTEBOOK';
+                notebookBtn.title = 'Jupyter-style Notebook Mode';
+            }
+            
+            isNotebookMode = !isNotebookMode;
+        }
+
+        function addNotebookCell(type = 'code') {
+            cellCounter++;
+            const cellsContainer = document.getElementById('notebook-cells');
+            const cellHtml = createCellHtml(cellCounter, type);
+            
+            const cellDiv = document.createElement('div');
+            cellDiv.innerHTML = cellHtml;
+            const cell = cellDiv.firstElementChild;
+            
+            cellsContainer.appendChild(cell);
+            updateCellCount();
+            
+            // Focus the new cell
+            const textarea = cell.querySelector('.cell-textarea');
+            if (textarea) {
+                textarea.focus();
+                setupCellKeyboardShortcuts(textarea);
+            }
+        }
+
+        function createCellHtml(cellId, type) {
+            const isMarkdown = type === 'markdown';
+            const cellType = isMarkdown ? 'markdown-cell' : 'code-cell';
+            const cellLabel = isMarkdown ? 'Markdown Cell' : 'Code Cell';
+            const executionLabel = isMarkdown ? '' : `In [${cellId}]:`;
+            const placeholder = isMarkdown ? 
+                '# Markdown Cell\n\nWrite markdown here...\n\n- **Bold text**\n- *Italic text*\n- `code`\n- [Links](https://example.com)\n\n```python\n# Code blocks\nprint("Hello World")\n```' :
+                '# Write your Python code here\n# Press Shift+Enter to run this cell\n\nprint("Hello from cell ' + cellId + '!")';
+
+            return `
+            <div class="notebook-cell ${cellType}" data-cell-id="${cellId}" data-cell-type="${type}">
+                <div class="cell-header">
+                    <div class="cell-type">
+                        <span class="cell-execution-count">${executionLabel}</span>
+                        ${cellLabel}
+                    </div>
+                    <div class="cell-controls">
+                        <button class="cell-btn" onclick="runCell(this)" title="Run Cell">▶</button>
+                        <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
+                        <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
+                        <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">${isMarkdown ? 'C' : 'M'}</button>
+                        <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
+                    </div>
+                </div>
+                <div class="cell-input">
+                    <textarea class="cell-textarea" placeholder="${placeholder}"></textarea>
+                </div>
+                <div class="cell-output" id="output-${cellId}"></div>
+            </div>`;
+        }
+
+        function runCell(button) {
+            const cell = button.closest('.notebook-cell');
+            const textarea = cell.querySelector('.cell-textarea');
+            const output = cell.querySelector('.cell-output');
+            const cellType = cell.dataset.cellType;
+            
+            if (cellType === 'markdown') {
+                renderMarkdown(textarea.value, output);
+            } else {
+                runPythonCode(textarea.value, output, cell.dataset.cellId);
+            }
+        }
+
+        function renderMarkdown(markdown, outputElement) {
+            // Simple markdown renderer
+            let html = markdown
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+                .replace(/^- (.*$)/gim, '<li>$1</li>')
+                .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+                .replace(/\n/g, '<br>');
+
+            // Handle code blocks
+            html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+            
+            outputElement.innerHTML = html;
+            outputElement.classList.add('has-output');
+            outputElement.style.color = '#ccc';
+        }
+
+        async function runPythonCode(code, outputElement, cellId) {
+            if (!pyodide) {
+                outputElement.innerHTML = 'Error: Python environment not ready';
+                outputElement.classList.add('has-output');
+                return;
+            }
+
+            try {
+                outputElement.innerHTML = 'Running...';
+                outputElement.classList.add('has-output');
+                
+                // Capture stdout
+                let stdout = '';
+                pyodide.runPython(`
+import sys
+from io import StringIO
+_stdout_capture = StringIO()
+sys.stdout = _stdout_capture
+                `);
+
+                // Execute the code
+                const result = pyodide.runPython(code);
+                
+                // Get captured output
+                stdout = pyodide.runPython('_stdout_capture.getvalue()');
+                
+                // Reset stdout
+                pyodide.runPython('sys.stdout = sys.__stdout__');
+                
+                // Update execution counter
+                const executionSpan = outputElement.closest('.notebook-cell').querySelector('.cell-execution-count');
+                if (executionSpan && !executionSpan.textContent.includes('Markdown')) {
+                    executionSpan.textContent = `In [${executionCounter}]:`;
+                    executionCounter++;
+                }
+                
+                // Display output
+                let output = '';
+                if (stdout) output += stdout;
+                if (result !== undefined && result !== null) {
+                    output += (output ? '\n' : '') + String(result);
+                }
+                
+                outputElement.innerHTML = output || '(no output)';
+                outputElement.style.color = '#fff';
+                
+            } catch (error) {
+                outputElement.innerHTML = `Error: ${error.message}`;
+                outputElement.style.color = '#ff4444';
+                outputElement.classList.add('has-output');
+            }
+        }
+
+        function moveCell(button, direction) {
+            const cell = button.closest('.notebook-cell');
+            const sibling = direction === -1 ? cell.previousElementSibling : cell.nextElementSibling;
+            
+            if (sibling && sibling.classList.contains('notebook-cell')) {
+                if (direction === -1) {
+                    sibling.parentNode.insertBefore(cell, sibling);
+                } else {
+                    sibling.parentNode.insertBefore(sibling, cell);
+                }
+            }
+        }
+
+        function deleteCell(button) {
+            const cell = button.closest('.notebook-cell');
+            const cellsContainer = document.getElementById('notebook-cells');
+            
+            if (cellsContainer.children.length > 1) {
+                cell.remove();
+                updateCellCount();
+            } else {
+                alert('Cannot delete the last cell');
+            }
+        }
+
+        function convertCell(button) {
+            const cell = button.closest('.notebook-cell');
+            const currentType = cell.dataset.cellType;
+            const newType = currentType === 'code' ? 'markdown' : 'code';
+            
+            // Clear output
+            const output = cell.querySelector('.cell-output');
+            output.innerHTML = '';
+            output.classList.remove('has-output');
+            
+            // Update cell
+            cell.dataset.cellType = newType;
+            cell.className = `notebook-cell ${newType}-cell`;
+            
+            // Update button text
+            button.textContent = newType === 'code' ? 'M' : 'C';
+            button.title = newType === 'code' ? 'Convert to Markdown' : 'Convert to Code';
+            
+            // Update cell header
+            const cellTypeSpan = cell.querySelector('.cell-type');
+            const executionSpan = cellTypeSpan.querySelector('.cell-execution-count');
+            const isMarkdown = newType === 'markdown';
+            
+            executionSpan.textContent = isMarkdown ? '' : `In [${cell.dataset.cellId}]:`;
+            cellTypeSpan.childNodes[cellTypeSpan.childNodes.length - 1].textContent = 
+                isMarkdown ? 'Markdown Cell' : 'Code Cell';
+        }
+
+        function runAllCells() {
+            const cells = document.querySelectorAll('.notebook-cell');
+            cells.forEach(cell => {
+                const runButton = cell.querySelector('.cell-btn[onclick*="runCell"]');
+                if (runButton) runCell(runButton);
+            });
+        }
+
+        function clearAllOutputs() {
+            const outputs = document.querySelectorAll('.cell-output');
+            outputs.forEach(output => {
+                output.innerHTML = '';
+                output.classList.remove('has-output');
+            });
+        }
+
+        function updateCellCount() {
+            const cellCount = document.querySelectorAll('.notebook-cell').length;
+            const counter = document.getElementById('cell-count');
+            if (counter) counter.textContent = cellCount;
+        }
+
+        function exportNotebook() {
+            const cells = [];
+            document.querySelectorAll('.notebook-cell').forEach(cell => {
+                const cellType = cell.dataset.cellType;
+                const content = cell.querySelector('.cell-textarea').value;
+                const output = cell.querySelector('.cell-output').innerHTML;
+                
+                cells.push({
+                    cell_type: cellType,
+                    source: content,
+                    outputs: output ? [{ text: output }] : []
+                });
+            });
+            
+            const notebook = {
+                cells: cells,
+                metadata: {
+                    kernelspec: {
+                        display_name: "Python 3 (Pyodide)",
+                        language: "python",
+                        name: "python3"
+                    }
+                },
+                nbformat: 4,
+                nbformat_minor: 4
+            };
+            
+            const dataStr = JSON.stringify(notebook, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportName = 'notebook.ipynb';
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportName);
+            linkElement.click();
+        }
+
+        function setupCellKeyboardShortcuts(textarea) {
+            textarea.addEventListener('keydown', function(e) {
+                // Shift+Enter to run cell
+                if (e.shiftKey && e.key === 'Enter') {
+                    e.preventDefault();
+                    const cell = textarea.closest('.notebook-cell');
+                    const runButton = cell.querySelector('.cell-btn[onclick*="runCell"]');
+                    if (runButton) runCell(runButton);
+                }
+            });
+        }
+
+        // Initialize notebook keyboard shortcuts for existing cells
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.cell-textarea').forEach(setupCellKeyboardShortcuts);
+        });
 
 
 

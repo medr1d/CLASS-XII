@@ -76,9 +76,7 @@
             → Python Environment
         </a>
         
-        <button type="button" class="btn btn-outline" onclick="showChangePassword()">
-            → Change Password
-        </button>
+
     </div>
 
     <!-- Logout -->
@@ -92,58 +90,7 @@
     </div>
 </div>
 
-<!-- Change Password Modal -->
-<div id="changePasswordModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>→ Change Password</h2>
-            <button class="modal-close" onclick="closeModal()">&times;</button>
-        </div>
-        
-        <form id="changePasswordForm" method="post" action="{% url 'auth_app:change_password' %}">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label class="form-label" for="current_password">Current Password</label>
-                <input type="password" 
-                       class="form-control" 
-                       id="current_password" 
-                       name="current_password" 
-                       placeholder="enter current password"
-                       required>
-            </div>
 
-            <div class="form-group">
-                <label class="form-label" for="new_password">New Password</label>
-                <input type="password" 
-                       class="form-control" 
-                       id="new_password" 
-                       name="new_password" 
-                       placeholder="enter new password"
-                       required
-                       minlength="6">
-                <div id="passwordValidation" class="form-validation"></div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="confirm_new_password">Confirm New Password</label>
-                <input type="password" 
-                       class="form-control" 
-                       id="confirm_new_password" 
-                       name="confirm_new_password" 
-                       placeholder="repeat new password"
-                       required
-                       minlength="6">
-                <div id="confirmPasswordValidation" class="form-validation"></div>
-            </div>
-
-            <div class="modal-actions">
-                <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn">Change Password</button>
-            </div>
-        </form>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_css %}
@@ -326,123 +273,4 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-// Modal Functions
-function showChangePassword() {
-    document.getElementById('changePasswordModal').style.display = 'flex';
-    document.getElementById('current_password').focus();
-}
-
-function closeModal() {
-    document.getElementById('changePasswordModal').style.display = 'none';
-    // Clear form
-    document.getElementById('changePasswordForm').reset();
-    document.getElementById('passwordValidation').innerHTML = '';
-    document.getElementById('confirmPasswordValidation').innerHTML = '';
-}
-
-// Close modal when clicking outside
-document.getElementById('changePasswordModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeModal();
-    }
-});
-
-// Close modal with Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeModal();
-    }
-});
-
-// Form validation
-document.addEventListener('DOMContentLoaded', function() {
-    // Password strength validation
-    document.getElementById('new_password').addEventListener('input', function() {
-        const password = this.value;
-        const validation = document.getElementById('passwordValidation');
-        
-        if (password.length === 0) {
-            validation.innerHTML = '';
-            return;
-        }
-        
-        if (password.length < 6) {
-            validation.innerHTML = '→ Must be at least 6 characters';
-            validation.style.color = 'var(--error-color)';
-        } else {
-            let strength = 0;
-            let message = '';
-            
-            if (password.length >= 8) strength++;
-            if (/[a-z]/.test(password)) strength++;
-            if (/[A-Z]/.test(password)) strength++;
-            if (/[0-9]/.test(password)) strength++;
-            if (/[^A-Za-z0-9]/.test(password)) strength++;
-            
-            if (strength <= 2) {
-                message = '🛡 Weak password';
-                validation.style.color = 'var(--error-color)';
-            } else if (strength <= 3) {
-                message = '🛡 Good password';
-                validation.style.color = 'var(--warning-color)';
-            } else {
-                message = '🛡 Strong password';
-                validation.style.color = 'var(--success-color)';
-            }
-            
-            validation.innerHTML = message;
-        }
-        
-        // Revalidate confirm password if it has content
-        const confirmField = document.getElementById('confirm_new_password');
-        if (confirmField.value) {
-            confirmField.dispatchEvent(new Event('input'));
-        }
-    });
-    
-    // Confirm password validation
-    document.getElementById('confirm_new_password').addEventListener('input', function() {
-        const password = document.getElementById('new_password').value;
-        const confirmPassword = this.value;
-        const validation = document.getElementById('confirmPasswordValidation');
-        
-        if (confirmPassword.length === 0) {
-            validation.innerHTML = '';
-            return;
-        }
-        
-        if (password === confirmPassword) {
-            validation.innerHTML = '✓ Passwords match';
-            validation.style.color = 'var(--success-color)';
-        } else {
-            validation.innerHTML = '✗ Passwords do not match';
-            validation.style.color = 'var(--error-color)';
-        }
-    });
-    
-    // Form submission validation
-    document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
-        const newPassword = document.getElementById('new_password').value;
-        const confirmPassword = document.getElementById('confirm_new_password').value;
-        
-        if (newPassword !== confirmPassword) {
-            e.preventDefault();
-            alert('[ERROR]: Passwords do not match');
-            return false;
-        }
-        
-        if (newPassword.length < 6) {
-            e.preventDefault();
-            alert('[ERROR]: Password must be at least 6 characters long');
-            return false;
-        }
-        
-        // Add loading state
-        const submitBtn = this.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '→ Changing...';
-    });
-});
-</script>
 {% endblock %}
