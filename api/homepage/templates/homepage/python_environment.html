@@ -1090,6 +1090,19 @@
             scrollbar-color: #00ff00 #111;
         }
 
+        /* Styling for matplotlib plots in terminal */
+        .terminal-output img {
+            display: block;
+            margin: 10px 0;
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            background: #fff;
+            padding: 5px;
+        }
+
         .terminal-output::-webkit-scrollbar {
             width: 8px;
         }
@@ -1339,7 +1352,7 @@
     <div class="loading-screen" id="loading-screen">
         <div class="boot-sequence">
             > INITIALIZING PYTHON TERMINAL v3.11.4<br>
-            > LOADING PYODIDE WEBASSEMBLY ENGINE...<br>
+            > Loading Python Environment...<br>
             > SETTING UP VIRTUAL FILE SYSTEM...<br>
             > CONFIGURING SECURITY RESTRICTIONS...<br>
         </div>
@@ -1514,6 +1527,51 @@ except PermissionError as e:
                 updateLoadingProgress("Loading Pyodide WebAssembly...");
                 pyodide = await loadPyodide();
                 
+                updateLoadingProgress("Installing scientific packages...");
+                // Install popular Python packages
+                await pyodide.loadPackage([
+                    "numpy", 
+                    "pandas", 
+                    "matplotlib", 
+                    "scipy",
+                    "scikit-learn",
+                    "micropip"
+                ]);
+                
+                updateLoadingProgress("Installing additional packages...");
+                // Use micropip to install more packages
+                await pyodide.runPython(`
+import micropip
+await micropip.install(['seaborn', 'requests', 'pillow'])
+                `);
+                
+                updateLoadingProgress("Setting up matplotlib backend...");
+                // Configure matplotlib for web display
+                await pyodide.runPython(`
+import matplotlib
+import matplotlib.pyplot as plt
+import io
+import base64
+
+# Set up matplotlib for web display
+matplotlib.use('Agg')  # Use Anti-Grain Geometry backend for web
+
+# Function to display plots in the terminal
+def show_plot():
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', dpi=150)
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    buf.close()
+    
+    # Display image in terminal
+    print(f'<img src="data:image/png;base64,{img_base64}" style="max-width: 100%; height: auto;" />')
+    plt.close()  # Close the figure to free memory
+
+# Override plt.show() to use our custom display function
+plt.show = show_plot
+                `);
+                
                 updateLoadingProgress("Setting up virtual file system...");
                 await setupVirtualFiles();
                 
@@ -1533,7 +1591,10 @@ builtins.open = restricted_open
                 `);
                 
                 updateLoadingProgress("Environment ready!");
-                updateTerminal("Welcome to python interactive, by Logesh M.s\n\n");
+                updateTerminal("Python Environment Loaded Successfully!\n");
+                updateTerminal("Available packages: numpy, pandas, matplotlib, scipy, scikit-learn, seaborn\n");
+                updateTerminal("Use plt.show() to display plots in the terminal\n");
+                updateTerminal("Example: import matplotlib.pyplot as plt; plt.plot([1,2,3]); plt.show()\n\n");
                 
                 isInitialized = true;
                 
@@ -1544,7 +1605,7 @@ builtins.open = restricted_open
                 
             } catch (error) {
                 updateLoadingProgress("Error loading environment");
-                updateTerminal("❌ Error loading Python environment: " + error.message + "\n");
+                updateTerminal("Error loading Python environment: " + error.message + "\n");
                 // Still show the interface even if there's an error
                 setTimeout(() => {
                     showMainInterface();
@@ -1693,7 +1754,7 @@ def write_file(filename, content, mode='w'):
     with _original_open(filename, mode) as f:
         f.write(content)
     refresh_files()
-    return f"✅ Wrote to {filename} and refreshed file list"
+    return f"Wrote to {filename} and refreshed file list"
 
 def simple_input(prompt=''):
     """Non-blocking input function"""
@@ -1735,7 +1796,7 @@ builtins.get_input = get_input
 builtins.refresh_files = refresh_files
 builtins.write_file = write_file
 
-print("✅ Enhanced input and file system ready!")
+print("Enhanced input and file system ready!")
 print("Usage:")
 print("1. Call input('prompt') - this shows the input field")
 print("2. Type your answer in the input field and press Enter")
@@ -1752,15 +1813,15 @@ print("  write_file('text.txt', 'Hello World!')  # Auto-refreshes")
 try:
     with open('text.txt', 'r') as f:
         content = f.read()
-        print(f"✅ text.txt loaded ({len(content)} characters)")
+        print(f"text.txt loaded ({len(content)} characters)")
     with open('tester.csv', 'r') as f:
         content = f.read()
-        print(f"✅ tester.csv loaded ({len(content)} characters)")
+        print(f"tester.csv loaded ({len(content)} characters)")
     with open('binary.dat', 'r') as f:
         content = f.read()
-        print(f"✅ binary.dat loaded ({len(content)} characters)")
+        print(f"binary.dat loaded ({len(content)} characters)")
 except Exception as e:
-    print(f"❌ Error setting up files: {e}")
+    print(f"Error setting up files: {e}")
             `);
         }
 
@@ -2032,8 +2093,8 @@ except Exception as e:
                 // Get appropriate icon based on file type
                 let icon = '';
                 if (filename.endsWith('.txt')) icon = '';
-                else if (filename.endsWith('.csv')) icon = '📊';
-                else if (filename.endsWith('.dat')) icon = '🔢';
+                else if (filename.endsWith('.csv')) icon = 'CSV';
+                else if (filename.endsWith('.dat')) icon = 'DAT';
                 
                 // Try to get file content and show size
                 try {
@@ -2071,8 +2132,8 @@ except Exception as e:
                     // Get appropriate icon
                     let icon = '';
                     if (filename.endsWith('.txt')) icon = '';
-                    else if (filename.endsWith('.csv')) icon = '📊';
-                    else if (filename.endsWith('.dat')) icon = '🔢';
+                    else if (filename.endsWith('.csv')) icon = 'CSV';
+                    else if (filename.endsWith('.dat')) icon = 'DAT';
                     
                     const content = localStorage.getItem(key);
                     li.innerHTML = `${icon} ${filename} <span style="color: #888">(${content.length} chars)</span>`;
@@ -2593,7 +2654,7 @@ sys.stderr = StringIO()
                 } catch (error) {
                     // Handle execution errors
                     if (error.name === 'PythonError') {
-                        updateTerminal("❌ " + error.message + "\n", true);
+                        updateTerminal("Error: " + error.message + "\n", true);
                     } else {
                         throw error;
                     }
@@ -2620,7 +2681,7 @@ sys.stderr = sys.__stderr__
                 }
 
             } catch (error) {
-                updateTerminal("❌ Error: " + error.message + "\n", true);
+                updateTerminal("Error: " + error.message + "\n", true);
             }
             
             document.getElementById('run-btn').disabled = false;
@@ -2639,7 +2700,14 @@ sys.stderr = sys.__stderr__
         function updateTerminal(message, isError = false) {
             const terminal = document.getElementById('terminal-output');
             const span = document.createElement('span');
-            span.textContent = message;
+            
+            // Check if message contains HTML img tag (for matplotlib plots)
+            if (message.includes('<img')) {
+                span.innerHTML = message; // Use innerHTML for HTML content
+            } else {
+                span.textContent = message; // Use textContent for plain text
+            }
+            
             if (isError) {
                 span.style.color = '#f44';
             }

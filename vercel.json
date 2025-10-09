@@ -6,17 +6,36 @@
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "15mb",
-        "runtime": "python3.12"
+        "runtime": "python3.11"
       }
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/public/static/$1"
+    },
+    {
+      "src": "/media/(.*)",
+      "dest": "/public/media/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "api/mywebsite/wsgi.py"
     }
   ],
   "env": {
-    "DJANGO_SETTINGS_MODULE": "mywebsite.settings"
+    "DJANGO_SETTINGS_MODULE": "mywebsite.settings",
+    "VERCEL": "1",
+    "DEBUG": "False"
+  },
+  "functions": {
+    "api/mywebsite/wsgi.py": {
+      "includeFiles": "api/**"
+    }
   }
 }
