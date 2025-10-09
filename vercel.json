@@ -32,10 +32,5 @@
     "DJANGO_SETTINGS_MODULE": "mywebsite.settings",
     "VERCEL": "1",
     "DEBUG": "False"
-  },
-  "functions": {
-    "api/mywebsite/wsgi.py": {
-      "includeFiles": "api/**"
-    }
   }
 }
