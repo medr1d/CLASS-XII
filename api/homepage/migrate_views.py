@@ -25,7 +25,7 @@ Database Tables Created:
 - django_content_type (for Django admin)
 - And other Django system tables
 
-Your authentication system is now ready!
+🚀 Your authentication system is now ready!
 
 Try creating an account at:
 - /auth/signup/
