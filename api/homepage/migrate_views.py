@@ -18,14 +18,13 @@ def run_migrations(request):
 📋 Migration Output:
 {result}
 
-✅ Database Tables Created:
+Database Tables Created:
 - auth_user (for user accounts)
 - auth_group (for permissions) 
 - django_session (for login sessions)
 - django_content_type (for Django admin)
 - And other Django system tables
-
-🚀 Your authentication system is now ready!
+The authentication system is now ready!
 
 Try creating an account at:
 - /auth/signup/
