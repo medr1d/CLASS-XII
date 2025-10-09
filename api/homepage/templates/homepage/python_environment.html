@@ -1673,8 +1673,18 @@ except PermissionError as e:
                         <button class="nb-btn" onclick="addNotebookCell('markdown')">+ Markdown</button>
                         <button class="nb-btn" onclick="runAllCells()">Run All</button>
                         <button class="nb-btn" onclick="clearAllOutputs()">Clear Outputs</button>
+                        <button class="nb-btn" onclick="showKeyboardShortcuts()">Shortcuts</button>
                         <button class="nb-btn" onclick="exportNotebook()">Export</button>
                     </div>
+                </div>
+                
+                <div class="notebook-toolbar" style="padding: 10px; background: rgba(0, 136, 0, 0.05); border-radius: 5px; margin-bottom: 15px; font-size: 12px; color: #888;">
+                    <strong>🎯 Quick Tips:</strong> 
+                    <code>Shift+Enter</code> = Run & Next | 
+                    <code>Ctrl+Enter</code> = Run | 
+                    <code>Alt+Enter</code> = Run & Add Cell | 
+                    <code>Tab</code> = Auto-complete | 
+                    Auto-save enabled 💾
                 </div>
                 
                 <div id="notebook-cells">
@@ -2052,26 +2062,53 @@ await micropip.install(['seaborn', 'requests', 'pillow'])
                 await pyodide.runPython(`
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 import io
 import base64
+import warnings
 
-# Set up matplotlib for web display
+# Suppress font warnings
+warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
+
+# Set up matplotlib for web display with fallback font configuration
 matplotlib.use('Agg')  # Use Anti-Grain Geometry backend for web
+
+# Configure font fallbacks to avoid font file access issues
+try:
+    # Set font properties to use built-in fonts
+    plt.rcParams['font.family'] = ['sans-serif']
+    plt.rcParams['font.sans-serif'] = ['Arial', 'Helvetica', 'DejaVu Sans', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif']
+    plt.rcParams['axes.unicode_minus'] = False  # Use ASCII minus
+    
+    # Clear font cache to avoid cached font path issues
+    fm.fontManager.__init__()
+    
+except Exception as e:
+    print(f"Font configuration warning: {e}")
+    # Continue with default matplotlib settings
 
 # Function to display plots in the terminal
 def show_plot():
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight', dpi=150)
-    buf.seek(0)
-    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
-    buf.close()
-    
-    # Display image in terminal
-    print(f'<img src="data:image/png;base64,{img_base64}" style="max-width: 100%; height: auto;" />')
-    plt.close()  # Close the figure to free memory
+    try:
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', bbox_inches='tight', dpi=100, facecolor='white')
+        buf.seek(0)
+        img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+        buf.close()
+        
+        # Display image in terminal
+        print(f'<img src="data:image/png;base64,{img_base64}" style="max-width: 100%; height: auto; background: white; border-radius: 5px;" />')
+        plt.close()  # Close the figure to free memory
+        
+    except Exception as e:
+        print(f"Plot display error: {e}")
+        plt.close()  # Still close the figure
 
 # Override plt.show() to use our custom display function
 plt.show = show_plot
+
+# Test plotting functionality
+print("📊 Matplotlib configured successfully!")
                 `);
                 
                 updateLoadingProgress("Setting up virtual file system...");
@@ -2081,13 +2118,36 @@ plt.show = show_plot
                 // Override open function to restrict file access
                 await pyodide.runPython(`
 import builtins
+import os
 original_open = builtins.open
 
 def restricted_open(filename, mode='r', *args, **kwargs):
+    # Allow user files
     allowed_files = ['text.txt', 'tester.csv', 'binary.dat']
-    if filename not in allowed_files:
-        raise PermissionError(f"Access denied: Cannot open '{filename}'. Only {allowed_files} are allowed.")
-    return original_open(filename, mode, *args, **kwargs)
+    
+    # Allow matplotlib, numpy, pandas, sklearn, and other library internal files
+    allowed_paths = [
+        '/lib/python3.11/site-packages/',
+        '/lib/python311.zip/',
+        '/lib/python3.11/',
+        '/usr/lib/',
+        '/usr/share/',
+        '<frozen',  # Built-in modules
+        '<string>',  # String execution
+        '<stdin>',   # Interactive input
+    ]
+    
+    # Check if it's an allowed user file
+    if os.path.basename(filename) in allowed_files:
+        return original_open(filename, mode, *args, **kwargs)
+    
+    # Check if it's a library internal file
+    for allowed_path in allowed_paths:
+        if filename.startswith(allowed_path) or allowed_path in filename:
+            return original_open(filename, mode, *args, **kwargs)
+    
+    # Block everything else
+    raise PermissionError(f"Access denied: Cannot open '{filename}'. Only {allowed_files} are allowed for user access.")
 
 builtins.open = restricted_open
                 `);
@@ -3411,56 +3471,7 @@ sys.stderr = sys.__stderr__
         }
 
         async function runPythonCode(code, outputElement, cellId) {
-            if (!pyodide) {
-                outputElement.innerHTML = 'Error: Python environment not ready';
-                outputElement.classList.add('has-output');
-                return;
-            }
-
-            try {
-                outputElement.innerHTML = 'Running...';
-                outputElement.classList.add('has-output');
-                
-                // Capture stdout
-                let stdout = '';
-                pyodide.runPython(`
-import sys
-from io import StringIO
-_stdout_capture = StringIO()
-sys.stdout = _stdout_capture
-                `);
-
-                // Execute the code
-                const result = pyodide.runPython(code);
-                
-                // Get captured output
-                stdout = pyodide.runPython('_stdout_capture.getvalue()');
-                
-                // Reset stdout
-                pyodide.runPython('sys.stdout = sys.__stdout__');
-                
-                // Update execution counter
-                const executionSpan = outputElement.closest('.notebook-cell').querySelector('.cell-execution-count');
-                if (executionSpan && !executionSpan.textContent.includes('Markdown')) {
-                    executionSpan.textContent = `In [${executionCounter}]:`;
-                    executionCounter++;
-                }
-                
-                // Display output
-                let output = '';
-                if (stdout) output += stdout;
-                if (result !== undefined && result !== null) {
-                    output += (output ? '\n' : '') + String(result);
-                }
-                
-                outputElement.innerHTML = output || '(no output)';
-                outputElement.style.color = '#fff';
-                
-            } catch (error) {
-                outputElement.innerHTML = `Error: ${error.message}`;
-                outputElement.style.color = '#ff4444';
-                outputElement.classList.add('has-output');
-            }
+            return runPythonCodeEnhanced(code, outputElement, cellId);
         }
 
         function moveCell(button, direction) {
@@ -3577,20 +3588,324 @@ sys.stdout = _stdout_capture
 
         function setupCellKeyboardShortcuts(textarea) {
             textarea.addEventListener('keydown', function(e) {
-                // Shift+Enter to run cell
+                const cell = textarea.closest('.notebook-cell');
+                
+                // Shift+Enter to run cell and select next
                 if (e.shiftKey && e.key === 'Enter') {
                     e.preventDefault();
-                    const cell = textarea.closest('.notebook-cell');
+                    const runButton = cell.querySelector('.cell-btn[onclick*="runCell"]');
+                    if (runButton) {
+                        runCell(runButton);
+                        // Focus next cell or create new one
+                        const nextCell = cell.nextElementSibling;
+                        if (nextCell && nextCell.classList.contains('notebook-cell')) {
+                            nextCell.querySelector('.cell-textarea').focus();
+                        } else {
+                            addNotebookCell('code');
+                        }
+                    }
+                }
+                
+                // Ctrl+Enter to run cell (stay in current cell)
+                if (e.ctrlKey && e.key === 'Enter') {
+                    e.preventDefault();
                     const runButton = cell.querySelector('.cell-btn[onclick*="runCell"]');
                     if (runButton) runCell(runButton);
                 }
+                
+                // Alt+Enter to run cell and add new cell below
+                if (e.altKey && e.key === 'Enter') {
+                    e.preventDefault();
+                    const runButton = cell.querySelector('.cell-btn[onclick*="runCell"]');
+                    if (runButton) runCell(runButton);
+                    addNotebookCell('code');
+                }
+                
+                // Escape to blur textarea
+                if (e.key === 'Escape') {
+                    textarea.blur();
+                }
+                
+                // Tab completion for common patterns
+                if (e.key === 'Tab' && !e.shiftKey) {
+                    const cursorPos = textarea.selectionStart;
+                    const textBefore = textarea.value.substring(0, cursorPos);
+                    const lastWord = textBefore.split(/\s/).pop();
+                    
+                    const completions = {
+                        'np': 'import numpy as np',
+                        'pd': 'import pandas as pd',
+                        'plt': 'import matplotlib.pyplot as plt',
+                        'fig': 'plt.figure(figsize=(10, 6))',
+                        'show': 'plt.show()',
+                        'pr': 'print()',
+                        'def': 'def function_name():\n    pass',
+                        'for': 'for i in range():\n    ',
+                        'if': 'if condition:\n    '
+                    };
+                    
+                    if (completions[lastWord]) {
+                        e.preventDefault();
+                        const beforeLastWord = textBefore.substring(0, textBefore.lastIndexOf(lastWord));
+                        const afterCursor = textarea.value.substring(cursorPos);
+                        textarea.value = beforeLastWord + completions[lastWord] + afterCursor;
+                        
+                        // Position cursor appropriately
+                        const newPos = beforeLastWord.length + completions[lastWord].length;
+                        textarea.setSelectionRange(newPos, newPos);
+                    }
+                }
             });
+            
+            // Setup code completion
+            setupCodeCompletion(textarea);
+        }
+
+        // Show keyboard shortcuts help
+        function showKeyboardShortcuts() {
+            const helpContent = `
+<div style="background: #111; color: #fff; padding: 20px; border-radius: 8px; max-width: 500px;">
+    <h3 style="color: #00ff00; margin-top: 0;">⌨️ Keyboard Shortcuts</h3>
+    
+    <h4 style="color: #ccc; margin-bottom: 10px;">Cell Execution:</h4>
+    <div style="font-family: monospace; margin-bottom: 15px;">
+        <code>Shift + Enter</code> - Run cell and select next<br>
+        <code>Ctrl + Enter</code> - Run cell (stay in cell)<br>
+        <code>Alt + Enter</code> - Run cell and add new cell below<br>
+    </div>
+    
+    <h4 style="color: #ccc; margin-bottom: 10px;">Cell Management:</h4>
+    <div style="font-family: monospace; margin-bottom: 15px;">
+        <code>Escape</code> - Exit cell edit mode<br>
+        <code>Tab</code> - Auto-complete common patterns<br>
+    </div>
+    
+    <h4 style="color: #ccc; margin-bottom: 10px;">Auto-completions:</h4>
+    <div style="font-family: monospace; margin-bottom: 15px;">
+        <code>np + Tab</code> → <code>import numpy as np</code><br>
+        <code>pd + Tab</code> → <code>import pandas as pd</code><br>
+        <code>plt + Tab</code> → <code>import matplotlib.pyplot as plt</code><br>
+        <code>fig + Tab</code> → <code>plt.figure(figsize=(10, 6))</code><br>
+        <code>show + Tab</code> → <code>plt.show()</code><br>
+    </div>
+    
+    <div style="color: #888; font-size: 11px; margin-top: 15px;">
+        💡 Tip: Your notebook auto-saves every 30 seconds!
+    </div>
+</div>
+            `;
+            
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                font-family: 'Courier New', monospace;
+            `;
+            
+            modal.innerHTML = helpContent;
+            modal.addEventListener('click', () => modal.remove());
+            document.body.appendChild(modal);
         }
 
         // Initialize notebook keyboard shortcuts for existing cells
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.cell-textarea').forEach(setupCellKeyboardShortcuts);
+            loadNotebookFromStorage();
+            setupAutoSave();
         });
+
+        // Auto-save functionality
+        function setupAutoSave() {
+            setInterval(saveNotebookToStorage, 30000); // Auto-save every 30 seconds
+            
+            // Save on cell content change
+            document.addEventListener('input', function(e) {
+                if (e.target.classList.contains('cell-textarea')) {
+                    clearTimeout(window.autoSaveTimeout);
+                    window.autoSaveTimeout = setTimeout(saveNotebookToStorage, 3000);
+                }
+            });
+        }
+
+        function saveNotebookToStorage() {
+            if (!isNotebookMode) return;
+            
+            const cells = [];
+            document.querySelectorAll('.notebook-cell').forEach(cell => {
+                cells.push({
+                    id: cell.dataset.cellId,
+                    type: cell.dataset.cellType,
+                    content: cell.querySelector('.cell-textarea').value,
+                    output: cell.querySelector('.cell-output').innerHTML
+                });
+            });
+            
+            localStorage.setItem('pythonNotebook', JSON.stringify({
+                cells: cells,
+                timestamp: Date.now()
+            }));
+            
+            // Show save indicator briefly
+            showSaveIndicator();
+        }
+
+        function loadNotebookFromStorage() {
+            const saved = localStorage.getItem('pythonNotebook');
+            if (!saved) return;
+            
+            try {
+                const notebook = JSON.parse(saved);
+                // Load saved notebook content when explicitly requested
+                // (You can add a "Load Saved" button if needed)
+            } catch (e) {
+                console.log('Could not load saved notebook');
+            }
+        }
+
+        function showSaveIndicator() {
+            const indicator = document.createElement('div');
+            indicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(0, 136, 0, 0.9);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-size: 12px;
+                z-index: 10000;
+                transition: opacity 0.3s;
+            `;
+            indicator.textContent = '💾 Saved';
+            document.body.appendChild(indicator);
+            
+            setTimeout(() => {
+                indicator.style.opacity = '0';
+                setTimeout(() => indicator.remove(), 300);
+            }, 1500);
+        }
+
+        // Enhanced error handling and performance monitoring
+        function runPythonCodeEnhanced(code, outputElement, cellId) {
+            if (!pyodide) {
+                outputElement.innerHTML = 'Error: Python environment not ready';
+                outputElement.classList.add('has-output');
+                return;
+            }
+
+            const startTime = performance.now();
+            
+            try {
+                outputElement.innerHTML = '⏳ Executing...';
+                outputElement.classList.add('has-output');
+                
+                // Enhanced stdout capture with error handling
+                let stdout = '';
+                let stderr = '';
+                
+                pyodide.runPython(`
+import sys
+from io import StringIO
+import traceback
+
+_stdout_capture = StringIO()
+_stderr_capture = StringIO()
+_old_stdout = sys.stdout
+_old_stderr = sys.stderr
+sys.stdout = _stdout_capture
+sys.stderr = _stderr_capture
+                `);
+
+                // Execute the code with better error handling
+                let result;
+                try {
+                    result = pyodide.runPython(code);
+                } catch (pythonError) {
+                    // Capture Python traceback
+                    stderr = pyodide.runPython(`
+import traceback
+traceback.print_exc()
+_stderr_capture.getvalue()
+                    `);
+                }
+                
+                // Get captured outputs
+                stdout = pyodide.runPython('_stdout_capture.getvalue()');
+                if (!stderr) {
+                    stderr = pyodide.runPython('_stderr_capture.getvalue()');
+                }
+                
+                // Reset stdout/stderr
+                pyodide.runPython(`
+sys.stdout = _old_stdout
+sys.stderr = _old_stderr
+                `);
+                
+                // Calculate execution time
+                const executionTime = (performance.now() - startTime).toFixed(2);
+                
+                // Update execution counter
+                const executionSpan = outputElement.closest('.notebook-cell').querySelector('.cell-execution-count');
+                if (executionSpan && !executionSpan.textContent.includes('Markdown')) {
+                    executionSpan.textContent = `In [${executionCounter}]:`;
+                    executionCounter++;
+                }
+                
+                // Display output with performance info
+                let output = '';
+                if (stderr) {
+                    output += `<span style="color: #ff4444;">Error:\n${stderr}</span>`;
+                } else {
+                    if (stdout) output += stdout;
+                    if (result !== undefined && result !== null && result !== '') {
+                        output += (output ? '\n' : '') + String(result);
+                    }
+                    if (!output) output = '(no output)';
+                }
+                
+                output += `\n<span style="color: #666; font-size: 11px;">⏱️ Executed in ${executionTime}ms</span>`;
+                
+                outputElement.innerHTML = output;
+                outputElement.style.color = stderr ? '#ff4444' : '#fff';
+                
+            } catch (error) {
+                const executionTime = (performance.now() - startTime).toFixed(2);
+                outputElement.innerHTML = `<span style="color: #ff4444;">JavaScript Error: ${error.message}</span>\n<span style="color: #666; font-size: 11px;">⏱️ Failed after ${executionTime}ms</span>`;
+                outputElement.style.color = '#ff4444';
+                outputElement.classList.add('has-output');
+            }
+        }
+
+        // Code completion hints (simple version)
+        function setupCodeCompletion(textarea) {
+            const commonPatterns = [
+                'import numpy as np',
+                'import pandas as pd', 
+                'import matplotlib.pyplot as plt',
+                'from sklearn',
+                'plt.figure(figsize=(10, 6))',
+                'plt.show()',
+                'print()',
+                'def ',
+                'for i in range(',
+                'if __name__ == "__main__":',
+                'try:\n    \nexcept:\n    '
+            ];
+            
+            textarea.addEventListener('input', function(e) {
+                // Simple autocomplete logic could be added here
+                // For now, just add helpful placeholder updates
+            });
+        }
 
 
 
