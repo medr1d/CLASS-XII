@@ -1423,6 +1423,17 @@
         }
 
         .notebook-cell.selected {
+        /* Expanded cell style */
+        .notebook-cell.expanded {
+            z-index: 100;
+            position: relative;
+            box-shadow: 0 0 24px 4px #2224;
+            background: #fff;
+            width: 98vw !important;
+            left: -2vw;
+            max-width: none !important;
+            color: #222;
+        }
             border-color: #008800;
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
         }
@@ -1702,6 +1713,7 @@ print(data.groupby('category').describe())"
                                 <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
                                 <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
                                 <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand Cell">⤢</button>
                             </div>
                         </div>
                         <div class="cell-input">
@@ -1762,6 +1774,7 @@ plt.show()</textarea>
                                 <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
                                 <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
                                 <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand Cell">⤢</button>
                             </div>
                         </div>
                         <div class="cell-input">
@@ -1831,6 +1844,7 @@ plt.show()</textarea>
                                 <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
                                 <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
                                 <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand Cell">⤢</button>
                             </div>
                         </div>
                         <div class="cell-input">
@@ -1908,6 +1922,7 @@ print(classification_report(y_test, y_pred))</textarea>
                                 <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
                                 <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">C</button>
                                 <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand Cell">⤢</button>
                             </div>
                         </div>
                         <div class="cell-input">
@@ -2348,6 +2363,98 @@ print(f"  Standard deviation: {np.std(word_lengths):.2f}")</textarea>
                         </div>
                         <div class="cell-output" id="output-8"></div>
                     </div>
+
+                    <!-- Interactive Input Demo -->
+                    <div class="notebook-cell code-cell" data-cell-id="9" data-cell-type="code">
+                        <div class="cell-header">
+                            <div class="cell-type">
+                                <span class="cell-execution-count">In [9]:</span>
+                                Code Cell
+                            </div>
+                            <div class="cell-controls">
+                                <button class="cell-btn" onclick="runCell(this)" title="Run Cell">▶</button>
+                                <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
+                                <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
+                                <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
+                                <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand Cell">⤢</button>
+                            </div>
+                        </div>
+                        <div class="cell-input">
+                            <textarea class="cell-textarea"># 🎮 Interactive Input Demo
+# This demonstrates the new input() pausing functionality!
+
+print("🚀 Interactive Input Demo")
+print("=" * 40)
+
+# Basic input example
+name = input("What's your name? ")
+print(f"Hello, {name}! Nice to meet you! 👋")
+
+# Numeric input with validation
+while True:
+    try:
+        age_input = input("How old are you? ")
+        age = int(age_input)
+        if age > 0:
+            break
+        else:
+            print("Please enter a positive number!")
+    except ValueError:
+        print("Please enter a valid number!")
+
+print(f"Wow, you're {age} years old!")
+
+# Interactive calculation
+print("\n🧮 Let's do some math!")
+try:
+    num1 = float(input("Enter first number: "))
+    operator = input("Enter operator (+, -, *, /): ").strip()
+    num2 = float(input("Enter second number: "))
+    
+    if operator == '+':
+        result = num1 + num2
+    elif operator == '-':
+        result = num1 - num2
+    elif operator == '*':
+        result = num1 * num2
+    elif operator == '/':
+        if num2 != 0:
+            result = num1 / num2
+        else:
+            result = "Error: Division by zero!"
+    else:
+        result = "Error: Invalid operator!"
+    
+    print(f"\n📊 Result: {num1} {operator} {num2} = {result}")
+    
+except ValueError:
+    print("Error: Invalid number input!")
+
+# Fun personality test
+print(f"\n🎯 Quick personality test, {name}!")
+color = input("What's your favorite color? ").lower().strip()
+
+color_meanings = {
+    'blue': 'calm and trustworthy',
+    'red': 'passionate and energetic', 
+    'green': 'natural and harmonious',
+    'yellow': 'optimistic and creative',
+    'purple': 'mysterious and imaginative',
+    'orange': 'enthusiastic and friendly',
+    'black': 'sophisticated and strong',
+    'white': 'pure and peaceful'
+}
+
+meaning = color_meanings.get(color, 'unique and special')
+print(f"🎨 {color.title()} lovers are typically {meaning}!")
+
+print(f"\n✨ Thanks for trying the interactive demo, {name}!")
+print("🔄 The input() function now properly pauses execution!")
+print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
+                        </div>
+                        <div class="cell-output" id="output-9"></div>
+                    </div>
                 </div>
                 
                 <button class="add-cell-btn" onclick="addNotebookCell('code')">
@@ -2692,7 +2799,8 @@ def write_file(filename, content, mode='w'):
     return f"Wrote to {filename} and refreshed file list"
 
 def simple_input(prompt=''):
-    """Non-blocking input function"""
+    """Blocking input function that waits for user input"""
+    import time
     try:
         # Print the prompt
         print(prompt, end='', flush=True)
@@ -2700,9 +2808,24 @@ def simple_input(prompt=''):
         # Start the input process
         js.startInput(str(prompt))
         
-        # For now, return a placeholder and tell user what to do
-        print("\\n[Input field shown below - type your answer and press Enter]")
-        return "[Input pending - check terminal below]"
+        # Wait for input with timeout (20 seconds)
+        timeout_seconds = 20
+        start_time = time.time()
+        
+        while not js.checkInput():
+            # Check timeout
+            if time.time() - start_time > timeout_seconds:
+                print(f"\\n[Input timeout after {timeout_seconds} seconds - using empty string]")
+                js.getInputResult()  # Clear the state
+                return ""
+            
+            # Small delay to prevent busy waiting
+            time.sleep(0.1)
+        
+        # Get the result
+        result = js.getInputResult()
+        print(f"\\n[Input received: '{result}']")
+        return result
         
     except Exception as e:
         print(f"Input error: {e}")
@@ -2733,15 +2856,14 @@ builtins.write_file = write_file
 
 print("Enhanced input and file system ready!")
 print("Usage:")
-print("1. Call input('prompt') - this shows the input field")
-print("2. Type your answer in the input field and press Enter")
-print("3. Use get_input() to retrieve your answer")
+print("1. Call input('prompt') - execution pauses until you provide input")
+print("2. Type your answer in the input field that appears and press Enter")
+print("3. Code execution resumes automatically with your input")
 print("4. Use write_file(filename, content) for auto-refresh")
 print("5. Use refresh_files() to manually refresh the file list")
 print("Example:")
-print("  input('What is your name? ')")
-print("  # Type in the input field below")
-print("  name = get_input()  # Gets your typed answer")
+print("  name = input('What is your name? ')  # Pauses here for input")
+print("  print(f'Hello, {name}!')  # Continues after you type and press Enter")
 print("  write_file('text.txt', 'Hello World!')  # Auto-refreshes")
 
 # Verify files exist
@@ -4284,5 +4406,18 @@ sys.stderr = _old_stderr
 
 
     </script>
+        // Cell expansion logic
+        function expandCell(btn) {
+            const cell = btn.closest('.notebook-cell');
+            if (cell.classList.contains('expanded')) {
+                cell.classList.remove('expanded');
+                btn.title = 'Expand Cell';
+                btn.innerText = '⤢';
+            } else {
+                cell.classList.add('expanded');
+                btn.title = 'Collapse Cell';
+                btn.innerText = '⤡';
+            }
+        }
 </body>
 </html>
