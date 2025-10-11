@@ -2515,10 +2515,10 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
                 mainContainer.classList.add('ready');
             }
             
-            // Initialize Ace Editor
+
             initializeAceEditor();
             
-            // Load user data from account
+
             loadUserData();
         }
 
@@ -2529,7 +2529,7 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
             aceEditor.setTheme("ace/theme/monokai");
             aceEditor.session.setMode("ace/mode/python");
             
-            // Configure editor options
+
             aceEditor.setOptions({
                 fontSize: "14px",
                 showPrintMargin: false,
@@ -2538,8 +2538,6 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
                 enableLiveAutocompletion: true,
                 enableSnippets: true
             });
-            
-            // Set default content
             const defaultContent = `import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -2569,13 +2567,13 @@ print(data.groupby('category').describe())`;
 
             aceEditor.setValue(defaultContent, -1);
             
-            // Sync with hidden textarea for compatibility
+
             aceEditor.session.on('change', function() {
                 document.getElementById('code_content').value = aceEditor.getValue();
             });
         }
 
-        // Update all code_content references to use Ace Editor
+
         function getEditorValue() {
             return aceEditor ? aceEditor.getValue() : document.getElementById('code_content').value;
         }
@@ -2587,7 +2585,7 @@ print(data.groupby('category').describe())`;
             document.getElementById('code_content').value = value;
         }
 
-        // User data management
+
         async function saveUserData() {
             const userData = {
                 currentCode: getEditorValue(),
@@ -2600,7 +2598,7 @@ print(data.groupby('category').describe())`;
                 }
             };
 
-            // Get all saved scripts
+
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key.startsWith('python_script_') || key.startsWith('data_file_')) {
@@ -3271,9 +3269,6 @@ except Exception as e:
             currentScript = 'untitled_script';
             document.getElementById('current-file').textContent = currentScript;
             
-            // Update syntax highlighting for the new content
-            updateSyntaxHighlighting();
-            
             updateStatus('New script created');
         }
 
@@ -3550,12 +3545,11 @@ except Exception as e:
             updateStatus('File list refreshed');
         }
 
-        // Enhanced Code Editor Features
+
         function setupCodeEditor() {
             const codeTextarea = document.getElementById('code_content');
-            const syntaxHighlight = document.getElementById('syntax-highlight');
             
-            // Auto-indentation after colon
+
             codeTextarea.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     const cursorPos = this.selectionStart;
@@ -3576,13 +3570,10 @@ except Exception as e:
                         
                         this.value = newText;
                         this.selectionStart = this.selectionEnd = cursorPos + 1 + newIndent.length;
-                        
-                        // Update syntax highlighting
-                        updateSyntaxHighlighting();
                     }
                 }
                 
-                // Tab key handling for proper indentation
+
                 if (e.key === 'Tab') {
                     e.preventDefault();
                     const start = this.selectionStart;
@@ -3593,292 +3584,11 @@ except Exception as e:
                     this.selectionStart = this.selectionEnd = start + 4;
                     
                     // Update syntax highlighting
-                    updateSyntaxHighlighting();
                 }
             });
-            
-            // Update syntax highlighting on input
-            codeTextarea.addEventListener('input', function() {
-                updateSyntaxHighlighting();
-            });
-            
-            // Sync scrolling between textarea and overlay with bounds checking
-            codeTextarea.addEventListener('scroll', function() {
-                // Get the maximum scroll values for both elements
-                const textareaMaxScrollTop = this.scrollHeight - this.clientHeight;
-                const textareaMaxScrollLeft = this.scrollWidth - this.clientWidth;
-                const overlayMaxScrollTop = syntaxHighlight.scrollHeight - syntaxHighlight.clientHeight;
-                const overlayMaxScrollLeft = syntaxHighlight.scrollWidth - syntaxHighlight.clientWidth;
-                
-                // Constrain scroll values to prevent over-scrolling
-                const constrainedScrollTop = Math.min(this.scrollTop, Math.min(textareaMaxScrollTop, overlayMaxScrollTop));
-                const constrainedScrollLeft = Math.min(this.scrollLeft, Math.min(textareaMaxScrollLeft, overlayMaxScrollLeft));
-                
-                // Apply constrained scroll values
-                syntaxHighlight.scrollTop = constrainedScrollTop;
-                syntaxHighlight.scrollLeft = constrainedScrollLeft;
-                
-                // If textarea scrolled beyond safe bounds, correct it
-                if (this.scrollTop > constrainedScrollTop) {
-                    this.scrollTop = constrainedScrollTop;
-                }
-                if (this.scrollLeft > constrainedScrollLeft) {
-                    this.scrollLeft = constrainedScrollLeft;
-                }
-            });
-
-        }
-        
-        function updateSyntaxHighlighting() {
-            const codeTextarea = document.getElementById('code_content');
-            const syntaxHighlight = document.getElementById('syntax-highlight');
-            const code = codeTextarea.value;
-            
-            // Check if current file is a Python file
-            const currentFile = document.getElementById('current-file').textContent;
-            const isPythonFile = currentFile.endsWith('.py') || currentFile === 'untitled_script';
-            
-            if (isPythonFile) {
-                // Apply Python syntax highlighting
-                const highlighted = highlightPythonSyntax(code);
-                syntaxHighlight.innerHTML = highlighted;
-                // Re-setup tooltips after updating content
-                setTimeout(() => setupTooltips(), 10);
-            } else {
-                // For non-Python files, just escape HTML and display as plain text
-                const escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                syntaxHighlight.innerHTML = `<span class="python-default">${escaped}</span>`;
-            }
-            
-            // Ensure both elements have the same scroll dimensions
-            setTimeout(() => {
-                // Force recalculation of scroll dimensions
-                const textareaScrollHeight = codeTextarea.scrollHeight;
-                const overlayScrollHeight = syntaxHighlight.scrollHeight;
-                
-                // If there's a difference, add padding to the shorter one
-                if (textareaScrollHeight !== overlayScrollHeight) {
-                    const maxHeight = Math.max(textareaScrollHeight, overlayScrollHeight);
-                    const heightDiff = maxHeight - Math.min(textareaScrollHeight, overlayScrollHeight);
-                    
-                    if (textareaScrollHeight < overlayScrollHeight) {
-                        // Add invisible content to textarea to match heights
-                        const lines = Math.ceil(heightDiff / (14 * 1.5)); // font-size * line-height
-                        codeTextarea.style.minHeight = maxHeight + 'px';
-                    } else if (overlayScrollHeight < textareaScrollHeight) {
-                        // Add invisible content to overlay to match heights
-                        const invisibleLines = '\n'.repeat(Math.ceil(heightDiff / (14 * 1.5)));
-                        syntaxHighlight.innerHTML += `<span style="opacity: 0;">${invisibleLines}</span>`;
-                    }
-                }
-            }, 0);
-        }
-        
-        function highlightPythonSyntax(code) {
-            // Python keywords
-            const keywords = ['def', 'class', 'if', 'elif', 'else', 'for', 'while', 'try', 'except', 'finally', 
-                             'with', 'as', 'import', 'from', 'return', 'yield', 'break', 'continue', 'pass', 
-                             'and', 'or', 'not', 'in', 'is', 'lambda', 'global', 'nonlocal', 'assert', 'del', 'raise'];
-            
-            // Python built-in functions with descriptions
-            const builtinDescriptions = {
-                'print': 'Prints objects to the text stream file',
-                'input': 'Reads a line from input, converts it to string',
-                'len': 'Returns the length of an object',
-                'range': 'Returns an immutable sequence of numbers',
-                'str': 'Converts value to a string',
-                'int': 'Converts value to an integer',
-                'float': 'Converts value to a floating point number',
-                'list': 'Creates a list object',
-                'dict': 'Creates a dictionary object',
-                'tuple': 'Creates a tuple object',
-                'set': 'Creates a set object',
-                'bool': 'Converts value to Boolean (True or False)',
-                'open': 'Opens a file and returns a file object',
-                'enumerate': 'Returns enumerate object with index and value',
-                'zip': 'Combines multiple iterables into tuples',
-                'map': 'Applies function to every item in iterable',
-                'filter': 'Filters elements based on function',
-                'sorted': 'Returns a new sorted list',
-                'max': 'Returns the largest item',
-                'min': 'Returns the smallest item',
-                'sum': 'Sums items of an iterable',
-                'any': 'Returns True if any element is true',
-                'all': 'Returns True if all elements are true',
-                'isinstance': 'Checks if object is instance of class',
-                'type': 'Returns the type of an object',
-                'hasattr': 'Checks if object has named attribute',
-                'getattr': 'Gets the value of named attribute',
-                'setattr': 'Sets the value of named attribute',
-                'abs': 'Returns absolute value of a number',
-                'round': 'Rounds a number to given precision',
-                'ord': 'Returns Unicode code point of character',
-                'chr': 'Returns character from Unicode code point'
-            };
-            
-            const builtins = Object.keys(builtinDescriptions);
-            
-            // First, escape HTML characters completely
-            let highlighted = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            
-            // Split into lines to process line by line to avoid conflicts
-            const lines = highlighted.split('\n');
-            const processedLines = [];
-            
-            for (let line of lines) {
-                let processedLine = line;
-                
-                // Track if we're inside a string to avoid highlighting inside strings
-                let inString = false;
-                let stringChar = '';
-                let result = '';
-                let i = 0;
-                
-                // First pass: identify and mark strings
-                const stringMarkers = [];
-                i = 0;
-                while (i < processedLine.length) {
-                    const char = processedLine[i];
-                    const next2 = processedLine.substr(i, 3);
-                    
-                    if (!inString && (next2 === '"""' || next2 === "'''")) {
-                        stringMarkers.push({start: i, end: processedLine.indexOf(next2, i + 3) + 3, type: 'multiline'});
-                        i = processedLine.indexOf(next2, i + 3) + 3;
-                        continue;
-                    }
-                    
-                    if (!inString && (char === '"' || char === "'")) {
-                        let endPos = i + 1;
-                        while (endPos < processedLine.length) {
-                            if (processedLine[endPos] === char && processedLine[endPos - 1] !== '\\') {
-                                break;
-                            }
-                            endPos++;
-                        }
-                        if (endPos < processedLine.length) {
-                            stringMarkers.push({start: i, end: endPos + 1, type: 'string'});
-                            i = endPos + 1;
-                            continue;
-                        }
-                    }
-                    i++;
-                }
-                
-                // Mark strings
-                for (let j = stringMarkers.length - 1; j >= 0; j--) {
-                    const marker = stringMarkers[j];
-                    const stringContent = processedLine.substring(marker.start, marker.end);
-                    processedLine = processedLine.substring(0, marker.start) + 
-                                   `<span class="python-string">${stringContent}</span>` + 
-                                   processedLine.substring(marker.end);
-                }
-                
-                // Check for comments (only if not already inside a string span)
-                if (processedLine.includes('#') && !processedLine.includes('<span class="python-string">')) {
-                    const commentIndex = processedLine.indexOf('#');
-                    if (commentIndex >= 0) {
-                        const beforeComment = processedLine.substring(0, commentIndex);
-                        const comment = processedLine.substring(commentIndex);
-                        processedLine = beforeComment + `<span class="python-comment">${comment}</span>`;
-                    }
-                } else if (processedLine.includes('#')) {
-                    // Handle comments that might be outside string spans
-                    processedLine = processedLine.replace(/(#.*$)(?![^<]*<\/span>)/g, '<span class="python-comment">$1</span>');
-                }
-                
-                // Highlight numbers (only outside of spans)
-                processedLine = processedLine.replace(/(?<![\w>])(\b\d+\.?\d*\b)(?![\w<])/g, (match, num, offset, string) => {
-                    // Check if we're inside a span
-                    const beforeMatch = string.substring(0, offset);
-                    const openSpans = (beforeMatch.match(/<span/g) || []).length;
-                    const closeSpans = (beforeMatch.match(/<\/span>/g) || []).length;
-                    if (openSpans > closeSpans) return match; // Inside a span
-                    return `<span class="python-number">${num}</span>`;
-                });
-                
-                // Highlight keywords (only outside of spans)
-                keywords.forEach(keyword => {
-                    const regex = new RegExp(`\\b(${keyword})\\b`, 'g');
-                    processedLine = processedLine.replace(regex, (match, kw, offset, string) => {
-                        // Check if we're inside a span
-                        const beforeMatch = string.substring(0, offset);
-                        const openSpans = (beforeMatch.match(/<span/g) || []).length;
-                        const closeSpans = (beforeMatch.match(/<\/span>/g) || []).length;
-                        if (openSpans > closeSpans) return match; // Inside a span
-                        return `<span class="python-keyword">${kw}</span>`;
-                    });
-                });
-                
-                // Highlight built-in functions (only outside of spans)
-                builtins.forEach(builtin => {
-                    const regex = new RegExp(`\\b(${builtin})\\b`, 'g');
-                    processedLine = processedLine.replace(regex, (match, built, offset, string) => {
-                        // Check if we're inside a span
-                        const beforeMatch = string.substring(0, offset);
-                        const openSpans = (beforeMatch.match(/<span/g) || []).length;
-                        const closeSpans = (beforeMatch.match(/<\/span>/g) || []).length;
-                        if (openSpans > closeSpans) return match; // Inside a span
-                        const description = builtinDescriptions[built] || 'Python built-in function';
-                        return `<span class="python-builtin" data-tooltip="${description}">${built}</span>`;
-                    });
-                });
-                
-                processedLines.push(processedLine);
-            }
-            
-            return processedLines.join('\n');
         }
 
-        // Tooltip functionality for Python functions
-        function setupTooltips() {
-            const syntaxHighlight = document.getElementById('syntax-highlight');
-            let tooltip = null;
 
-            // Create tooltip element if it doesn't exist
-            function createTooltip() {
-                if (!tooltip) {
-                    tooltip = document.createElement('div');
-                    tooltip.className = 'python-tooltip';
-                    document.body.appendChild(tooltip);
-                }
-                return tooltip;
-            }
-
-            // Show tooltip
-            function showTooltip(element, text, x, y) {
-                const tooltipEl = createTooltip();
-                tooltipEl.textContent = text;
-                tooltipEl.style.left = x + 'px';
-                tooltipEl.style.top = (y - 35) + 'px'; // Position above the element
-                tooltipEl.classList.add('show');
-            }
-
-            // Hide tooltip
-            function hideTooltip() {
-                if (tooltip) {
-                    tooltip.classList.remove('show');
-                }
-            }
-
-            // Add event listeners to syntax highlight overlay
-            syntaxHighlight.addEventListener('mouseover', function(e) {
-                if (e.target.classList.contains('python-builtin') && e.target.dataset.tooltip) {
-                    const rect = e.target.getBoundingClientRect();
-                    showTooltip(e.target, e.target.dataset.tooltip, rect.left, rect.top);
-                }
-            });
-
-            syntaxHighlight.addEventListener('mouseout', function(e) {
-                if (e.target.classList.contains('python-builtin')) {
-                    hideTooltip();
-                }
-            });
-
-            // Hide tooltip when scrolling
-            syntaxHighlight.addEventListener('scroll', hideTooltip);
-        }
-
-        // Execute Python code
         async function executeCode() {
             if (!isInitialized) {
                 await initPyodide();
@@ -4003,15 +3713,8 @@ sys.stderr = sys.__stderr__
             }
         });
 
-        // Initialize on page load
         window.addEventListener('load', function() {
             setupCodeEditor();
-            setupTooltips();
-            
-            // Apply syntax highlighting to initial content after a brief delay
-            setTimeout(() => {
-                updateSyntaxHighlighting();
-            }, 100);
             
             loadScriptList();
             // Start initializing Pyodide immediately
@@ -4348,9 +4051,6 @@ sys.stderr = sys.__stderr__
                     }
                 }
             });
-            
-            // Setup code completion
-            setupCodeCompletion(textarea);
         }
 
         // Show keyboard shortcuts help
@@ -4577,27 +4277,7 @@ sys.stderr = _old_stderr
             }
         }
 
-        // Code completion hints (simple version)
-        function setupCodeCompletion(textarea) {
-            const commonPatterns = [
-                'import numpy as np',
-                'import pandas as pd', 
-                'import matplotlib.pyplot as plt',
-                'from sklearn',
-                'plt.figure(figsize=(10, 6))',
-                'plt.show()',
-                'print()',
-                'def ',
-                'for i in range(',
-                'if __name__ == "__main__":',
-                'try:\n    \nexcept:\n    '
-            ];
-            
-            textarea.addEventListener('input', function(e) {
-                // Simple autocomplete logic could be added here
-                // For now, just add helpful placeholder updates
-            });
-        }
+
 
 
 
