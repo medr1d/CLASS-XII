@@ -34,7 +34,7 @@
 
         body {
             font-family: 'Courier New', monospace;
-            background: linear-gradient(180deg, #000000 0%, #1a4d1a 25%, #000000 50%, #1a4d1a 75%, #000000 100%);
+            background: linear-gradient(180deg, #000000 0%, #0a1a0a 15%, #000000 30%, #0a1a0a 45%, #000000 60%, #0a1a0a 75%, #000000 90%, #0a1a0a 100%);
             color: #d4d4d4;
             height: 100vh;
             overflow: hidden;
@@ -101,13 +101,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(180deg, #000000 0%, #1a4d1a 50%, #000000 100%);
+            background: linear-gradient(180deg, #000000 0%, #0a1a0a 50%, #000000 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            color: #00ff00;
+            color: #00cc00;
             overflow: hidden;
         }
 
@@ -432,15 +432,15 @@
         }
 
         .file-manager {
-            background: linear-gradient(180deg, #000000 0%, #1a4d1a 50%, #000000 100%);
-            border-right: 1px solid #00ff00;
+            background: linear-gradient(180deg, #000000 0%, #0a1a0a 20%, #000000 40%, #0a1a0a 60%, #000000 80%, #0a1a0a 100%);
+            border-right: 1px solid #008800;
             padding: 10px;
             overflow-y: auto;
             scrollbar-width: thin;
-            scrollbar-color: #00ff00 #000000;
+            scrollbar-color: #008800 #000000;
             position: relative;
             z-index: 2;
-            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.1);
+            box-shadow: inset 0 0 20px rgba(0, 136, 0, 0.05);
         }
 
         .file-manager::before {
@@ -609,7 +609,7 @@
         .main-area {
             display: flex;
             flex-direction: column;
-            background: linear-gradient(180deg, #000000 0%, #0d2818 50%, #000000 100%);
+            background: linear-gradient(180deg, #000000 0%, #0a1a0a 30%, #000000 70%, #0a1a0a 100%);
         }
 
         .editor-section {
@@ -838,9 +838,9 @@
 
         /* Enhanced Focus and Notebook Mode Buttons */
         .focus-button {
-            background: linear-gradient(45deg, #1a4d1a 0%, #00ff00 50%, #1a4d1a 100%);
-            border: 2px solid #00ff00;
-            color: #000;
+            background: linear-gradient(45deg, #0a1a0a 0%, #008800 50%, #0a1a0a 100%);
+            border: 2px solid #008800;
+            color: #ffffff;
             padding: 8px 16px;
             cursor: pointer;
             border-radius: 6px;
@@ -852,12 +852,12 @@
             overflow: hidden;
             text-transform: uppercase;
             letter-spacing: 1px;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+            box-shadow: 0 0 10px rgba(0, 136, 0, 0.1);
         }
 
         .focus-button:hover {
-            background: linear-gradient(45deg, #00ff00 0%, #88ff88 50%, #00ff00 100%);
-            box-shadow: 0 0 25px rgba(0, 255, 0, 0.5);
+            background: linear-gradient(45deg, #008800 0%, #00aa00 50%, #008800 100%);
+            box-shadow: 0 0 15px rgba(0, 136, 0, 0.3);
             transform: translateY(-2px);
         }
 
@@ -1057,9 +1057,9 @@
         }
 
         .execute-button {
-            background: linear-gradient(45deg, #008800 0%, #00ff00 50%, #008800 100%);
-            border: 1px solid #00ff00;
-            color: #000;
+            background: linear-gradient(45deg, #006600 0%, #008800 50%, #006600 100%);
+            border: 1px solid #008800;
+            color: #ffffff;
             padding: 8px 15px;
             cursor: pointer;
             border-radius: 3px;
@@ -1071,7 +1071,7 @@
             overflow: hidden;
             text-transform: uppercase;
             letter-spacing: 1px;
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 8px rgba(0, 136, 0, 0.2);
         }
 
         .execute-button::before {
@@ -1113,8 +1113,8 @@
 
         .terminal-output {
             flex: 1;
-            background: linear-gradient(180deg, #000000 0%, #0d2818 50%, #000000 100%);
-            color: #00ff00;
+            background: linear-gradient(180deg, #000000 0%, #0a1a0a 30%, #000000 70%, #0a1a0a 100%);
+            color: #00cc00;
             padding: 15px;
             font-family: 'Courier New', monospace;
             font-size: 13px;
@@ -1126,7 +1126,7 @@
             outline: none;
             position: relative;
             z-index: 2;
-            text-shadow: 0 0 2px #00ff00;
+            text-shadow: 0 0 1px #00cc00;
             scrollbar-width: thin;
             scrollbar-color: #00ff00 #111;
         }
@@ -1151,19 +1151,19 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: linear-gradient(180deg, #000000 0%, #1a4d1a 50%, #000000 100%);
+            background: linear-gradient(180deg, #000000 0%, #0a1a0a 50%, #000000 100%);
             border-radius: 5px;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #00ff00 0%, #008800 50%, #00ff00 100%);
+            background: linear-gradient(180deg, #008800 0%, #006600 50%, #008800 100%);
             border-radius: 5px;
-            box-shadow: 0 0 5px #00ff00;
+            box-shadow: 0 0 3px #008800;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #00ff88 0%, #00cc00 50%, #00ff88 100%);
-            box-shadow: 0 0 8px #00ff00;
+            background: linear-gradient(180deg, #00aa00 0%, #008800 50%, #00aa00 100%);
+            box-shadow: 0 0 5px #008800;
         }
 
         .terminal-output::-webkit-scrollbar {
@@ -1171,13 +1171,13 @@
         }
 
         .terminal-output::-webkit-scrollbar-track {
-            background: linear-gradient(180deg, #000000 0%, #0d2818 50%, #000000 100%);
+            background: linear-gradient(180deg, #000000 0%, #0a1a0a 50%, #000000 100%);
         }
 
         .terminal-output::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #00ff00 0%, #008800 50%, #00ff00 100%);
+            background: linear-gradient(180deg, #008800 0%, #006600 50%, #008800 100%);
             border-radius: 4px;
-            box-shadow: 0 0 5px #00ff00;
+            box-shadow: 0 0 3px #008800;
         }
 
         .terminal-output.error {
@@ -1220,15 +1220,15 @@
         }
 
         .file-viewers {
-            background: linear-gradient(180deg, #000000 0%, #1a4d1a 50%, #000000 100%);
-            border-left: 1px solid #00ff00;
+            background: linear-gradient(180deg, #000000 0%, #0a1a0a 20%, #000000 40%, #0a1a0a 60%, #000000 80%, #0a1a0a 100%);
+            border-left: 1px solid #008800;
             padding: 10px;
             overflow-y: auto;
             scrollbar-width: thin;
-            scrollbar-color: #00ff00 #000000;
+            scrollbar-color: #008800 #000000;
             position: relative;
             z-index: 2;
-            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.1);
+            box-shadow: inset 0 0 20px rgba(0, 136, 0, 0.05);
         }
 
         .file-viewers::before {
@@ -1499,7 +1499,7 @@
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            z-index: 99;
+            z-index: 999;
             display: none;
         }
 
@@ -1509,40 +1509,128 @@
 
         /* Expanded cell style */
         .notebook-cell.expanded {
-            z-index: 100;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 50px 10px rgba(0, 255, 0, 0.3);
-            background: linear-gradient(180deg, #000000 0%, #0d2818 50%, #000000 100%);
+            z-index: 1000 !important;
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            box-shadow: 0 0 50px 10px rgba(0, 136, 0, 0.2) !important;
+            background: linear-gradient(180deg, #000000 0%, #0a1a0a 30%, #000000 70%, #0a1a0a 100%) !important;
             width: 95vw !important;
             height: 90vh !important;
             max-width: none !important;
-            color: #00ff00;
-            border: 2px solid #00ff00;
-            border-radius: 10px;
-            overflow: auto;
+            color: #00cc00 !important;
+            border: 2px solid #008800 !important;
+            border-radius: 10px !important;
+            overflow: auto !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
         }
 
         .notebook-cell.expanded .cell-header {
-            background: linear-gradient(90deg, #000000 0%, #1a4d1a 50%, #000000 100%);
-            color: #00ff00;
-            border-bottom: 1px solid #00ff00;
+            background: linear-gradient(90deg, #000000 0%, #0a1a0a 50%, #000000 100%) !important;
+            color: #00cc00 !important;
+            border-bottom: 1px solid #008800 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            z-index: 1001 !important;
+            position: relative !important;
         }
 
         .notebook-cell.expanded .cell-textarea {
-            background: #000000;
-            color: #00ff00;
-            border: 1px solid #008800;
-            text-shadow: 0 0 2px #00ff00;
-            min-height: 70vh;
-            font-size: 16px;
+            background: #000000 !important;
+            color: #00cc00 !important;
+            border: 1px solid #006600 !important;
+            text-shadow: 0 0 1px #00cc00 !important;
+            min-height: 70vh !important;
+            font-size: 16px !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            z-index: 1001 !important;
+            position: relative !important;
         }
 
         .notebook-cell.expanded .cell-output {
-            background: #f9f9f9;
-            color: #333;
+            background: #0a1a0a !important;
+            color: #00cc00 !important;
+            border: 1px solid #006600 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            z-index: 1001 !important;
+            position: relative !important;
+        }
+
+        /* Ensure all child elements of expanded cell are not affected by backdrop blur */
+        .notebook-cell.expanded * {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        /* Custom Ace Editor Green-on-Black Theme Override */
+        .ace_editor {
+            background-color: #000000 !important;
+            color: #00cc00 !important;
+        }
+
+        .ace_gutter {
+            background-color: #0a1a0a !important;
+            color: #008800 !important;
+            border-right: 1px solid #006600 !important;
+        }
+
+        .ace_gutter-active-line {
+            background-color: #0d2d0d !important;
+        }
+
+        .ace_marker-layer .ace_active-line {
+            background-color: #0a1a0a !important;
+        }
+
+        .ace_cursor {
+            color: #00ff00 !important;
+            border-left: 2px solid #00ff00 !important;
+        }
+
+        .ace_selection {
+            background-color: #004400 !important;
+        }
+
+        .ace_keyword {
+            color: #00ff00 !important;
+            font-weight: bold !important;
+        }
+
+        .ace_string {
+            color: #00cc00 !important;
+        }
+
+        .ace_comment {
+            color: #006600 !important;
+            font-style: italic !important;
+        }
+
+        .ace_function {
+            color: #00ff88 !important;
+        }
+
+        .ace_variable {
+            color: #00aa00 !important;
+        }
+
+        .ace_constant.ace_numeric {
+            color: #00dd00 !important;
+        }
+
+        .ace_scrollbar {
+            background-color: #000000 !important;
+        }
+
+        .ace_scrollbar-h {
+            background-color: #000000 !important;
+        }
+
+        .ace_scrollbar-v {
+            background-color: #000000 !important;
         }
 
         .cell-header {
@@ -1566,24 +1654,24 @@
         }
 
         .cell-btn {
-            background: linear-gradient(45deg, #0d2818 0%, #1a4d1a 50%, #0d2818 100%);
-            border: 1px solid #008800;
-            color: #00ff00;
+            background: linear-gradient(45deg, #0a1a0a 0%, #0d2d0d 50%, #0a1a0a 100%);
+            border: 1px solid #006600;
+            color: #00cc00;
             cursor: pointer;
             padding: 6px 8px;
             border-radius: 4px;
             font-size: 12px;
             font-weight: bold;
             transition: all 0.3s ease;
-            box-shadow: 0 0 8px rgba(0, 255, 0, 0.1);
+            box-shadow: 0 0 5px rgba(0, 136, 0, 0.1);
             min-width: 30px;
             text-align: center;
         }
 
         .cell-btn:hover {
-            background: linear-gradient(45deg, #1a4d1a 0%, #00ff00 50%, #1a4d1a 100%);
-            color: #000;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            background: linear-gradient(45deg, #0d2d0d 0%, #008800 50%, #0d2d0d 100%);
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 136, 0, 0.2);
             transform: translateY(-1px);
         }
 
@@ -2618,7 +2706,7 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
 
         function initializeAceEditor() {
             aceEditor = ace.edit("ace-editor");
-            aceEditor.setTheme("ace/theme/solarized_dark");
+            aceEditor.setTheme("ace/theme/terminal");
             aceEditor.session.setMode("ace/mode/python");
             
 
@@ -2628,7 +2716,7 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
                 wrap: true
             });
 
-            // Enable autocompletion and snippets
+            
             ace.require("ace/ext/language_tools");
             aceEditor.setOptions({
                 enableBasicAutocompletion: true,
@@ -2703,7 +2791,7 @@ print(data.groupby('category').describe())`;
                 }
             }
 
-            // Get notebook data
+            
             const notebookData = localStorage.getItem('notebook_data');
             if (notebookData) {
                 userData.notebooks = JSON.parse(notebookData);
@@ -2745,7 +2833,7 @@ print(data.groupby('category').describe())`;
                 console.log('Failed to load from account, checking local backup');
             }
 
-            // Fallback to local storage
+            
             const backupData = localStorage.getItem('user_data_backup');
             if (backupData) {
                 try {
@@ -2759,31 +2847,31 @@ print(data.groupby('category').describe())`;
         }
 
         function restoreUserData(userData) {
-            // Restore current code
+            
             if (userData.currentCode) {
                 setEditorValue(userData.currentCode);
             }
 
-            // Restore scripts
+            
             if (userData.scripts) {
                 for (const [key, value] of Object.entries(userData.scripts)) {
                     localStorage.setItem(key, value);
                 }
             }
 
-            // Restore notebooks
+            
             if (userData.notebooks) {
                 localStorage.setItem('notebook_data', JSON.stringify(userData.notebooks));
             }
 
-            // Restore settings
+            
             if (userData.settings) {
                 if (aceEditor && userData.settings.fontSize) {
                     aceEditor.setFontSize(userData.settings.fontSize + 'px');
                 }
             }
 
-            // Refresh file list
+            
             loadScriptList();
         }
 
@@ -2802,19 +2890,19 @@ print(data.groupby('category').describe())`;
             return cookieValue;
         }
 
-        // Auto-save functionality
+        
         let autoSaveTimer = null;
         function scheduleAutoSave() {
             if (autoSaveTimer) clearTimeout(autoSaveTimer);
-            autoSaveTimer = setTimeout(saveUserData, 5000); // Auto-save after 5 seconds of inactivity
+            autoSaveTimer = setTimeout(saveUserData, 5000); 
         }
 
-        // Save data when page is about to unload
+        
         window.addEventListener('beforeunload', function(event) {
             saveUserData();
         });
 
-        // Schedule auto-save on editor changes
+        
         document.addEventListener('DOMContentLoaded', function() {
             if (aceEditor) {
                 aceEditor.session.on('change', scheduleAutoSave);
@@ -2843,7 +2931,7 @@ await micropip.install([
                 `);
                 
                 updateLoadingProgress("Setting up matplotlib backend...");
-                // Configure matplotlib for web display
+                
                 await pyodide.runPython(`
 import matplotlib
 import matplotlib.pyplot as plt
@@ -2900,7 +2988,7 @@ print("📊 Matplotlib configured successfully!")
                 await setupVirtualFiles();
                 
                 updateLoadingProgress("Configuring file restrictions...");
-                // Override open function to restrict file access
+                
                 await pyodide.runPython(`
 import builtins
 import os
@@ -2944,7 +3032,7 @@ builtins.open = restricted_open
                 
                 isInitialized = true;
                 
-                // Show main interface after a brief delay
+                
                 setTimeout(() => {
                     showMainInterface();
                 }, 500);
@@ -2952,34 +3040,34 @@ builtins.open = restricted_open
             } catch (error) {
                 updateLoadingProgress("Error loading environment");
                 updateTerminal("Error loading Python environment: " + error.message + "\n");
-                // Still show the interface even if there's an error
+                
                 setTimeout(() => {
                     showMainInterface();
                 }, 1000);
             }
         }
 
-        // Setup virtual files with actual server data
+        
         async function setupVirtualFiles() {
-            // Load files from Django server initially to populate Pyodide filesystem
+            
             try {
                 const response = await fetch('/python/get-files/');
                 const filesData = await response.json();
                 
-                // Write files to Pyodide's virtual filesystem
+                
                 pyodide.FS.writeFile('text.txt', filesData.text_content || 'Hello from text.txt!\nThis is a sample text file.');
                 pyodide.FS.writeFile('tester.csv', filesData.csv_content || 'name,age,city\nJohn,25,NYC\nJane,30,LA');
                 pyodide.FS.writeFile('binary.dat', filesData.binary_content || 'Binary data example');
                 
-                // Store binary content and hex data for display
+                
                 globalThis.binaryContent = filesData.binary_content || 'Binary data example';
                 globalThis.binaryHexData = filesData.binary_hex || 'No hex data available';
                 
-                // Load file viewers with initial content
+                
                 updateFileViewers();
                 
             } catch (error) {
-                // Fallback to default content if server fetch fails
+                
                 pyodide.FS.writeFile('text.txt', 'Hello from text.txt!\nThis is a sample text file.');
                 pyodide.FS.writeFile('tester.csv', 'name,age,city\nJohn,25,NYC\nJane,30,LA');
                 pyodide.FS.writeFile('binary.dat', 'Binary data example');
@@ -2988,7 +3076,7 @@ builtins.open = restricted_open
                 updateFileViewers();
             }
             
-            // Create input system using global variables and polling
+            
             globalThis.inputState = {
                 waiting: false,
                 result: null,
@@ -3013,19 +3101,19 @@ builtins.open = restricted_open
             
             globalThis.getInputResult = function() {
                 const result = globalThis.inputState.result;
-                // Reset state
+                
                 globalThis.inputState.waiting = false;
                 globalThis.inputState.result = null;
                 globalThis.inputState.ready = false;
                 return result || "";
             };
             
-            // Make these available to Python
+            
             pyodide.globals.set("startInput", globalThis.startInput);
             pyodide.globals.set("checkInput", globalThis.checkInput);
             pyodide.globals.set("getInputResult", globalThis.getInputResult);
             
-            // Add file refresh function for Python to call
+            
             globalThis.refreshFileList = function() {
                 loadScriptList();
             };
@@ -3186,7 +3274,7 @@ except Exception as e:
             `);
         }
 
-        // Show terminal input prompt - fixed positioning
+        
         function showTerminalInput(prompt, resolver) {
             console.log('showTerminalInput called with prompt:', prompt);
             
@@ -3204,23 +3292,23 @@ except Exception as e:
             
             if (!terminal || !inputContainer || !inputPrompt || !terminalInput) {
                 console.error('Missing required elements!');
-                resolver(''); // Resolve with empty string to avoid hanging
+                resolver(''); 
                 return;
             }
             
-            // FIXED: Add the prompt to terminal first, then position input at the end
+            
             updateTerminal(prompt);
             
-            // Ensure terminal is scrolled to bottom before showing input
+            
             terminal.scrollTop = terminal.scrollHeight;
             
-            // Show input line at the very end
+            
             inputPrompt.textContent = '';
             terminalInput.value = '';
             inputContainer.style.display = 'block';
             terminalInput.style.display = 'inline';
             
-            // Force focus and scroll to input
+            
             setTimeout(() => {
                 terminalInput.focus();
                 terminal.scrollTop = terminal.scrollHeight;
@@ -3231,20 +3319,20 @@ except Exception as e:
             
             console.log('Input setup complete, waiting for user input');
             
-            // Handle input submission
+            
             terminalInput.onkeydown = function(e) {
                 if (e.key === 'Enter') {
                     console.log('Enter pressed, value:', terminalInput.value);
                     const value = terminalInput.value;
                     
-                    // Show the input in terminal
+                    
                     updateTerminal(value + '\n');
                     
-                    // Hide input line
+                    
                     inputContainer.style.display = 'none';
                     isWaitingForInput = false;
                     
-                    // Resolve the promise
+                    
                     if (inputResolver) {
                         console.log('Resolving with value:', value);
                         inputResolver(value);
@@ -3254,7 +3342,7 @@ except Exception as e:
             };
         }
 
-        // Client-side script management
+        
         function saveScript() {
             const scriptName = document.getElementById('filename-input').value.trim();
             if (!scriptName) {
@@ -3262,7 +3350,7 @@ except Exception as e:
                 return;
             }
 
-            // Validate file extension
+            
             const allowedExtensions = ['.py', '.txt', '.csv', '.dat'];
             const hasValidExtension = allowedExtensions.some(ext => scriptName.toLowerCase().endsWith(ext));
             
@@ -3273,13 +3361,13 @@ except Exception as e:
 
             const code = getEditorValue();
             
-            // Determine if it's a Python script or data file
+            
             const isPythonScript = scriptName.toLowerCase().endsWith('.py');
             const storageKey = isPythonScript ? 'python_script_' + scriptName : 'data_file_' + scriptName;
             
             localStorage.setItem(storageKey, code);
             updateStatus(`${isPythonScript ? 'Script' : 'Data file'} '${scriptName}' saved to browser storage`, 'success');
-            scheduleAutoSave(); // Auto-save to account
+            scheduleAutoSave(); 
             loadScriptList();
             currentScript = scriptName;
             document.getElementById('current-file').textContent = currentScript;
@@ -3291,7 +3379,7 @@ except Exception as e:
                 return;
             }
 
-            // Try Python script first, then data file
+            
             let code = localStorage.getItem('python_script_' + selectedScript);
             if (code === null) {
                 code = localStorage.getItem('data_file_' + selectedScript);
@@ -3314,7 +3402,7 @@ except Exception as e:
             }
 
             if (confirm(`Delete file '${selectedScript}'?`)) {
-                // Try to delete from both possible storage keys
+                
                 let deleted = false;
                 if (localStorage.getItem('python_script_' + selectedScript)) {
                     localStorage.removeItem('python_script_' + selectedScript);
@@ -3329,7 +3417,7 @@ except Exception as e:
                     loadScriptList();
                     selectedScript = '';
                     
-                    // Clear editor if this was the current file
+                    
                     if (currentScript === selectedScript) {
                         setEditorValue('');
                         currentScript = '';
@@ -3370,19 +3458,19 @@ except Exception as e:
         }
 
         function selectScript(scriptName) {
-            // Remove previous selection
+            
             document.querySelectorAll('.file-item').forEach(item => {
                 item.classList.remove('selected');
             });
             
-            // Add selection to clicked item
+            
             event.target.classList.add('selected');
             selectedScript = scriptName;
             
-            // Update filename input
+            
             document.getElementById('filename-input').value = scriptName;
             
-            // Automatically load the script content (like selectFile does)
+            
             const code = localStorage.getItem('python_script_' + scriptName);
             if (code !== null) {
                 setEditorValue(code);
@@ -3395,19 +3483,19 @@ except Exception as e:
         }
 
         function selectDataFile(filename) {
-            // Remove previous selection
+            
             document.querySelectorAll('.file-item').forEach(item => {
                 item.classList.remove('selected');
             });
             
-            // Add selection to clicked item
-            event.target.classList.add('selected');
-            selectedScript = filename; // Use same variable for simplicity
             
-            // Update filename input
+            event.target.classList.add('selected');
+            selectedScript = filename; 
+            
+            
             document.getElementById('filename-input').value = filename;
             
-            // Load the data file content
+            
             const content = localStorage.getItem('data_file_' + filename);
             if (content !== null) {
                 setEditorValue(content);
@@ -3423,14 +3511,14 @@ except Exception as e:
             const fileList = document.getElementById('file-list');
             fileList.innerHTML = '';
             
-            // Add a section for data files (server files + user uploaded files)
+            
             const dataSection = document.createElement('li');
             dataSection.innerHTML = '<strong>Data Files:</strong>';
             dataSection.style.color = '#00ff00';
             dataSection.style.marginBottom = '10px';
             fileList.appendChild(dataSection);
             
-            // Show the allowed server files
+            
             const allowedFiles = ['text.txt', 'tester.csv', 'binary.dat'];
             allowedFiles.forEach(filename => {
                 const li = document.createElement('li');
@@ -3439,13 +3527,13 @@ except Exception as e:
                 li.style.padding = '5px';
                 li.style.marginLeft = '15px';
                 
-                // Get appropriate icon based on file type
+                
                 let icon = '';
                 if (filename.endsWith('.txt')) icon = '';
                 else if (filename.endsWith('.csv')) icon = 'CSV';
                 else if (filename.endsWith('.dat')) icon = 'DAT';
                 
-                // Try to get file content and show size
+                
                 try {
                     if (pyodide && pyodide.FS) {
                         try {
@@ -3465,7 +3553,7 @@ except Exception as e:
                 fileList.appendChild(li);
             });
             
-            // Show user-saved data files
+            
             let hasDataFiles = false;
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -3478,7 +3566,7 @@ except Exception as e:
                     li.style.padding = '5px';
                     li.style.marginLeft = '15px';
                     
-                    // Get appropriate icon
+                    
                     let icon = '';
                     if (filename.endsWith('.txt')) icon = '';
                     else if (filename.endsWith('.csv')) icon = 'CSV';
@@ -3491,19 +3579,19 @@ except Exception as e:
                 }
             }
             
-            // Add separator
+            
             const separator = document.createElement('li');
             separator.innerHTML = '<hr style="border-color: #333; margin: 10px 0;">';
             fileList.appendChild(separator);
             
-            // Add section for Python scripts
+            
             const scriptSection = document.createElement('li');
             scriptSection.innerHTML = '<strong>Saved Scripts:</strong>';
             scriptSection.style.color = '#00ff00';
             scriptSection.style.marginBottom = '10px';
             fileList.appendChild(scriptSection);
             
-            // Get all saved Python scripts from localStorage
+            
             let hasScripts = false;
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -3532,30 +3620,30 @@ except Exception as e:
             }
         }
 
-        // Function to update file viewers with current Pyodide content
+        
         function updateFileViewers() {
             if (!pyodide || !pyodide.FS) return;
             
             try {
-                // Update text.txt viewer
+                
                 const textContent = pyodide.FS.readFile('text.txt', { encoding: 'utf8' });
                 document.getElementById('text-content').textContent = textContent;
                 
-                // Update tester.csv viewer
+                
                 const csvContent = pyodide.FS.readFile('tester.csv', { encoding: 'utf8' });
                 document.getElementById('csv-content').textContent = csvContent;
                 
-                // Update binary.dat viewer with special handling
+                
                 try {
-                    // First try to use the stored parsed content from server
+                    
                     if (globalThis.binaryContent && globalThis.binaryContent !== 'Binary data example') {
                         document.getElementById('binary-content').textContent = globalThis.binaryContent;
                     } else {
-                        // Fallback to client-side parsing if needed
+                        
                         const binaryData = pyodide.FS.readFile('binary.dat');
                         let binaryDisplay = '';
                         
-                        // Try to parse as pickle data using Python
+                        
                         try {
                             const pickleResult = pyodide.runPython(`
 import pickle
@@ -3579,7 +3667,7 @@ except Exception as e:
     f"Error parsing binary data: {str(e)}"
                             `);
                             binaryDisplay = pickleResult;
-                            // Update the stored content
+                            
                             globalThis.binaryContent = binaryDisplay;
                         } catch (e) {
                             binaryDisplay = `Binary file (${binaryData.length} bytes) - parsing error: ${e.message}`;
@@ -3588,7 +3676,7 @@ except Exception as e:
                         document.getElementById('binary-content').textContent = binaryDisplay;
                     }
                     
-                    // Show hex data if available
+                    
                     if (globalThis.binaryHexData && globalThis.binaryHexData !== 'No hex data available') {
                         document.getElementById('binary-hex').textContent = globalThis.binaryHexData;
                         document.getElementById('binary-hex').style.display = 'block';
@@ -3600,14 +3688,14 @@ except Exception as e:
                 
             } catch (error) {
                 console.log('Error updating file viewers:', error);
-                // Set default content if files don't exist
+                
                 document.getElementById('text-content').textContent = 'File not found or empty';
                 document.getElementById('csv-content').textContent = 'File not found or empty';
                 document.getElementById('binary-content').textContent = 'File not found or empty';
             }
         }
 
-        // Add function to select virtual files
+        
         function selectFile(filename) {
             try {
                 if (pyodide && pyodide.FS) {
@@ -3615,17 +3703,17 @@ except Exception as e:
                     setEditorValue(content);
                     document.getElementById('filename-input').value = filename;
                     
-                    // Update current file display to show the actual filename
+                    
                     document.getElementById('current-file').textContent = filename;
                     
                     updateStatus(`Loaded: ${filename} (${content.length} characters)`);
                     
 
                     
-                    // Update file viewers to show current content
+                    
                     updateFileViewers();
                     
-                    // Highlight selected file
+                    
                     document.querySelectorAll('.file-item').forEach(item => {
                         item.classList.remove('selected');
                     });
@@ -3636,7 +3724,7 @@ except Exception as e:
             }
         }
 
-        // Add file refresh function
+        
         function refreshFiles() {
             loadScriptList();
             updateStatus('File list refreshed');
@@ -3653,15 +3741,15 @@ except Exception as e:
                     const textBeforeCursor = this.value.substring(0, cursorPos);
                     const currentLine = textBeforeCursor.split('\n').pop();
                     
-                    // Check if current line ends with colon (ignoring whitespace)
+                    
                     if (currentLine.trim().endsWith(':')) {
                         e.preventDefault();
                         
-                        // Count existing indentation of current line
+                        
                         const indentMatch = currentLine.match(/^(\s*)/);
                         const currentIndent = indentMatch ? indentMatch[1] : '';
                         
-                        // Add new line with additional 4 spaces
+                        
                         const newIndent = currentIndent + '    ';
                         const newText = this.value.substring(0, cursorPos) + '\n' + newIndent + this.value.substring(cursorPos);
                         
@@ -3739,7 +3827,7 @@ sys.stderr = sys.__stderr__
             
             document.getElementById('run-btn').disabled = false;
             
-            // Save user data after code execution
+            
             if (isLoggedIn) {
                 saveUserData();
             }
@@ -3890,7 +3978,7 @@ sys.stderr = sys.__stderr__
             const cellLabel = isMarkdown ? 'Markdown Cell' : 'Code Cell';
             const executionLabel = isMarkdown ? '' : `In [${cellId}]:`;
             const placeholder = isMarkdown ? 
-                '# Markdown Cell\n\nWrite markdown here...\n\n- **Bold text**\n- *Italic text*\n- `code`\n- [Links](https://example.com)\n\n```python\n# Code blocks\nprint("Hello World")\n```' :
+                '# Markdown Cell\n\nWrite markdown here...\n\n- **Bold text**\n- *Italic text*\n- `code`\n- [Links](https://example.com)' :
                 '# Write your Python code here\n# Press Shift+Enter to run this cell\n\nprint("Hello from cell ' + cellId + '!")';
 
             return `
@@ -4185,9 +4273,9 @@ sys.stderr = sys.__stderr__
         });
 
         function setupAutoSave() {
-            setInterval(saveNotebookToStorage, 30000); // Auto-save every 30 seconds
+            setInterval(saveNotebookToStorage, 30000); 
             
-            // Save on cell content change
+            
             document.addEventListener('input', function(e) {
                 if (e.target.classList.contains('cell-textarea')) {
                     clearTimeout(window.autoSaveTimeout);
@@ -4214,7 +4302,7 @@ sys.stderr = sys.__stderr__
                 timestamp: Date.now()
             }));
             
-            // Show save indicator briefly
+            
             showSaveIndicator();
         }
 
@@ -4224,8 +4312,8 @@ sys.stderr = sys.__stderr__
             
             try {
                 const notebook = JSON.parse(saved);
-                // Load saved notebook content when explicitly requested
-                // (You can add a "Load Saved" button if needed)
+                
+                
             } catch (e) {
                 console.log('Could not load saved notebook');
             }
@@ -4254,7 +4342,7 @@ sys.stderr = sys.__stderr__
             }, 1500);
         }
 
-        // Enhanced error handling and performance monitoring
+        
         function runPythonCodeEnhanced(code, outputElement, cellId) {
             if (!pyodide) {
                 outputElement.innerHTML = 'Error: Python environment not ready';
@@ -4268,7 +4356,7 @@ sys.stderr = sys.__stderr__
                 outputElement.innerHTML = '⏳ Executing...';
                 outputElement.classList.add('has-output');
                 
-                // Enhanced stdout capture with error handling
+                
                 let stdout = '';
                 let stderr = '';
                 
@@ -4285,12 +4373,12 @@ sys.stdout = _stdout_capture
 sys.stderr = _stderr_capture
                 `);
 
-                // Execute the code with better error handling
+                
                 let result;
                 try {
                     result = pyodide.runPython(code);
                 } catch (pythonError) {
-                    // Capture Python traceback
+                    
                     stderr = pyodide.runPython(`
 import traceback
 traceback.print_exc()
@@ -4298,29 +4386,29 @@ _stderr_capture.getvalue()
                     `);
                 }
                 
-                // Get captured outputs
+                
                 stdout = pyodide.runPython('_stdout_capture.getvalue()');
                 if (!stderr) {
                     stderr = pyodide.runPython('_stderr_capture.getvalue()');
                 }
                 
-                // Reset stdout/stderr
+                
                 pyodide.runPython(`
 sys.stdout = _old_stdout
 sys.stderr = _old_stderr
                 `);
                 
-                // Calculate execution time
+                
                 const executionTime = (performance.now() - startTime).toFixed(2);
                 
-                // Update execution counter
+                
                 const executionSpan = outputElement.closest('.notebook-cell').querySelector('.cell-execution-count');
                 if (executionSpan && !executionSpan.textContent.includes('Markdown')) {
                     executionSpan.textContent = `In [${executionCounter}]:`;
                     executionCounter++;
                 }
                 
-                // Display output with performance info
+                
                 let output = '';
                 if (stderr) {
                     output += `<span style="color: #ff4444;">Error:\n${stderr}</span>`;
@@ -4345,7 +4433,7 @@ sys.stderr = _old_stderr
             }
         }
 
-        // Cell expansion logic
+        
         function expandCell(btn) {
             const cell = btn.closest('.notebook-cell');
             const overlay = document.getElementById('cell-overlay');
@@ -4355,17 +4443,17 @@ sys.stderr = _old_stderr
                 overlay.classList.remove('active');
                 btn.title = 'Expand Cell';
                 btn.innerText = '⤢';
-                document.body.style.overflow = 'hidden'; // Restore original overflow
+                document.body.style.overflow = 'hidden'; 
             } else {
                 cell.classList.add('expanded');
                 overlay.classList.add('active');
                 btn.title = 'Collapse Cell';
                 btn.innerText = '⤡';
-                document.body.style.overflow = 'hidden'; // Prevent scrolling when expanded
+                document.body.style.overflow = 'hidden'; 
             }
         }
 
-        // Close expanded cell when clicking on overlay
+        
         document.addEventListener('DOMContentLoaded', function() {
             const overlay = document.getElementById('cell-overlay');
             if (overlay) {
