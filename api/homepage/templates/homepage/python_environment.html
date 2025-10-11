@@ -35,10 +35,10 @@
         body {
             font-family: 'Courier New', monospace;
             background: 
-                linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #000000 50%, #0a0a0a 75%, #000000 100%),
+                linear-gradient(135deg, #1e1e1e 0%, #252526 25%, #1e1e1e 50%, #252526 75%, #1e1e1e 100%),
                 radial-gradient(circle at 25% 25%, rgba(0, 136, 0, 0.02) 0%, transparent 50%),
                 radial-gradient(circle at 75% 75%, rgba(0, 136, 0, 0.02) 0%, transparent 50%);
-            color: #fff;
+            color: #d4d4d4;
             height: 100vh;
             overflow: hidden;
             position: relative;
@@ -104,13 +104,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: #000;
+            background: #1e1e1e;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            color: #008800;
+            color: #4ec9b0;
             overflow: hidden;
         }
 
@@ -1025,8 +1025,8 @@
         }
 
         .execute-button {
-            background: #333;
-            border: 1px solid #555;
+            background: #0e639c;
+            border: 1px solid #14a085;
             color: #fff;
             padding: 8px 15px;
             cursor: pointer;
@@ -1079,8 +1079,8 @@
 
         .terminal-output {
             flex: 1;
-            background: #000;
-            color: #0f0;
+            background: #1e1e1e;
+            color: #d4d4d4;
             padding: 15px;
             font-family: 'Courier New', monospace;
             font-size: 13px;
@@ -1092,7 +1092,7 @@
             outline: none;
             position: relative;
             z-index: 2;
-            text-shadow: 0 0 5px #00ff00;
+            text-shadow: none;
             scrollbar-width: thin;
             scrollbar-color: #00ff00 #111;
         }
@@ -2533,7 +2533,12 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
             aceEditor.setOptions({
                 fontSize: "14px",
                 showPrintMargin: false,
-                wrap: true,
+                wrap: true
+            });
+
+            // Enable autocompletion and snippets
+            ace.require("ace/ext/language_tools");
+            aceEditor.setOptions({
                 enableBasicAutocompletion: true,
                 enableLiveAutocompletion: true,
                 enableSnippets: true
@@ -3579,11 +3584,8 @@ except Exception as e:
                     const start = this.selectionStart;
                     const end = this.selectionEnd;
                     
-                    // Insert 4 spaces instead of tab
                     this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
                     this.selectionStart = this.selectionEnd = start + 4;
-                    
-                    // Update syntax highlighting
                 }
             });
         }
@@ -3604,7 +3606,6 @@ except Exception as e:
             document.getElementById('run-btn').disabled = true;
             
             try {
-                // Set up stdout/stderr capture
                 await pyodide.runPython(`
 import sys
 from io import StringIO
@@ -3612,11 +3613,9 @@ sys.stdout = StringIO()
 sys.stderr = StringIO()
                 `);
 
-                // Run user code - this needs to handle async input
                 try {
                     const result = await pyodide.runPythonAsync(code);
                 } catch (error) {
-                    // Handle execution errors
                     if (error.name === 'PythonError') {
                         updateTerminal("Error: " + error.message + "\n", true);
                     } else {
@@ -3624,11 +3623,9 @@ sys.stderr = StringIO()
                     }
                 }
 
-                // Get output
                 const stdout = await pyodide.runPython("sys.stdout.getvalue()");
                 const stderr = await pyodide.runPython("sys.stderr.getvalue()");
 
-                // Reset stdout/stderr
                 await pyodide.runPython(`
 sys.stdout = sys.__stdout__
 sys.stderr = sys.__stderr__
@@ -3650,14 +3647,17 @@ sys.stderr = sys.__stderr__
             
             document.getElementById('run-btn').disabled = false;
             
-            // Auto-refresh file list and file viewers after code execution
+            // Save user data after code execution
+            if (isLoggedIn) {
+                saveUserData();
+            }
+            
             loadScriptList();
             updateFileViewers();
         }
 
         function clearTerminal() {
             document.getElementById('terminal-output').textContent = '';
-            // Show a stylish notification instead of text in terminal
             updateStatus('Terminal cleared', 'success');
         }
 
@@ -3665,11 +3665,10 @@ sys.stderr = sys.__stderr__
             const terminal = document.getElementById('terminal-output');
             const span = document.createElement('span');
             
-            // Check if message contains HTML img tag (for matplotlib plots)
             if (message.includes('<img')) {
-                span.innerHTML = message; // Use innerHTML for HTML content
+                span.innerHTML = message; 
             } else {
-                span.textContent = message; // Use textContent for plain text
+                span.textContent = message; 
             }
             
             if (isError) {
@@ -3692,7 +3691,6 @@ sys.stderr = sys.__stderr__
             }
         }
 
-        // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'Enter') {
                 e.preventDefault();
@@ -3705,7 +3703,7 @@ sys.stderr = sys.__stderr__
             }
         });
 
-        // Update current file display when filename changes
+
         document.getElementById('filename-input').addEventListener('input', function(e) {
             if (e.target.value.trim()) {
                 currentScript = e.target.value.trim();
@@ -3717,11 +3715,9 @@ sys.stderr = sys.__stderr__
             setupCodeEditor();
             
             loadScriptList();
-            // Start initializing Pyodide immediately
             initPyodide();
         });
 
-        // Fullscreen toggle functionality
         let isFocusMode = false;
 
         function toggleFocusMode() {
@@ -3729,7 +3725,6 @@ sys.stderr = sys.__stderr__
             const body = document.body;
             
             if (!isFocusMode) {
-                // Enter focus mode
                 body.classList.add('focus-mode');
                 document.querySelectorAll('.file-manager, .file-viewers, .terminal-section').forEach(el => {
                     el.classList.add('background-blur');
@@ -3738,7 +3733,6 @@ sys.stderr = sys.__stderr__
                 focusBtn.title = 'Exit focus mode';
                 document.getElementById('code_content').focus();
             } else {
-                // Exit focus mode
                 body.classList.remove('focus-mode');
                 document.querySelectorAll('.file-manager, .file-viewers, .terminal-section').forEach(el => {
                     el.classList.remove('background-blur');
@@ -3750,7 +3744,6 @@ sys.stderr = sys.__stderr__
             isFocusMode = !isFocusMode;
         }
 
-        // Notebook Mode Functionality
         let isNotebookMode = false;
         let cellCounter = 8;
         let executionCounter = 1;
@@ -3760,17 +3753,14 @@ sys.stderr = sys.__stderr__
             const body = document.body;
             
             if (!isNotebookMode) {
-                // Enter notebook mode
                 body.classList.add('notebook-mode');
                 notebookBtn.innerHTML = 'EDITOR';
                 notebookBtn.title = 'Switch to Editor Mode';
                 updateCellCount();
                 
-                // Focus first cell
                 const firstCell = document.querySelector('.cell-textarea');
                 if (firstCell) firstCell.focus();
             } else {
-                // Exit notebook mode
                 body.classList.remove('notebook-mode');
                 notebookBtn.innerHTML = 'NOTEBOOK';
                 notebookBtn.title = 'Jupyter-style Notebook Mode';
@@ -3791,7 +3781,6 @@ sys.stderr = sys.__stderr__
             cellsContainer.appendChild(cell);
             updateCellCount();
             
-            // Focus the new cell
             const textarea = cell.querySelector('.cell-textarea');
             if (textarea) {
                 textarea.focus();
@@ -3844,7 +3833,6 @@ sys.stderr = sys.__stderr__
         }
 
         function renderMarkdown(markdown, outputElement) {
-            // Simple markdown renderer
             let html = markdown
                 .replace(/^# (.*$)/gim, '<h1>$1</h1>')
                 .replace(/^## (.*$)/gim, '<h2>$1</h2>')
@@ -3857,7 +3845,6 @@ sys.stderr = sys.__stderr__
                 .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
                 .replace(/\n/g, '<br>');
 
-            // Handle code blocks
             html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
             
             outputElement.innerHTML = html;
@@ -3899,20 +3886,16 @@ sys.stderr = sys.__stderr__
             const currentType = cell.dataset.cellType;
             const newType = currentType === 'code' ? 'markdown' : 'code';
             
-            // Clear output
             const output = cell.querySelector('.cell-output');
             output.innerHTML = '';
             output.classList.remove('has-output');
             
-            // Update cell
             cell.dataset.cellType = newType;
             cell.className = `notebook-cell ${newType}-cell`;
             
-            // Update button text
             button.textContent = newType === 'code' ? 'M' : 'C';
             button.title = newType === 'code' ? 'Convert to Markdown' : 'Convert to Code';
             
-            // Update cell header
             const cellTypeSpan = cell.querySelector('.cell-type');
             const executionSpan = cellTypeSpan.querySelector('.cell-execution-count');
             const isMarkdown = newType === 'markdown';
@@ -3985,13 +3968,11 @@ sys.stderr = sys.__stderr__
             textarea.addEventListener('keydown', function(e) {
                 const cell = textarea.closest('.notebook-cell');
                 
-                // Shift+Enter to run cell and select next
                 if (e.shiftKey && e.key === 'Enter') {
                     e.preventDefault();
                     const runButton = cell.querySelector('.cell-btn[onclick*="runCell"]');
                     if (runButton) {
                         runCell(runButton);
-                        // Focus next cell or create new one
                         const nextCell = cell.nextElementSibling;
                         if (nextCell && nextCell.classList.contains('notebook-cell')) {
                             nextCell.querySelector('.cell-textarea').focus();
@@ -4001,14 +3982,12 @@ sys.stderr = sys.__stderr__
                     }
                 }
                 
-                // Ctrl+Enter to run cell (stay in current cell)
                 if (e.ctrlKey && e.key === 'Enter') {
                     e.preventDefault();
                     const runButton = cell.querySelector('.cell-btn[onclick*="runCell"]');
                     if (runButton) runCell(runButton);
                 }
                 
-                // Alt+Enter to run cell and add new cell below
                 if (e.altKey && e.key === 'Enter') {
                     e.preventDefault();
                     const runButton = cell.querySelector('.cell-btn[onclick*="runCell"]');
@@ -4016,12 +3995,10 @@ sys.stderr = sys.__stderr__
                     addNotebookCell('code');
                 }
                 
-                // Escape to blur textarea
                 if (e.key === 'Escape') {
                     textarea.blur();
                 }
                 
-                // Tab completion for common patterns
                 if (e.key === 'Tab' && !e.shiftKey) {
                     const cursorPos = textarea.selectionStart;
                     const textBefore = textarea.value.substring(0, cursorPos);
@@ -4045,7 +4022,6 @@ sys.stderr = sys.__stderr__
                         const afterCursor = textarea.value.substring(cursorPos);
                         textarea.value = beforeLastWord + completions[lastWord] + afterCursor;
                         
-                        // Position cursor appropriately
                         const newPos = beforeLastWord.length + completions[lastWord].length;
                         textarea.setSelectionRange(newPos, newPos);
                     }
@@ -4053,7 +4029,6 @@ sys.stderr = sys.__stderr__
             });
         }
 
-        // Show keyboard shortcuts help
         function showKeyboardShortcuts() {
             const helpContent = `
 <div style="background: #111; color: #fff; padding: 20px; border-radius: 8px; max-width: 500px;">
@@ -4087,7 +4062,6 @@ sys.stderr = sys.__stderr__
 </div>
             `;
             
-            // Create modal
             const modal = document.createElement('div');
             modal.style.cssText = `
                 position: fixed;
@@ -4108,14 +4082,12 @@ sys.stderr = sys.__stderr__
             document.body.appendChild(modal);
         }
 
-        // Initialize notebook keyboard shortcuts for existing cells
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.cell-textarea').forEach(setupCellKeyboardShortcuts);
             loadNotebookFromStorage();
             setupAutoSave();
         });
 
-        // Auto-save functionality
         function setupAutoSave() {
             setInterval(saveNotebookToStorage, 30000); // Auto-save every 30 seconds
             
@@ -4277,12 +4249,6 @@ sys.stderr = _old_stderr
             }
         }
 
-
-
-
-
-
-    </script>
         // Cell expansion logic
         function expandCell(btn) {
             const cell = btn.closest('.notebook-cell');
@@ -4296,5 +4262,7 @@ sys.stderr = _old_stderr
                 btn.innerText = '⤡';
             }
         }
+
+    </script>
 </body>
 </html>
