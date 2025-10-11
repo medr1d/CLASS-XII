@@ -447,11 +447,107 @@ def get_files(request):
             'saved_files': []
         })
 
+@login_required
+@csrf_exempt
+def save_user_data(request):
+    if request.method == 'POST':
+        try:
+            user_data = json.loads(request.body)
+            user = request.user
+            
+            # Save current code
+            if user_data.get('currentCode'):
+                session, created = PythonCodeSession.objects.get_or_create(
+                    user=user,
+                    filename='main.py',
+                    defaults={'code_content': user_data['currentCode']}
+                )
+                if not created:
+                    session.code_content = user_data['currentCode']
+                    session.save()
+            
+            # Save scripts
+            if user_data.get('scripts'):
+                for key, content in user_data['scripts'].items():
+                    if key.startswith('python_script_'):
+                        filename = key.replace('python_script_', '')
+                        session, created = PythonCodeSession.objects.get_or_create(
+                            user=user,
+                            filename=filename,
+                            defaults={'code_content': content}
+                        )
+                        if not created:
+                            session.code_content = content
+                            session.save()
+                    elif key.startswith('data_file_'):
+                        filename = key.replace('data_file_', '')
+                        file_obj, created = UserFiles.objects.get_or_create(
+                            user=user,
+                            filename=filename,
+                            defaults={'content': content, 'is_system_file': False}
+                        )
+                        if not created:
+                            file_obj.content = content
+                            file_obj.save()
+            
+            # Save notebook data to user profile or create a new model for it
+            if user_data.get('notebooks'):
+                # For now, save as a special PythonCodeSession
+                session, created = PythonCodeSession.objects.get_or_create(
+                    user=user,
+                    filename='_notebook_data.json',
+                    defaults={'code_content': json.dumps(user_data['notebooks'])}
+                )
+                if not created:
+                    session.code_content = json.dumps(user_data['notebooks'])
+                    session.save()
+            
+            return JsonResponse({'status': 'success', 'message': 'Data saved successfully'})
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
 
-
-
-
-
-
-
-
+@login_required
+def load_user_data(request):
+    try:
+        user = request.user
+        user_data = {
+            'currentCode': '',
+            'scripts': {},
+            'notebooks': {},
+            'settings': {
+                'theme': 'monokai',
+                'fontSize': 14,
+                'lastLoaded': timezone.now().isoformat()
+            }
+        }
+        
+        # Load current code (main.py)
+        try:
+            main_session = PythonCodeSession.objects.get(user=user, filename='main.py')
+            user_data['currentCode'] = main_session.code_content
+        except PythonCodeSession.DoesNotExist:
+            pass
+        
+        # Load all Python scripts
+        for session in PythonCodeSession.objects.filter(user=user):
+            if session.filename != 'main.py' and not session.filename.endswith('.json'):
+                user_data['scripts'][f'python_script_{session.filename}'] = session.code_content
+        
+        # Load data files
+        for file_obj in UserFiles.objects.filter(user=user, is_system_file=False):
+            user_data['scripts'][f'data_file_{file_obj.filename}'] = file_obj.content
+        
+        # Load notebook data
+        try:
+            notebook_session = PythonCodeSession.objects.get(user=user, filename='_notebook_data.json')
+            user_data['notebooks'] = json.loads(notebook_session.code_content)
+        except (PythonCodeSession.DoesNotExist, json.JSONDecodeError):
+            pass
+        
+        return JsonResponse(user_data)
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
