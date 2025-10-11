@@ -34,10 +34,7 @@
 
         body {
             font-family: 'Courier New', monospace;
-            background: 
-                linear-gradient(135deg, #1e1e1e 0%, #252526 25%, #1e1e1e 50%, #252526 75%, #1e1e1e 100%),
-                radial-gradient(circle at 25% 25%, rgba(0, 136, 0, 0.02) 0%, transparent 50%),
-                radial-gradient(circle at 75% 75%, rgba(0, 136, 0, 0.02) 0%, transparent 50%);
+            background: linear-gradient(180deg, #000000 0%, #1a4d1a 25%, #000000 50%, #1a4d1a 75%, #000000 100%);
             color: #d4d4d4;
             height: 100vh;
             overflow: hidden;
@@ -104,13 +101,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: #1e1e1e;
+            background: linear-gradient(180deg, #000000 0%, #1a4d1a 50%, #000000 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            color: #4ec9b0;
+            color: #00ff00;
             overflow: hidden;
         }
 
@@ -435,16 +432,15 @@
         }
 
         .file-manager {
-            background: 
-                linear-gradient(180deg, #111 0%, #0a0a0a 100%);
-            border-right: 1px solid #333;
+            background: linear-gradient(180deg, #000000 0%, #1a4d1a 50%, #000000 100%);
+            border-right: 1px solid #00ff00;
             padding: 10px;
             overflow-y: auto;
             scrollbar-width: thin;
-            scrollbar-color: #00ff00 #111;
+            scrollbar-color: #00ff00 #000000;
             position: relative;
             z-index: 2;
-            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.05);
+            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.1);
         }
 
         .file-manager::before {
@@ -613,7 +609,7 @@
         .main-area {
             display: flex;
             flex-direction: column;
-            background: #000;
+            background: linear-gradient(180deg, #000000 0%, #0d2818 50%, #000000 100%);
         }
 
         .editor-section {
@@ -840,6 +836,42 @@
             gap: 15px;
         }
 
+        /* Enhanced Focus and Notebook Mode Buttons */
+        .focus-button {
+            background: linear-gradient(45deg, #1a4d1a 0%, #00ff00 50%, #1a4d1a 100%);
+            border: 2px solid #00ff00;
+            color: #000;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        }
+
+        .focus-button:hover {
+            background: linear-gradient(45deg, #00ff00 0%, #88ff88 50%, #00ff00 100%);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .focus-button:active {
+            transform: translateY(0);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+
+        .focus-button.active {
+            background: linear-gradient(45deg, #ff4444 0%, #ff8888 50%, #ff4444 100%);
+            border-color: #ff4444;
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+        }
+
         .expand-button {
             background: #333;
             color: #fff;
@@ -1025,19 +1057,21 @@
         }
 
         .execute-button {
-            background: #0e639c;
-            border: 1px solid #14a085;
-            color: #fff;
+            background: linear-gradient(45deg, #008800 0%, #00ff00 50%, #008800 100%);
+            border: 1px solid #00ff00;
+            color: #000;
             padding: 8px 15px;
             cursor: pointer;
             border-radius: 3px;
             font-family: 'Courier New', monospace;
             font-size: 12px;
+            font-weight: bold;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
             text-transform: uppercase;
             letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
         }
 
         .execute-button::before {
@@ -1079,8 +1113,8 @@
 
         .terminal-output {
             flex: 1;
-            background: #1e1e1e;
-            color: #d4d4d4;
+            background: linear-gradient(180deg, #000000 0%, #0d2818 50%, #000000 100%);
+            color: #00ff00;
             padding: 15px;
             font-family: 'Courier New', monospace;
             font-size: 13px;
@@ -1092,7 +1126,7 @@
             outline: none;
             position: relative;
             z-index: 2;
-            text-shadow: none;
+            text-shadow: 0 0 2px #00ff00;
             scrollbar-width: thin;
             scrollbar-color: #00ff00 #111;
         }
@@ -1110,16 +1144,38 @@
             padding: 5px;
         }
 
+        /* Custom scrollbars for all elements */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: linear-gradient(180deg, #000000 0%, #1a4d1a 50%, #000000 100%);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #00ff00 0%, #008800 50%, #00ff00 100%);
+            border-radius: 5px;
+            box-shadow: 0 0 5px #00ff00;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #00ff88 0%, #00cc00 50%, #00ff88 100%);
+            box-shadow: 0 0 8px #00ff00;
+        }
+
         .terminal-output::-webkit-scrollbar {
             width: 8px;
         }
 
         .terminal-output::-webkit-scrollbar-track {
-            background: #111;
+            background: linear-gradient(180deg, #000000 0%, #0d2818 50%, #000000 100%);
         }
 
         .terminal-output::-webkit-scrollbar-thumb {
-            background: #00ff00;
+            background: linear-gradient(180deg, #00ff00 0%, #008800 50%, #00ff00 100%);
             border-radius: 4px;
             box-shadow: 0 0 5px #00ff00;
         }
@@ -1164,16 +1220,15 @@
         }
 
         .file-viewers {
-            background: 
-                linear-gradient(180deg, #111 0%, #0a0a0a 100%);
-            border-left: 1px solid #333;
+            background: linear-gradient(180deg, #000000 0%, #1a4d1a 50%, #000000 100%);
+            border-left: 1px solid #00ff00;
             padding: 10px;
             overflow-y: auto;
             scrollbar-width: thin;
-            scrollbar-color: #00ff00 #111;
+            scrollbar-color: #00ff00 #000000;
             position: relative;
             z-index: 2;
-            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.05);
+            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.1);
         }
 
         .file-viewers::before {
@@ -1434,6 +1489,24 @@
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
         }
 
+        /* Backdrop blur overlay for expanded cells */
+        .cell-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 99;
+            display: none;
+        }
+
+        .cell-overlay.active {
+            display: block;
+        }
+
         /* Expanded cell style */
         .notebook-cell.expanded {
             z-index: 100;
@@ -1441,24 +1514,28 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            box-shadow: 0 0 50px 10px rgba(0, 0, 0, 0.8);
-            background: #fff;
+            box-shadow: 0 0 50px 10px rgba(0, 255, 0, 0.3);
+            background: linear-gradient(180deg, #000000 0%, #0d2818 50%, #000000 100%);
             width: 95vw !important;
             height: 90vh !important;
             max-width: none !important;
-            color: #222;
+            color: #00ff00;
+            border: 2px solid #00ff00;
             border-radius: 10px;
             overflow: auto;
         }
 
         .notebook-cell.expanded .cell-header {
-            background: #f5f5f5;
-            color: #333;
+            background: linear-gradient(90deg, #000000 0%, #1a4d1a 50%, #000000 100%);
+            color: #00ff00;
+            border-bottom: 1px solid #00ff00;
         }
 
         .notebook-cell.expanded .cell-textarea {
-            background: #fafafa;
-            color: #333;
+            background: #000000;
+            color: #00ff00;
+            border: 1px solid #008800;
+            text-shadow: 0 0 2px #00ff00;
             min-height: 70vh;
             font-size: 16px;
         }
@@ -1489,18 +1566,30 @@
         }
 
         .cell-btn {
-            background: none;
-            border: none;
-            color: #888;
+            background: linear-gradient(45deg, #0d2818 0%, #1a4d1a 50%, #0d2818 100%);
+            border: 1px solid #008800;
+            color: #00ff00;
             cursor: pointer;
-            padding: 4px;
-            border-radius: 3px;
-            font-size: 11px;
-            transition: color 0.2s;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.1);
+            min-width: 30px;
+            text-align: center;
         }
 
         .cell-btn:hover {
-            color: #00ff00;
+            background: linear-gradient(45deg, #1a4d1a 0%, #00ff00 50%, #1a4d1a 100%);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .cell-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.2);
         }
 
         .cell-input {
@@ -1585,6 +1674,9 @@
     </style>
 </head>
 <body>
+    <!-- Cell overlay for backdrop blur -->
+    <div class="cell-overlay" id="cell-overlay"></div>
+    
     <!-- Enhanced 8-bit Loading Screen -->
     <div class="loading-screen" id="loading-screen">
         <div class="boot-sequence">
@@ -2526,7 +2618,7 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
 
         function initializeAceEditor() {
             aceEditor = ace.edit("ace-editor");
-            aceEditor.setTheme("ace/theme/monokai");
+            aceEditor.setTheme("ace/theme/solarized_dark");
             aceEditor.session.setMode("ace/mode/python");
             
 
@@ -3731,6 +3823,7 @@ sys.stderr = sys.__stderr__
                 });
                 focusBtn.innerHTML = 'EXIT';
                 focusBtn.title = 'Exit focus mode';
+                focusBtn.classList.add('active');
                 document.getElementById('code_content').focus();
             } else {
                 body.classList.remove('focus-mode');
@@ -3739,6 +3832,7 @@ sys.stderr = sys.__stderr__
                 });
                 focusBtn.innerHTML = 'FOCUS';
                 focusBtn.title = 'Focus Mode';
+                focusBtn.classList.remove('active');
             }
             
             isFocusMode = !isFocusMode;
@@ -3756,6 +3850,7 @@ sys.stderr = sys.__stderr__
                 body.classList.add('notebook-mode');
                 notebookBtn.innerHTML = 'EDITOR';
                 notebookBtn.title = 'Switch to Editor Mode';
+                notebookBtn.classList.add('active');
                 updateCellCount();
                 
                 const firstCell = document.querySelector('.cell-textarea');
@@ -3764,6 +3859,7 @@ sys.stderr = sys.__stderr__
                 body.classList.remove('notebook-mode');
                 notebookBtn.innerHTML = 'NOTEBOOK';
                 notebookBtn.title = 'Jupyter-style Notebook Mode';
+                notebookBtn.classList.remove('active');
             }
             
             isNotebookMode = !isNotebookMode;
@@ -4252,16 +4348,38 @@ sys.stderr = _old_stderr
         // Cell expansion logic
         function expandCell(btn) {
             const cell = btn.closest('.notebook-cell');
+            const overlay = document.getElementById('cell-overlay');
+            
             if (cell.classList.contains('expanded')) {
                 cell.classList.remove('expanded');
+                overlay.classList.remove('active');
                 btn.title = 'Expand Cell';
                 btn.innerText = '⤢';
+                document.body.style.overflow = 'hidden'; // Restore original overflow
             } else {
                 cell.classList.add('expanded');
+                overlay.classList.add('active');
                 btn.title = 'Collapse Cell';
                 btn.innerText = '⤡';
+                document.body.style.overflow = 'hidden'; // Prevent scrolling when expanded
             }
         }
+
+        // Close expanded cell when clicking on overlay
+        document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.getElementById('cell-overlay');
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    const expandedCell = document.querySelector('.notebook-cell.expanded');
+                    if (expandedCell) {
+                        const expandBtn = expandedCell.querySelector('.cell-btn[onclick*="expandCell"]');
+                        if (expandBtn) {
+                            expandCell(expandBtn);
+                        }
+                    }
+                });
+            }
+        });
 
     </script>
 </body>
