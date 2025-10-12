@@ -224,12 +224,19 @@ def update_theme(request):
         if theme in ['default', 'greydom', 'cloud', 'chaos', 'lebron']:
             # Get or create user profile
             from homepage.models import UserProfile
+            from django.http import JsonResponse
             profile, created = UserProfile.objects.get_or_create(user=request.user)
             profile.theme = theme
             profile.save()
             
+            # Return JSON for AJAX requests
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/x-www-form-urlencoded':
+                return JsonResponse({'success': True, 'theme': theme})
+            
             messages.success(request, f'Theme updated to {theme.title()}!')
         else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/x-www-form-urlencoded':
+                return JsonResponse({'success': False, 'error': 'Invalid theme'})
             messages.error(request, 'Invalid theme selected.')
     
     return redirect('auth_app:account')
