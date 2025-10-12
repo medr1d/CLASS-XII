@@ -4662,9 +4662,7 @@ sys.stderr = _old_stderr
                     </div>
                     {% if user.profile.paidUser %}
                     <div class="theme-option" data-theme="lebron">
-                        <div class="theme-preview theme-preview-lebron">
-                            <span class="theme-icon-sun" aria-hidden="true"></span>
-                        </div>
+                        <div class="theme-preview theme-preview-lebron theme-preview-sun-only"></div>
                         <div class="theme-info">
                             <div class="theme-name">LeBron</div>
                             <div class="theme-desc">Premium 👑</div>
@@ -4747,6 +4745,34 @@ sys.stderr = _old_stderr
             filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
             pointer-events: none;
         }
+
+        /* Sun-only preview for LeBron (premium) */
+        .theme-preview-sun-only {
+            background: radial-gradient(circle at center, #ffd54f 0%, #ffb300 60%, #ff8f00 100%);
+            position: relative;
+        }
+        .theme-preview-sun-only::after {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            background: url("{% static 'auth_app/images/sunshine.png' %}") center/70% no-repeat;
+            filter: drop-shadow(0 0 6px rgba(0,0,0,0.4));
+        }
+
+        /* Ace editor typography enhancements for LeBron */
+        body.theme-lebron .ace_editor, 
+        body.theme-lebron .ace_content, 
+        body.theme-lebron .ace_line {
+            font-weight: 600 !important;
+            color: #111 !important;
+            text-shadow: 0 0 0 transparent !important;
+        }
+        body.theme-lebron .ace_gutter-cell { font-weight: 600 !important; color: #222 !important; }
+        body.theme-lebron .ace_keyword { font-weight: 700 !important; }
+        body.theme-lebron .ace_string { font-weight: 600 !important; }
+        body.theme-lebron .ace_comment { font-style: normal !important; font-weight: 500 !important; color: #444 !important; }
+        body.theme-lebron .ace_variable, 
+        body.theme-lebron .ace_identifier { font-weight: 600 !important; }
 
         .settings-dropdown {
             position: absolute;
@@ -4994,6 +5020,76 @@ sys.stderr = _old_stderr
                 return cookieValue;
             }
         });
+
+        // LeBron bouncing basketball physics
+        (function(){
+            const screen = document.getElementById('loading-screen');
+            if(!screen) return;
+            const ball = screen.querySelector('.retro-computer');
+            if(!ball) return;
+            let vx = 120; // px/s
+            let vy = 60;  // px/s
+            const gravity = 500; // px/s^2
+            const elasticity = 0.75;
+            const friction = 0.995;
+            let dragging = false;
+            let lastTime = null;
+            let rect = () => screen.getBoundingClientRect();
+
+            function frame(ts){
+                if(!lastTime) lastTime = ts;
+                const dt = (ts - lastTime)/1000;
+                lastTime = ts;
+                if(!dragging){
+                    vy += gravity * dt;
+                    let x = parseFloat(ball.dataset.x || (ball.offsetLeft)) ;
+                    let y = parseFloat(ball.dataset.y || (ball.offsetTop)) ;
+                    x += vx * dt;
+                    y += vy * dt;
+                    const r = 90; // half of 180px ball
+                    const bounds = rect();
+                    const minX = 0;
+                    const maxX = bounds.width - ball.offsetWidth;
+                    const minY = 0;
+                    const maxY = bounds.height - ball.offsetHeight;
+                    if (x < minX){ x = minX; vx = -vx * elasticity; }
+                    if (x > maxX){ x = maxX; vx = -vx * elasticity; }
+                    if (y < minY){ y = minY; vy = -vy * elasticity; }
+                    if (y > maxY){ y = maxY; vy = -vy * elasticity; }
+                    vx *= friction;
+                    vy *= friction;
+                    ball.style.position = 'absolute';
+                    ball.style.left = x + 'px';
+                    ball.style.top = y + 'px';
+                    ball.dataset.x = x;
+                    ball.dataset.y = y;
+                }
+                requestAnimationFrame(frame);
+            }
+            requestAnimationFrame(frame);
+
+            let startOffset = {x:0,y:0};
+            ball.addEventListener('pointerdown', e => {
+                dragging = true;
+                ball.setPointerCapture(e.pointerId);
+                startOffset.x = e.clientX - (parseFloat(ball.dataset.x)||ball.offsetLeft);
+                startOffset.y = e.clientY - (parseFloat(ball.dataset.y)||ball.offsetTop);
+                vx = 0; vy = 0;
+            });
+            ball.addEventListener('pointermove', e => {
+                if(!dragging) return;
+                const x = e.clientX - startOffset.x;
+                const y = e.clientY - startOffset.y;
+                ball.style.left = x + 'px';
+                ball.style.top = y + 'px';
+                ball.dataset.x = x;
+                ball.dataset.y = y;
+            });
+            ball.addEventListener('pointerup', e => {
+                dragging = false;
+                // Give a little throw velocity based on last movement (optional improvement later)
+            });
+        })();
     </script>
 
 </body>
