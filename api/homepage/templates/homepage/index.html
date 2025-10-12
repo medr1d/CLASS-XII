@@ -74,7 +74,7 @@
             background: var(--accent-color);
             border-radius: 50%;
             opacity: 0.3;            
-            animation: float 6s infinite linear;
+            animation: float 10s infinite linear;
         }
 
         @keyframes float {
@@ -89,7 +89,7 @@
                 opacity: 0.3;
             }
             100% {
-                transform: translateY(-100px) rotate(360deg);
+                transform: translateY(-50px) rotate(360deg);
                 opacity: 0;
             }
         }
@@ -111,7 +111,7 @@
             height: 4px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
-            animation: floatDot 6s infinite linear;
+            animation: floatDot 10s infinite linear;
         }
 
         @keyframes floatDot {
@@ -127,7 +127,7 @@
                 opacity: 0.5;
             }
             100% {
-                transform: translateY(-100px) translateX(100px) scale(0);
+                transform: translateY(-50px) translateX(50px) scale(0);
                 opacity: 0;
             }
         }
@@ -711,6 +711,14 @@
                 </a>
             </li>
             {% if user.is_authenticated %}
+                {% if user.is_superuser %}
+                <li class="menu-item">
+                    <a href="/auth/admin-panel/" class="menu-link">
+                        <span class="menu-icon">AD</span>
+                        <span>Admin Panel</span>
+                    </a>
+                </li>
+                {% endif %}
                 <li class="menu-item">
                     <a href="/auth/account/" class="menu-link">
                         <span class="menu-icon">AC</span>
@@ -745,11 +753,11 @@
     </main>
 
     <script>
-        const texts = ['PYTHON ASSEMBLY', 'CODE EDITOR', 'TERMINAL', 'NOTEBOOK'];
+        const texts = ['PYTHON ASSEMBLY', 'CODE EDITOR', 'PYTHON TERMINAL'];
         let textIndex = 0;
         let charIndex = 0;
         let isDeleting = false;
-        let typingSpeed = 150;
+        let typingSpeed = 120;
 
         function typeWriter() {
             const typingElement = document.getElementById('typingText');
@@ -884,9 +892,11 @@
             });
         });
 
-        // Initialize particles and dots
-        createParticles();
-        createFloatingDots();
+        // Initialize particles and dots after page fully loads
+        window.addEventListener('load', function() {
+            createParticles();
+            createFloatingDots();
+        });
 
         // Add subtle mouse movement effect
         document.addEventListener('mousemove', function(e) {
