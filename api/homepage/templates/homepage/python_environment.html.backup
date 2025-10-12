@@ -1715,7 +1715,7 @@
         }
     </style>
 </head>
-<body class="{% if user_theme == 'greydom' %}theme-greydom{% endif %}">
+<body>
     <!-- Enhanced 8-bit Loading Screen -->
     <div class="loading-screen" id="loading-screen">
         <div class="boot-sequence">
@@ -2652,14 +2652,7 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
 
         function initializeAceEditor() {
             aceEditor = ace.edit("ace-editor");
-            
-            // Set theme based on user preference
-            {% if user_theme == 'greydom' %}
-                aceEditor.setTheme("ace/theme/monokai");
-            {% else %}
-                aceEditor.setTheme("ace/theme/terminal");
-            {% endif %}
-            
+            aceEditor.setTheme("ace/theme/terminal");
             aceEditor.session.setMode("ace/mode/python");
             
 

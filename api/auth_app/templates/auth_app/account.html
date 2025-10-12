@@ -70,6 +70,26 @@
         </div>
     </div>
 
+    <!-- Theme Preferences -->
+    <div class="theme-preferences">
+        <h3 class="section-title">→ Theme Settings</h3>
+        <form method="post" action="{% url 'auth_app:update_theme' %}" id="theme-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Python Environment Theme</label>
+                <select name="theme" id="theme-select" class="form-input" onchange="this.form.submit()">
+                    <option value="default" {% if user.profile.theme == 'default' %}selected{% endif %}>
+                        Default (Green Matrix)
+                    </option>
+                    <option value="greydom" {% if user.profile.theme == 'greydom' %}selected{% endif %}>
+                        Greydom (Dark Grey-Blue)
+                    </option>
+                </select>
+                <small class="form-hint">Choose your preferred color scheme for the Python environment</small>
+            </div>
+        </form>
+    </div>
+
     <!-- Quick Actions -->
     <div class="account-actions">
         <a href="{% url 'homepage:home' %}" class="btn btn-outline">
@@ -107,6 +127,28 @@
     border-radius: 4px;
     color: var(--text-primary);
     font-family: 'Fira Code', monospace;
+}
+
+.theme-preferences {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.section-title {
+    color: var(--accent-color);
+    font-size: 1.1rem;
+    margin: 0 0 1rem 0;
+    font-family: 'Fira Code', monospace;
+}
+
+.form-hint {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
 }
 
 .account-stats {

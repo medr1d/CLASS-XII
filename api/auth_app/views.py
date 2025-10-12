@@ -105,6 +105,24 @@ def account_view(request):
         'user': request.user
     })
 
+@login_required
+def update_theme(request):
+    if request.method == 'POST':
+        theme = request.POST.get('theme', 'default')
+        
+        if theme in ['default', 'greydom']:
+            # Get or create user profile
+            from homepage.models import UserProfile
+            profile, created = UserProfile.objects.get_or_create(user=request.user)
+            profile.theme = theme
+            profile.save()
+            
+            messages.success(request, f'Theme updated to {theme.title()}!')
+        else:
+            messages.error(request, 'Invalid theme selected.')
+    
+    return redirect('auth_app:account')
+
 def logout_view(request):
     if request.user.is_authenticated:
         username = request.user.username

@@ -398,6 +398,11 @@ print(f"Hello, {{name}}!")
         if not terminal_output:
             terminal_output = f"Database setup required. Please visit /migrate/ to initialize your account data."
     
+    # Get user's theme preference
+    user_theme = 'default'
+    if hasattr(user, 'profile'):
+        user_theme = user.profile.theme
+    
     response = render(request, 'homepage/python_environment.html', {
         'terminal_output': terminal_output,
         'binary_content': binary_content,
@@ -409,6 +414,7 @@ print(f"Hello, {{name}}!")
         'execution_success': execution_success,
         'current_filename': current_filename,
         'migration_needed': migration_needed,
+        'user_theme': user_theme,
     })
     
     response['Cross-Origin-Opener-Policy'] = 'same-origin'
