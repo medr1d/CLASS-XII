@@ -102,16 +102,19 @@
             --shadow-color: rgba(0, 0, 0, 0.3);
             --glow-color: rgba(0, 0, 0, 0.1);
             --grid-color: rgba(0, 0, 0, 0.05);
+            background: transparent !important;
         }
 
         body.theme-lebron::before {
-            background-image: url("{% static 'auth_app/images/lebron.jpg' %}");
+            background-image: url("{% static 'auth_app/images/lebron.jpg' %}") !important;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
             opacity: 1;
             z-index: -1;
+            /* Remove the grid overlay */
+            background-blend-mode: normal;
         }
 
         * {
@@ -681,6 +684,62 @@
             width: 16px;
             height: 16px;
             background: url("{% static 'auth_app/images/sunshine.png' %}") center/contain no-repeat;
+        }
+
+        /* LeBron Theme - Make ALL backgrounds transparent */
+        body.theme-lebron .file-manager,
+        body.theme-lebron .editor-section,
+        body.theme-lebron .terminal-section,
+        body.theme-lebron .file-manager::before,
+        body.theme-lebron .editor-section::before,
+        body.theme-lebron .terminal-section::before,
+        body.theme-lebron .container,
+        body.theme-lebron section,
+        body.theme-lebron .editor-container,
+        body.theme-lebron .editor-container::before,
+        body.theme-lebron .terminal-container,
+        body.theme-lebron .output-container,
+        body.theme-lebron .terminal-output,
+        body.theme-lebron .file-controls,
+        body.theme-lebron .header,
+        body.theme-lebron .header-title,
+        body.theme-lebron .toolbar {
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        body.theme-lebron .file-manager,
+        body.theme-lebron .editor-section,
+        body.theme-lebron .terminal-section {
+            border-color: rgba(0, 0, 0, 0.3) !important;
+        }
+
+        body.theme-lebron .file-button,
+        body.theme-lebron .btn,
+        body.theme-lebron button {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: #000000 !important;
+            border-color: #000000 !important;
+        }
+
+        body.theme-lebron .file-button:hover,
+        body.theme-lebron .btn:hover,
+        body.theme-lebron button:hover {
+            background: rgba(255, 255, 255, 0.4) !important;
+        }
+
+        body.theme-lebron .settings-dropdown {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-color: #000000 !important;
+        }
+
+        body.theme-lebron .theme-option {
+            background: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        body.theme-lebron .theme-option:hover,
+        body.theme-lebron .theme-option.active {
+            background: rgba(255, 255, 255, 0.8) !important;
         }
 
         .file-controls {
