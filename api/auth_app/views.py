@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
 from homepage.models import UserProfile
+from .models import LoginAttempt
 import json
 import re
 
@@ -71,6 +72,18 @@ def login_view(request):
         return redirect('auth_app:account')
     
     if request.method == 'POST':
+        # Get client IP address
+        ip_address = request.META.get('HTTP_X_FORWARDED_FOR')
+        if ip_address:
+            ip_address = ip_address.split(',')[0].strip()
+        else:
+            ip_address = request.META.get('REMOTE_ADDR', '0.0.0.0')
+        
+        # Check if IP is blocked due to too many failed attempts
+        if LoginAttempt.is_blocked(ip_address):
+            messages.error(request, 'Too many failed login attempts. Please try again in 5 minutes.')
+            return render(request, 'auth_app/login.html')
+        
         email = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password', '')
         
@@ -87,10 +100,14 @@ def login_view(request):
                 messages.success(request, f'Welcome back, {user.username}!')
                 return redirect('auth_app:account')
             else:
+                # Record failed login attempt
+                LoginAttempt.record_attempt(ip_address, email)
                 messages.error(request, 'Invalid credentials.')
                 return render(request, 'auth_app/login.html')
                 
         except User.DoesNotExist:
+            # Record failed login attempt
+            LoginAttempt.record_attempt(ip_address, email)
             messages.error(request, 'No account found with this email.')
             return render(request, 'auth_app/login.html')
         
@@ -175,7 +192,7 @@ def admin_panel_view(request):
         messages.error(request, 'Access denied. Admin privileges required.')
         return redirect('auth_app:account')
     
-    users = User.objects.all().select_related('profile').order_by('-date_joined')
+    users = User.objects.all().select_related('profile').order_by('id')
     
     paid_count = 0
     super_count = 0
