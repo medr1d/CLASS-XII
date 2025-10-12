@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADMIN PANEL</title>
     {% load static %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Courier New', monospace; background: #000; color: #fff; min-height: 100vh; overflow-x: hidden; }
@@ -188,15 +189,25 @@
     </div>
     
     <script>
-        // Function to get CSRF token from cookies
-        function getCookie(name) {
+        // Get CSRF token from meta tag (since CSRF_USE_SESSIONS = True in settings)
+        function getCSRFToken() {
+            // Get from meta tag - this is the most reliable method
+            const metaToken = document.querySelector('meta[name="csrf-token"]');
+            if (metaToken) {
+                const token = metaToken.getAttribute('content');
+                console.log('Got CSRF token from meta tag');
+                return token;
+            }
+            
+            // This won't work when CSRF_USE_SESSIONS = True
+            console.warn('No meta tag found, trying cookie (may not work)');
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
                 const cookies = document.cookie.split(';');
                 for (let i = 0; i < cookies.length; i++) {
                     const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    if (cookie.substring(0, 10) === 'csrftoken=') {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
                         break;
                     }
                 }
@@ -217,12 +228,13 @@
             row.classList.add('loading');
             
             try {
-                const csrftoken = getCookie('csrftoken');
+                const csrftoken = getCSRFToken();
                 
                 if (!csrftoken) {
                     throw new Error('CSRF token not found. Please refresh the page.');
                 }
                 
+                console.log('CSRF Token:', csrftoken.substring(0, 10) + '...');
                 console.log('Sending request to update user', userId, 'to', originalState);
                 
                 const response = await fetch('/auth/api/update-paid-status/', {
@@ -316,7 +328,13 @@
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Admin panel loaded');
-            console.log('CSRF token present:', !!getCookie('csrftoken'));
+            const token = getCSRFToken();
+            console.log('CSRF token present:', !!token);
+            if (token) {
+                console.log('CSRF token preview:', token.substring(0, 10) + '...');
+            } else {
+                console.error('WARNING: No CSRF token found!');
+            }
         });
     </script>
 </body>
