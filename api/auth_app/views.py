@@ -222,6 +222,14 @@ def update_theme(request):
         theme = request.POST.get('theme', 'default')
         
         if theme in ['default', 'greydom', 'cloud', 'chaos', 'lebron']:
+            # Enforce paid restriction for premium theme
+            if theme == 'lebron':
+                profile, _ = UserProfile.objects.get_or_create(user=request.user)
+                if not profile.paidUser:
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/x-www-form-urlencoded':
+                        return JsonResponse({'success': False, 'error': 'LeBron theme is available only for premium users.'}, status=403)
+                    messages.error(request, 'LeBron theme requires a premium account.')
+                    return redirect('auth_app:account')
             # Get or create user profile
             from homepage.models import UserProfile
             from django.http import JsonResponse

@@ -251,6 +251,16 @@
             opacity: 0.7;
         }
 
+        .theme-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(60%);
+        }
+        .theme-option.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
         /* Info Grid */
         .info-grid {
             display: grid;
@@ -832,6 +842,23 @@
                                 <div class="theme-desc">Black & Grey Terminal</div>
                             </div>
                         </div>
+                        {% if user.profile and user.profile.paidUser %}
+                        <div class="theme-option {% if user.profile.theme == 'lebron' %}active{% endif %}" onclick="selectTheme('lebron')">
+                            <div class="theme-radio"></div>
+                            <div class="theme-info">
+                                <div class="theme-name">LeBron Theme</div>
+                                <div class="theme-desc">Premium Cinematic Backdrop</div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="theme-option disabled" title="Available for Premium Users">
+                            <div class="theme-radio"></div>
+                            <div class="theme-info">
+                                <div class="theme-name">LeBron Theme <span style="font-size:0.7rem;opacity:0.7;">(Premium)</span></div>
+                                <div class="theme-desc">Upgrade to unlock</div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                     <input type="hidden" name="theme" id="theme-input" value="{% if user.profile %}{{ user.profile.theme }}{% else %}default{% endif %}">
                 </form>
