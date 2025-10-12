@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
+from django.views.decorators.csrf import ensure_csrf_cookie
 from homepage.models import UserProfile
 import json
 import re
@@ -193,7 +193,6 @@ def admin_panel_view(request):
         'superusers_count': super_count,
     })
 
-@csrf_exempt
 @login_required
 @require_http_methods(["POST"])
 def update_paid_status(request):
