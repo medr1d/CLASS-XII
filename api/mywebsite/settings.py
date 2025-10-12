@@ -116,9 +116,7 @@ USE_TZ = True
 STATIC_URL = os.getenv('STATIC_URL', '/static/')
 STATIC_ROOT = os.path.join(BASE_DIR, os.getenv('STATIC_ROOT', 'staticfiles'))
 
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',  # api/static (contains favicon and app static files)
-]
+# STATICFILES_DIRS not needed - Django automatically finds static files in each app's static/ folder
 
 MEDIA_URL = os.getenv('MEDIA_URL', '/media/')
 MEDIA_ROOT = os.path.join(BASE_DIR, os.getenv('MEDIA_ROOT', 'media'))
