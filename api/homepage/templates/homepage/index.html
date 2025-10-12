@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLASS 12 PYTHON ASSEMBLY</title>
+    <title>PYTHON ASSEMBLY</title>
     
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-4GQ8NQ38P5"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -74,8 +73,8 @@
             height: 2px;
             background: var(--accent-color);
             border-radius: 50%;
-            opacity: 0.3;
-            animation: float 20s infinite linear;
+            opacity: 0.3;            
+            animation: float 6s infinite linear;
         }
 
         @keyframes float {
@@ -112,7 +111,7 @@
             height: 4px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
-            animation: floatDot 25s infinite linear;
+            animation: floatDot 6s infinite linear;
         }
 
         @keyframes floatDot {
@@ -146,7 +145,7 @@
                 linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
             background-size: 50px 50px;
-            animation: gridPulse 10s ease-in-out infinite;
+            animation: gridPulse 5s ease-in-out infinite;
         }
 
         @keyframes gridPulse {
@@ -363,6 +362,23 @@
             -webkit-text-fill-color: transparent;
             animation: titleGlow 4s ease-in-out infinite;
             position: relative;
+            min-height: 1.2em;
+            display: inline-block;
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 3px;
+            height: 0.9em;
+            background: var(--accent-color);
+            margin-left: 8px;
+            animation: blink 0.7s infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
         }
 
         @keyframes titleGlow {
@@ -415,7 +431,7 @@
             height: 200px;
             top: 20%;
             right: 10%;
-            animation: floatRotate 20s infinite linear;
+            animation: floatRotate 10s infinite linear;
         }
 
         .shape-2 {
@@ -423,7 +439,7 @@
             height: 150px;
             bottom: 20%;
             left: 15%;
-            animation: floatRotate 25s infinite linear reverse;
+            animation: floatRotate 12s infinite linear reverse;
         }
 
         .shape-3 {
@@ -431,7 +447,7 @@
             height: 100px;
             top: 60%;
             right: 25%;
-            animation: floatRotate 15s infinite linear;
+            animation: floatRotate 8s infinite linear;
         }
 
         @keyframes floatRotate {
@@ -519,7 +535,7 @@
             height: 100px;
             z-index: -1;
             background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.02));
-            animation: wave 8s ease-in-out infinite;
+            animation: wave 4s ease-in-out infinite;
         }
 
         @keyframes wave {
@@ -555,19 +571,19 @@
         .ring-1 {
             width: 200px;
             height: 200px;
-            animation: rotateClockwise 30s linear infinite;
+            animation: rotateClockwise 15s linear infinite;
         }
 
         .ring-2 {
             width: 300px;
             height: 300px;
-            animation: rotateCounterClockwise 45s linear infinite;
+            animation: rotateCounterClockwise 20s linear infinite;
         }
 
         .ring-3 {
             width: 400px;
             height: 400px;
-            animation: rotateClockwise 60s linear infinite;
+            animation: rotateClockwise 25s linear infinite;
         }
 
         @keyframes rotateClockwise {
@@ -721,34 +737,76 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="title-container">
-            <h1 class="main-title">PYTHON ASSEMBLY</h1>
+            <h1 class="main-title">
+                <span id="typingText"></span><span class="typing-cursor"></span>
+            </h1>
             <p class="subtitle">by Logesh M.s, XII - A2 2025</p>
         </div>
     </main>
 
     <script>
+        const texts = ['PYTHON ASSEMBLY', 'CODE EDITOR', 'TERMINAL', 'NOTEBOOK'];
+        let textIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        let typingSpeed = 150;
+
+        function typeWriter() {
+            const typingElement = document.getElementById('typingText');
+            const currentText = texts[textIndex];
+
+            if (!isDeleting) {
+                typingElement.textContent = currentText.substring(0, charIndex + 1);
+                charIndex++;
+
+                if (charIndex === currentText.length) {
+                    isDeleting = true;
+                    typingSpeed = 2000;
+                }
+            } else {
+                typingElement.textContent = currentText.substring(0, charIndex - 1);
+                charIndex--;
+
+                if (charIndex === 0) {
+                    isDeleting = false;
+                    textIndex = (textIndex + 1) % texts.length;
+                    typingSpeed = 500;
+                } else {
+                    typingSpeed = 50;
+                }
+            }
+
+            if (!isDeleting && charIndex < currentText.length) {
+                typingSpeed = 150;
+            }
+
+            setTimeout(typeWriter, typingSpeed);
+        }
+
+        window.addEventListener('load', function() {
+            setTimeout(typeWriter, 1000);
+        });
+
         // Loading Animation
         window.addEventListener('load', function() {
             setTimeout(() => {
                 document.getElementById('loadingOverlay').classList.add('fade-out');
-            }, 1000);
+            }, 300);
         });
 
         // Particle System
         function createParticles() {
             const particlesContainer = document.getElementById('particles');
-            const particleCount = 50;
+            const particleCount = 30;
 
             for (let i = 0; i < particleCount; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
                 
-                // Random positioning and animation delay
                 particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 20 + 's';
-                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (5 + Math.random() * 1) + 's';
                 
-                // Random size variation
                 const size = 1 + Math.random() * 3;
                 particle.style.width = size + 'px';
                 particle.style.height = size + 'px';
@@ -760,18 +818,16 @@
         // Floating Dots System
         function createFloatingDots() {
             const dotsContainer = document.getElementById('floatingDots');
-            const dotCount = 30;
+            const dotCount = 20;
 
             for (let i = 0; i < dotCount; i++) {
                 const dot = document.createElement('div');
                 dot.className = 'floating-dot';
                 
-                // Random positioning and animation delay
                 dot.style.left = Math.random() * 100 + '%';
-                dot.style.animationDelay = Math.random() * 25 + 's';
-                dot.style.animationDuration = (20 + Math.random() * 10) + 's';
+                dot.style.animationDelay = Math.random() * 6 + 's';
+                dot.style.animationDuration = (5 + Math.random() * 1) + 's';
                 
-                // Random size variation
                 const size = 2 + Math.random() * 4;
                 dot.style.width = size + 'px';
                 dot.style.height = size + 'px';

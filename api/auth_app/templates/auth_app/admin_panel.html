@@ -4,6 +4,679 @@
 
 {% block content %}
 <style>
+    body {
+        background: #000000;
+    }
+
+    .admin-wrapper {
+        width: 100%;
+        min-height: 100vh;
+        padding: 0;
+        margin: 0;
+    }
+
+    .admin-topbar {
+        background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+        border-bottom: 3px solid #ffffff;
+        padding: 25px 50px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.8);
+    }
+
+    .admin-topbar h1 {
+        font-size: 2rem;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    .admin-nav {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .admin-nav a {
+        background: #000000;
+        border: 2px solid #ffffff;
+        color: #ffffff;
+        padding: 12px 30px;
+        text-decoration: none;
+        font-family: 'Courier New', monospace;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+
+    .admin-nav a:hover {
+        background: #ffffff;
+        color: #000000;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+    }
+
+    .admin-content {
+        max-width: 1800px;
+        margin: 0 auto;
+        padding: 50px 60px;
+    }
+
+    .stats-section {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 30px;
+        margin-bottom: 60px;
+    }
+
+    .stat-box {
+        background: #0a0a0a;
+        border: 3px solid #333333;
+        padding: 40px 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: #ffffff;
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .stat-box:hover {
+        border-color: #ffffff;
+        transform: translateY(-8px);
+        box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-box:hover::before {
+        transform: scaleX(1);
+    }
+
+    .stat-number {
+        font-size: 4rem;
+        font-weight: bold;
+        color: #ffffff;
+        display: block;
+        margin-bottom: 15px;
+        line-height: 1;
+    }
+
+    .stat-title {
+        font-size: 1.1rem;
+        color: #999999;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: bold;
+    }
+
+    .users-section {
+        background: #0a0a0a;
+        border: 3px solid #333333;
+        overflow: hidden;
+    }
+
+    .section-header {
+        background: #000000;
+        border-bottom: 3px solid #ffffff;
+        padding: 30px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-header h2 {
+        font-size: 1.8rem;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    .section-actions {
+        display: flex;
+        gap: 15px;
+    }
+
+    .action-btn {
+        background: #1a1a1a;
+        border: 2px solid #666666;
+        color: #ffffff;
+        padding: 10px 25px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+    }
+
+    .action-btn:hover {
+        background: #ffffff;
+        color: #000000;
+        border-color: #ffffff;
+    }
+
+    .users-table-wrapper {
+        overflow-x: auto;
+        max-height: 650px;
+        overflow-y: auto;
+    }
+
+    .users-table-wrapper::-webkit-scrollbar {
+        width: 14px;
+        height: 14px;
+    }
+
+    .users-table-wrapper::-webkit-scrollbar-track {
+        background: #000000;
+    }
+
+    .users-table-wrapper::-webkit-scrollbar-thumb {
+        background: #333333;
+        border: 2px solid #000000;
+    }
+
+    .users-table-wrapper::-webkit-scrollbar-thumb:hover {
+        background: #666666;
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 1rem;
+    }
+
+    .users-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .users-table th {
+        background: #000000;
+        color: #ffffff;
+        padding: 20px 25px;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: bold;
+        font-size: 0.95rem;
+        border-bottom: 3px solid #ffffff;
+        white-space: nowrap;
+    }
+
+    .users-table tbody tr {
+        border-bottom: 2px solid #1a1a1a;
+        transition: all 0.2s ease;
+        background: #0a0a0a;
+    }
+
+    .users-table tbody tr:hover {
+        background: #1a1a1a;
+        border-bottom-color: #ffffff;
+    }
+
+    .users-table td {
+        padding: 20px 25px;
+        color: #cccccc;
+        font-size: 0.95rem;
+    }
+
+    .user-id-cell {
+        color: #666666;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .username-cell {
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 1.05rem;
+    }
+
+    .email-cell {
+        color: #999999;
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 16px;
+        border: 2px solid;
+        font-size: 0.85rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        background: transparent;
+    }
+
+    .status-active {
+        border-color: #00ff00;
+        color: #00ff00;
+    }
+
+    .status-inactive {
+        border-color: #ff0000;
+        color: #ff0000;
+    }
+
+    .role-admin {
+        border-color: #ffff00;
+        color: #ffff00;
+    }
+
+    .role-user {
+        border-color: #666666;
+        color: #666666;
+    }
+
+    .theme-badge {
+        border-color: #00ffff;
+        color: #00ffff;
+    }
+
+    .paid-toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .toggle-switch-desktop {
+        position: relative;
+        width: 70px;
+        height: 35px;
+        background: #1a1a1a;
+        border: 2px solid #333333;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .toggle-switch-desktop input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        transition: 0.3s;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "OFF";
+        height: 27px;
+        width: 27px;
+        left: 2px;
+        top: 2px;
+        background: #666666;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6rem;
+        color: #000000;
+        font-weight: bold;
+    }
+
+    input:checked + .toggle-slider {
+        background: #1a1a1a;
+        border-color: #00ff00;
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(35px);
+        background: #00ff00;
+        content: "ON";
+    }
+
+    .toggle-switch-desktop:hover {
+        border-color: #ffffff;
+    }
+
+    .date-cell {
+        color: #666666;
+        font-size: 0.85rem;
+    }
+
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .loading-overlay.active {
+        display: flex;
+    }
+
+    .loading-box {
+        background: #0a0a0a;
+        border: 3px solid #ffffff;
+        padding: 50px 80px;
+        text-align: center;
+    }
+
+    .loading-spinner {
+        border: 5px solid #333333;
+        border-top: 5px solid #ffffff;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        color: #ffffff;
+        font-size: 1.2rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .notification {
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        padding: 20px 35px;
+        border: 3px solid;
+        z-index: 1001;
+        font-family: 'Courier New', monospace;
+        font-size: 1rem;
+        font-weight: bold;
+        letter-spacing: 1px;
+        animation: slideInRight 0.4s ease-out;
+        max-width: 500px;
+        text-transform: uppercase;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(500px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .notification-success {
+        background: #000000;
+        border-color: #00ff00;
+        color: #00ff00;
+    }
+
+    .notification-error {
+        background: #000000;
+        border-color: #ff0000;
+        color: #ff0000;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 40px;
+        color: #666666;
+        font-size: 1.3rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 1600px) {
+        .admin-content {
+            max-width: 95%;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .stats-section {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<div class="admin-wrapper">
+    <div class="admin-topbar">
+        <h1>ADMIN CONTROL PANEL</h1>
+        <div class="admin-nav">
+            <a href="{% url 'auth_app:account' %}">ACCOUNT</a>
+            <a href="{% url 'homepage:python_environment' %}">PYTHON ENV</a>
+            <a href="{% url 'auth_app:logout' %}">LOGOUT</a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="notification notification-{{ message.tags }}" id="messageNotification">
+                {% if message.tags == 'error' %}
+                    [ERROR]:
+                {% elif message.tags == 'success' %}
+                    [SUCCESS]:
+                {% endif %}
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="admin-content">
+        <div class="stats-section">
+            <div class="stat-box">
+                <span class="stat-number">{{ total_users }}</span>
+                <span class="stat-title">Total Users</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">{{ paid_users }}</span>
+                <span class="stat-title">Paid Users</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">{{ admin_users }}</span>
+                <span class="stat-title">Administrators</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">{{ free_users }}</span>
+                <span class="stat-title">Free Users</span>
+            </div>
+        </div>
+
+        <div class="users-section">
+            <div class="section-header">
+                <h2>USER DATABASE</h2>
+                <div class="section-actions">
+                    <button class="action-btn" onclick="location.reload()">REFRESH</button>
+                </div>
+            </div>
+            <div class="users-table-wrapper">
+                {% if users %}
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>USERNAME</th>
+                                <th>EMAIL</th>
+                                <th>STATUS</th>
+                                <th>ROLE</th>
+                                <th>THEME</th>
+                                <th>PAID ACCESS</th>
+                                <th>JOINED</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                                <tr data-user-id="{{ user.id }}">
+                                    <td class="user-id-cell">#{{ user.id }}</td>
+                                    <td class="username-cell">{{ user.username }}</td>
+                                    <td class="email-cell">{{ user.email }}</td>
+                                    <td>
+                                        {% if user.is_active %}
+                                            <span class="status-badge status-active">ACTIVE</span>
+                                        {% else %}
+                                            <span class="status-badge status-inactive">INACTIVE</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.is_superuser %}
+                                            <span class="status-badge role-admin">ADMIN</span>
+                                        {% else %}
+                                            <span class="status-badge role-user">USER</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="status-badge theme-badge">{{ user.theme|upper }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="paid-toggle-container">
+                                            <label class="toggle-switch-desktop">
+                                                <input type="checkbox" 
+                                                       class="paid-toggle" 
+                                                       data-user-id="{{ user.id }}"
+                                                       {% if user.paidUser %}checked{% endif %}
+                                                       {% if user.is_superuser %}disabled{% endif %}>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td class="date-cell">{{ user.date_joined|date:"Y-m-d H:i" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="empty-state">NO USERS FOUND IN DATABASE</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">PROCESSING...</div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const paidToggles = document.querySelectorAll('.paid-toggle');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function showNotification(message, type) {
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `[${type.toUpperCase()}]: ${message}`;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideInRight 0.4s ease-out reverse';
+                setTimeout(() => notification.remove(), 400);
+            }, 3000);
+        }
+
+        paidToggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const userId = this.dataset.userId;
+                const paidStatus = this.checked;
+                const originalState = !paidStatus;
+
+                loadingOverlay.classList.add('active');
+
+                fetch('{% url "auth_app:update_paid_status" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        paid_status: paidStatus
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingOverlay.classList.remove('active');
+                    
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                    } else {
+                        this.checked = originalState;
+                        showNotification(data.error || 'FAILED TO UPDATE USER STATUS', 'error');
+                    }
+                })
+                .catch(error => {
+                    loadingOverlay.classList.remove('active');
+                    this.checked = originalState;
+                    showNotification('NETWORK ERROR. PLEASE TRY AGAIN.', 'error');
+                    console.error('Error:', error);
+                });
+            });
+        });
+
+        setTimeout(() => {
+            const messageNotification = document.getElementById('messageNotification');
+            if (messageNotification) {
+                messageNotification.style.animation = 'slideInRight 0.4s ease-out reverse';
+                setTimeout(() => messageNotification.remove(), 400);
+            }
+        }, 3000);
+    });
+</script>
+{% endblock %}
     .admin-panel-container {
         max-width: 1400px;
         width: 100%;

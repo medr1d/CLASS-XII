@@ -171,7 +171,7 @@ def home_view(request):
 def admin_panel_view(request):
     if not request.user.is_superuser:
         messages.error(request, 'Access denied. Admin privileges required.')
-        return redirect('homepage:python_environment')
+        return redirect('auth_app:account')
     
     users = User.objects.all().select_related('profile').order_by('-date_joined')
     
