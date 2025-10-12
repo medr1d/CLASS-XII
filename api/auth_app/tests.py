@@ -1,6 +1,8 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
+from .models import LoginAttempt
+from django.utils import timezone
 
 
 class AuthAppTestCase(TestCase):
@@ -14,10 +16,13 @@ class AuthAppTestCase(TestCase):
         
         # Clean up any existing test users
         User.objects.all().delete()
+        # Clean up any existing login attempts
+        LoginAttempt.objects.all().delete()
     
     def tearDown(self):
         """Clean up after tests"""
         User.objects.all().delete()
+        LoginAttempt.objects.all().delete()
     
     def test_user_creation(self):
         """Test user creation with valid data"""
@@ -104,3 +109,67 @@ class AuthAppTestCase(TestCase):
         # Test that user is logged out
         response = self.client.get(reverse('auth_app:account'))
         self.assertEqual(response.status_code, 302)  # Should redirect to login
+    
+    def test_login_rate_limiting(self):
+        """Test that login rate limiting blocks excessive failed attempts"""
+        # Create a test user
+        User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='securepassword123'
+        )
+        
+        # Make 10 failed login attempts
+        for i in range(10):
+            response = self.client.post(reverse('auth_app:login'), {
+                'email': 'test@example.com',
+                'password': 'wrongpassword',
+            }, REMOTE_ADDR='127.0.0.1')
+        
+        # The 11th attempt should be blocked
+        response = self.client.post(reverse('auth_app:login'), {
+            'email': 'test@example.com',
+            'password': 'securepassword123',  # Even with correct password
+        }, REMOTE_ADDR='127.0.0.1')
+        
+        # Should still show login page with error message
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Too many failed login attempts')
+    
+    def test_login_rate_limiting_with_nonexistent_email(self):
+        """Test that rate limiting works for non-existent email addresses"""
+        # Make 10 failed login attempts with non-existent email
+        for i in range(10):
+            response = self.client.post(reverse('auth_app:login'), {
+                'email': 'nonexistent@example.com',
+                'password': 'somepassword',
+            }, REMOTE_ADDR='192.168.1.1')
+        
+        # The 11th attempt should be blocked
+        response = self.client.post(reverse('auth_app:login'), {
+            'email': 'nonexistent@example.com',
+            'password': 'somepassword',
+        }, REMOTE_ADDR='192.168.1.1')
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Too many failed login attempts')
+    
+    def test_login_attempt_model(self):
+        """Test LoginAttempt model methods"""
+        # Test recording attempts
+        ip = '10.0.0.1'
+        LoginAttempt.record_attempt(ip, 'test@example.com')
+        self.assertEqual(LoginAttempt.objects.filter(ip_address=ip).count(), 1)
+        
+        # Test is_blocked after insufficient attempts
+        self.assertFalse(LoginAttempt.is_blocked(ip))
+        
+        # Add more attempts to trigger blocking
+        for i in range(9):
+            LoginAttempt.record_attempt(ip, 'test@example.com')
+        
+        # Should be blocked after 10 attempts
+        self.assertTrue(LoginAttempt.is_blocked(ip))
+        
+        # Test that a different IP is not blocked
+        self.assertFalse(LoginAttempt.is_blocked('10.0.0.2'))
