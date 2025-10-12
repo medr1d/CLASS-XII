@@ -196,43 +196,93 @@ def admin_panel_view(request):
 @login_required
 @require_http_methods(["POST"])
 def update_paid_status(request):
-    print('update_paid_status called by:', request.user)
+    """Update the paid status of a user. Only accessible by superusers."""
+    
+    # Check if user is superuser
     if not request.user.is_superuser:
-        print('User is not superuser')
         return JsonResponse({
             'success': False,
             'error': 'Unauthorized. Admin access required.'
         }, status=403)
+    
     try:
-        data = json.loads(request.body)
-        print('Received data:', data)
-        user_id = data.get('user_id')
-        paid_status = data.get('paid_status')
-        if user_id is None or paid_status is None:
-            print('Missing required parameters')
+        # Parse request body
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
             return JsonResponse({
                 'success': False,
-                'error': 'Missing required parameters'
+                'error': 'Invalid JSON in request body'
             }, status=400)
-        user = User.objects.get(id=user_id)
+        
+        # Get and validate parameters
+        user_id = data.get('user_id')
+        paid_status = data.get('paid_status')
+        
+        if user_id is None:
+            return JsonResponse({
+                'success': False,
+                'error': 'Missing user_id parameter'
+            }, status=400)
+        
+        if paid_status is None:
+            return JsonResponse({
+                'success': False,
+                'error': 'Missing paid_status parameter'
+            }, status=400)
+        
+        # Validate paid_status is boolean
+        if not isinstance(paid_status, bool):
+            return JsonResponse({
+                'success': False,
+                'error': 'paid_status must be a boolean value'
+            }, status=400)
+        
+        # Get user
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': f'User with id {user_id} not found'
+            }, status=404)
+        
+        # Get or create user profile
         profile, created = UserProfile.objects.get_or_create(user=user)
-        print(f'Updating user {user.username} paidUser from {profile.paidUser} to {paid_status}')
+        
+        # Log the change
+        old_status = profile.paidUser
+        print(f'[ADMIN ACTION] {request.user.username} updating user {user.username} (ID: {user_id})')
+        print(f'[ADMIN ACTION] Changing paidUser from {old_status} to {paid_status}')
+        
+        # Update the status
         profile.paidUser = paid_status
-        profile.save()
-        print('Update successful')
+        profile.save(update_fields=['paidUser'])
+        
+        # Verify the change was saved
+        profile.refresh_from_db()
+        if profile.paidUser != paid_status:
+            print(f'[ERROR] Failed to save paid status for user {user.username}')
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to save changes to database'
+            }, status=500)
+        
+        print(f'[SUCCESS] User {user.username} paid status successfully updated to {paid_status}')
+        
         return JsonResponse({
             'success': True,
-            'message': f'User {user.username} paid status updated to {paid_status}'
+            'message': f'User {user.username} paid status updated to {"PAID" if paid_status else "FREE"}',
+            'user_id': user_id,
+            'username': user.username,
+            'paid_status': paid_status
         })
-    except User.DoesNotExist:
-        print('User not found')
-        return JsonResponse({
-            'success': False,
-            'error': 'User not found'
-        }, status=404)
+        
     except Exception as e:
-        print('Exception:', str(e))
+        print(f'[ERROR] Exception in update_paid_status: {type(e).__name__}: {str(e)}')
+        import traceback
+        traceback.print_exc()
         return JsonResponse({
             'success': False,
-            'error': str(e)
+            'error': f'Server error: {str(e)}'
         }, status=500)

@@ -3463,11 +3463,12 @@ except Exception as e:
             const fileList = document.getElementById('file-list');
             fileList.innerHTML = '';
             const computedStyle = getComputedStyle(document.body);
+            const textColor = computedStyle.getPropertyValue('--text-bright').trim() || '#0f0';
             
             
             const dataSection = document.createElement('li');
             dataSection.innerHTML = '<strong>Data Files:</strong>';
-            dataSection.style.color = computedStyle.getPropertyValue('--text-bright');
+            dataSection.style.color = textColor;
             dataSection.style.marginBottom = '10px';
             fileList.appendChild(dataSection);
             
@@ -3540,7 +3541,7 @@ except Exception as e:
             
             const scriptSection = document.createElement('li');
             scriptSection.innerHTML = '<strong>Saved Scripts:</strong>';
-            scriptSection.style.color = computedStyle.getPropertyValue('--text-bright');
+            scriptSection.style.color = textColor;
             scriptSection.style.marginBottom = '10px';
             fileList.appendChild(scriptSection);
             

@@ -204,70 +204,120 @@
             return cookieValue;
         }
 
-        function toggle(userId, checkbox) {
+        // Main toggle function with improved error handling
+        async function toggle(userId, checkbox) {
             const row = document.getElementById('row-' + userId);
             const badge = document.getElementById('badge-' + userId);
             const label = document.getElementById('label-' + userId);
             
+            // Store original state
+            const originalState = checkbox.checked;
+            
+            // Add loading state
             row.classList.add('loading');
             
-            const csrftoken = getCookie('csrftoken');
-            
-            fetch('/auth/api/update-paid-status/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({
-                    user_id: userId,
-                    paid_status: checkbox.checked
-                })
-            })
-            .then(response => {
+            try {
+                const csrftoken = getCookie('csrftoken');
+                
+                if (!csrftoken) {
+                    throw new Error('CSRF token not found. Please refresh the page.');
+                }
+                
+                console.log('Sending request to update user', userId, 'to', originalState);
+                
+                const response = await fetch('/auth/api/update-paid-status/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        paid_status: originalState
+                    }),
+                    credentials: 'same-origin'
+                });
+                
+                console.log('Response status:', response.status);
+                
                 if (!response.ok) {
-                    throw new Error('HTTP ' + response.status);
+                    const errorText = await response.text();
+                    console.error('Server error:', errorText);
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
                 }
-                return response.json();
-            })
-            .then(data => {
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
                 if (data.success) {
-                    if (checkbox.checked) {
-                        label.textContent = 'ON';
-                        label.classList.add('on');
-                        badge.className = 'badge badge-paid';
-                        badge.innerHTML = '● PAID';
-                    } else {
-                        label.textContent = 'OFF';
-                        label.classList.remove('on');
-                        badge.className = 'badge badge-free';
-                        badge.innerHTML = '○ FREE';
-                    }
+                    // Update UI to reflect new state
+                    updateUserUI(userId, originalState);
                     updateStats();
+                    
+                    // Visual feedback
                     row.style.background = 'rgba(255, 255, 255, 0.1)';
-                    setTimeout(() => { row.style.background = ''; }, 300);
+                    setTimeout(() => { 
+                        row.style.background = ''; 
+                    }, 300);
+                    
+                    console.log('Successfully updated user', userId, 'paid status to', originalState);
                 } else {
-                    checkbox.checked = !checkbox.checked;
-                    alert('Error: ' + (data.error || 'Failed to update'));
+                    // Revert checkbox if server says it failed
+                    checkbox.checked = !originalState;
+                    throw new Error(data.error || 'Failed to update user status');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                checkbox.checked = !checkbox.checked;
-                alert('Error: ' + error.message);
-            })
-            .finally(() => {
+                
+            } catch (error) {
+                console.error('Error updating paid status:', error);
+                // Revert checkbox on error
+                checkbox.checked = !originalState;
+                alert(`Error: ${error.message}\n\nPlease try again or refresh the page.`);
+            } finally {
                 row.classList.remove('loading');
-            });
+            }
         }
         
-        function updateStats() {
-            const boxes = document.querySelectorAll('input[type="checkbox"]');
-            let paid = 0, free = 0;
-            boxes.forEach(cb => { if (cb.checked) paid++; else free++; });
-            document.getElementById('paid').textContent = paid;
-            document.getElementById('free').textContent = free;
+        // Update UI elements for a user
+        function updateUserUI(userId, isPaid) {
+            const badge = document.getElementById('badge-' + userId);
+            const label = document.getElementById('label-' + userId);
+            
+            if (isPaid) {
+                label.textContent = 'ON';
+                label.classList.add('on');
+                badge.className = 'badge badge-paid';
+                badge.innerHTML = '● PAID';
+            } else {
+                label.textContent = 'OFF';
+                label.classList.remove('on');
+                badge.className = 'badge badge-free';
+                badge.innerHTML = '○ FREE';
+            }
+        }
         
+        // Update statistics counters
+        function updateStats() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            let paidCount = 0;
+            let freeCount = 0;
+            
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    paidCount++;
+                } else {
+                    freeCount++;
+                }
+            });
+            
+            document.getElementById('paid').textContent = paidCount;
+            document.getElementById('free').textContent = freeCount;
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Admin panel loaded');
+            console.log('CSRF token present:', !!getCookie('csrftoken'));
+        });
     </script>
 </body>
 </html>
