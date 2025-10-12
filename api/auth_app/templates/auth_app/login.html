@@ -9,7 +9,7 @@
 </div>
 
 <div class="auth-body">
-    <!-- Display messages -->
+    
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{{ message.tags }}" role="alert">
@@ -25,7 +25,7 @@
         {% endfor %}
     {% endif %}
     
-    <!-- Rate Limit Warning -->
+    
     {% if blocked %}
         <div class="alert alert-error" role="alert" style="background: rgba(255, 0, 0, 0.1); border: 2px solid #ff0000;">
             <strong>🔒 [LOCKED]:</strong> Too many failed login attempts. Please wait before trying again.
@@ -39,7 +39,7 @@
     <form method="post" id="loginForm" {% if blocked %}style="opacity: 0.5; pointer-events: none;"{% endif %}>
         {% csrf_token %}
         
-        <!-- Email Field -->
+        
         <div class="form-group">
             <label class="form-label" for="email">Email Address</label>
             <input type="email" 
@@ -53,7 +53,7 @@
                    {% if blocked %}disabled{% endif %}>
         </div>
 
-        <!-- Password Field -->
+        
         <div class="form-group position-relative">
             <label class="form-label" for="password">Password</label>
             <input type="password" 
@@ -71,7 +71,7 @@
             </button>
         </div>
 
-        <!-- Remember Me -->
+        
         <div class="form-check mb-3">
             <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me">
             <label class="form-check-label" for="rememberMe">
@@ -79,13 +79,13 @@
             </label>
         </div>
 
-        <!-- Submit Button -->
+        
         <button type="submit" class="btn" {% if blocked %}disabled{% endif %}>
             {% if blocked %}🔒 Locked{% else %}Sign In{% endif %}
         </button>
     </form>
 
-    <!-- Links -->
+    
     <div class="text-center mt-4">
         <p style="margin-bottom: 15px; color: var(--text-muted);">
             Don't have an account? 
@@ -99,7 +99,7 @@
     </div>
 </div>
 
-<!-- Demo Modal -->
+
 <div id="demoModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; align-items: center; justify-content: center;">
     <div style="background: var(--secondary-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 30px; max-width: 400px; margin: 20px; color: var(--text-primary); font-family: 'Courier New', monospace;">
         <h3 style="margin: 0 0 20px 0; color: var(--accent-color); letter-spacing: 1px;">

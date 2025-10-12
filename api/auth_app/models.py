@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
 import random
@@ -123,6 +124,70 @@ class EmailVerification(models.Model):
     @classmethod
     def cleanup_old_verifications(cls):
         """Remove expired verifications older than 1 hour."""
+        time_threshold = timezone.now() - timedelta(hours=1)
+        cls.objects.filter(created_at__lt=time_threshold, verified=False).delete()
+        # Also delete verified ones older than 24 hours
+        verified_threshold = timezone.now() - timedelta(hours=24)
+        cls.objects.filter(created_at__lt=verified_threshold, verified=True).delete()
+
+
+class PasswordChangeRequest(models.Model):
+    """Store password change verification codes for authenticated users."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_change_requests')
+    verification_code = models.CharField(max_length=6)
+    new_password = models.CharField(max_length=128)  # Will store hashed new password
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    attempts = models.IntegerField(default=0)
+    verified = models.BooleanField(default=False)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - {'Verified' if self.verified else 'Pending'}"
+    
+    def save(self, *args, **kwargs):
+        if not self.verification_code:
+            self.verification_code = self.generate_code()
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(minutes=10)
+        super().save(*args, **kwargs)
+    
+    @staticmethod
+    def generate_code():
+        """Generate a random 6-digit verification code."""
+        return ''.join(random.choices(string.digits, k=6))
+    
+    def is_expired(self):
+        """Check if the verification code has expired."""
+        return timezone.now() > self.expires_at
+    
+    def is_valid(self, code):
+        """Check if the provided code matches and hasn't expired."""
+        return (
+            self.verification_code == code and
+            not self.is_expired() and
+            not self.verified and
+            self.attempts < 5
+        )
+    
+    def increment_attempts(self):
+        """Increment failed verification attempts."""
+        self.attempts += 1
+        self.save(update_fields=['attempts'])
+    
+    def mark_verified(self):
+        """Mark code as verified."""
+        self.verified = True
+        self.save(update_fields=['verified'])
+    
+    @classmethod
+    def cleanup_old_requests(cls):
+        """Remove expired password change requests older than 1 hour."""
         time_threshold = timezone.now() - timedelta(hours=1)
         cls.objects.filter(created_at__lt=time_threshold, verified=False).delete()
         # Also delete verified ones older than 24 hours

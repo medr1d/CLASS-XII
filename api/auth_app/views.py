@@ -7,12 +7,12 @@ from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
 from datetime import timedelta
 from homepage.models import UserProfile
-from .models import LoginAttempt, EmailVerification
-from .email_utils import send_verification_email, send_verification_code_resend
+from .models import LoginAttempt, EmailVerification, PasswordChangeRequest
+from .email_utils import send_verification_email, send_verification_code_resend, send_password_change_code
 import json
 import re
 
@@ -512,3 +512,121 @@ def resend_code_view(request):
         return redirect('auth_app:signup')
     
     return redirect('auth_app:verify_email')
+
+@login_required
+@require_http_methods(["POST"])
+def request_password_change(request):
+    """Verify current password and send verification code for password change."""
+    try:
+        data = json.loads(request.body)
+        current_password = data.get('current_password', '').strip()
+        new_password = data.get('new_password', '').strip()
+        confirm_password = data.get('confirm_password', '').strip()
+        
+        if not all([current_password, new_password, confirm_password]):
+            return JsonResponse({'success': False, 'error': 'All fields are required.'}, status=400)
+        
+        if not request.user.check_password(current_password):
+            return JsonResponse({'success': False, 'error': 'Current password is incorrect.'}, status=400)
+        
+        if len(new_password) < 6:
+            return JsonResponse({'success': False, 'error': 'New password must be at least 6 characters long.'}, status=400)
+        
+        if new_password != confirm_password:
+            return JsonResponse({'success': False, 'error': 'New passwords do not match.'}, status=400)
+        
+        if check_password(new_password, request.user.password):
+            return JsonResponse({'success': False, 'error': 'New password must be different from current password.'}, status=400)
+        
+        PasswordChangeRequest.objects.filter(user=request.user, verified=False).delete()
+        
+        change_request = PasswordChangeRequest.objects.create(user=request.user, new_password=make_password(new_password))
+        
+        if send_password_change_code(request.user.email, request.user.username, change_request.verification_code):
+            return JsonResponse({'success': True, 'message': f'Verification code sent to {request.user.email}. Please check your inbox.', 'request_id': change_request.id})
+        else:
+            change_request.delete()
+            return JsonResponse({'success': False, 'error': 'Failed to send verification email. Please try again.'}, status=500)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid request data.'}, status=400)
+    except Exception as e:
+        print(f"Password change request error: {str(e)}")
+        return JsonResponse({'success': False, 'error': 'Failed to process request. Please try again.'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def verify_password_change(request):
+    """Verify the code and update the user's password."""
+    try:
+        data = json.loads(request.body)
+        code = data.get('code', '').strip()
+        
+        if not code:
+            return JsonResponse({'success': False, 'error': 'Verification code is required.'}, status=400)
+        
+        if len(code) != 6 or not code.isdigit():
+            return JsonResponse({'success': False, 'error': 'Please enter a valid 6-digit code.'}, status=400)
+        
+        try:
+            change_request = PasswordChangeRequest.objects.filter(user=request.user, verified=False).latest('created_at')
+        except PasswordChangeRequest.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'No password change request found. Please start over.'}, status=404)
+        
+        if change_request.is_expired():
+            change_request.delete()
+            return JsonResponse({'success': False, 'error': 'Verification code expired. Please request a new one.'}, status=400)
+        
+        if change_request.attempts >= 5:
+            change_request.delete()
+            return JsonResponse({'success': False, 'error': 'Too many failed attempts. Please start over.'}, status=400)
+        
+        if change_request.is_valid(code):
+            try:
+                request.user.password = change_request.new_password
+                request.user.save(update_fields=['password'])
+                change_request.mark_verified()
+                return JsonResponse({'success': True, 'message': 'Password changed successfully!'})
+            except Exception as e:
+                print(f"Password update error: {str(e)}")
+                return JsonResponse({'success': False, 'error': 'Failed to update password. Please try again.'}, status=500)
+        else:
+            change_request.increment_attempts()
+            remaining = 5 - change_request.attempts
+            if remaining > 0:
+                return JsonResponse({'success': False, 'error': f'Incorrect code. {remaining} attempt{"s" if remaining != 1 else ""} remaining.'}, status=400)
+            else:
+                change_request.delete()
+                return JsonResponse({'success': False, 'error': 'Too many failed attempts. Please start over.'}, status=400)
+                
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid request data.'}, status=400)
+    except Exception as e:
+        print(f"Password verification error: {str(e)}")
+        return JsonResponse({'success': False, 'error': 'Failed to verify code. Please try again.'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def resend_password_change_code(request):
+    """Resend verification code for password change."""
+    try:
+        try:
+            change_request = PasswordChangeRequest.objects.filter(user=request.user, verified=False).latest('created_at')
+        except PasswordChangeRequest.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'No password change request found. Please start over.'}, status=404)
+        
+        change_request.verification_code = PasswordChangeRequest.generate_code()
+        change_request.expires_at = timezone.now() + timedelta(minutes=10)
+        change_request.attempts = 0
+        change_request.save()
+        
+        if send_password_change_code(request.user.email, request.user.username, change_request.verification_code):
+            return JsonResponse({'success': True, 'message': 'New verification code sent! Check your email.'})
+        else:
+            return JsonResponse({'success': False, 'error': 'Failed to send email. Please try again.'}, status=500)
+            
+    except Exception as e:
+        print(f"Resend password change code error: {str(e)}")
+        return JsonResponse({'success': False, 'error': 'Failed to resend code. Please try again.'}, status=500)

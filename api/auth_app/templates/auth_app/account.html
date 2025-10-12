@@ -96,6 +96,10 @@
             → Python Environment
         </a>
         
+        <button type="button" class="btn btn-outline" onclick="openPasswordModal()">
+            → Change Password
+        </button>
+        
         {% if user.is_superuser %}
         <a href="{% url 'auth_app:admin_panel' %}" class="btn btn-outline" style="background: linear-gradient(135deg, rgba(254, 202, 87, 0.1) 0%, rgba(254, 202, 87, 0.2) 100%); border-color: #feca57; color: #feca57;">
             → Admin Panel
@@ -112,6 +116,60 @@
                 → Sign Out
             </button>
         </form>
+    </div>
+</div>
+
+<!-- Password Change Modal -->
+<div id="passwordModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>→ Change Password</h2>
+            <button type="button" class="modal-close" onclick="closePasswordModal()">&times;</button>
+        </div>
+        
+        <div id="modalBody">
+            <!-- Step 1: Enter passwords -->
+            <div id="passwordStep" class="modal-step">
+                <div class="form-group">
+                    <label class="form-label">Current Password</label>
+                    <input type="password" id="currentPassword" class="form-input" placeholder="Enter current password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">New Password</label>
+                    <input type="password" id="newPassword" class="form-input" placeholder="Enter new password (min 6 characters)" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm new password" required>
+                </div>
+                
+                <div id="passwordError" class="alert alert-error" style="display: none;"></div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="requestPasswordChange()">Send Code</button>
+                </div>
+            </div>
+            
+            <!-- Step 2: Enter verification code -->
+            <div id="codeStep" class="modal-step" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Verification Code</label>
+                    <input type="text" id="verificationCode" class="form-input" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" required>
+                    <small class="form-hint">Check your email ({{ user.email }}) for the verification code</small>
+                </div>
+                
+                <div id="codeError" class="alert alert-error" style="display: none;"></div>
+                <div id="codeSuccess" class="alert alert-success" style="display: none;"></div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="resendCode()">Resend Code</button>
+                    <button type="button" class="btn btn-primary" onclick="verifyPasswordChange()">Verify & Change</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -236,6 +294,12 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .modal-content {
@@ -246,6 +310,18 @@
     max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { 
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to { 
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .modal-header {
@@ -284,8 +360,11 @@
     background: var(--input-bg);
 }
 
-.modal-content .form-group {
-    margin: 1.5rem;
+.modal-step {
+    padding: 1.5rem;
+}
+
+.modal-step .form-group {
     margin-bottom: 1rem;
 }
 
@@ -293,12 +372,55 @@
     display: flex;
     gap: 1rem;
     padding: 1.5rem;
+    padding-top: 0;
+    margin-top: 1.5rem;
     border-top: 1px solid var(--border-color);
-    background: var(--card-bg);
 }
 
 .modal-actions .btn {
     flex: 1;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--text-muted);
+    color: var(--text-muted);
+}
+
+.btn-secondary:hover {
+    background: var(--input-bg);
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+}
+
+.btn-primary {
+    background: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    color: var(--bg-color);
+}
+
+.btn-primary:hover {
+    background: transparent;
+    color: var(--accent-color);
+}
+
+.alert {
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.alert-error {
+    background: rgba(255, 0, 0, 0.1);
+    border: 1px solid rgba(255, 0, 0, 0.3);
+    color: #ff6b6b;
+}
+
+.alert-success {
+    background: rgba(0, 255, 0, 0.1);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    color: var(--accent-color);
 }
 
 /* Responsive Design */
@@ -320,4 +442,218 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+// Modal control functions
+function openPasswordModal() {
+    document.getElementById('passwordModal').style.display = 'flex';
+    document.getElementById('passwordStep').style.display = 'block';
+    document.getElementById('codeStep').style.display = 'none';
+    clearForm();
+}
+
+function closePasswordModal() {
+    document.getElementById('passwordModal').style.display = 'none';
+    clearForm();
+}
+
+function clearForm() {
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    document.getElementById('verificationCode').value = '';
+    hideError('passwordError');
+    hideError('codeError');
+    hideSuccess('codeSuccess');
+}
+
+function showError(elementId, message) {
+    const el = document.getElementById(elementId);
+    el.textContent = message;
+    el.style.display = 'block';
+}
+
+function hideError(elementId) {
+    document.getElementById(elementId).style.display = 'none';
+}
+
+function showSuccess(elementId, message) {
+    const el = document.getElementById(elementId);
+    el.textContent = message;
+    el.style.display = 'block';
+}
+
+function hideSuccess(elementId) {
+    document.getElementById(elementId).style.display = 'none';
+}
+
+// Step 1: Request password change and send code
+async function requestPasswordChange() {
+    const currentPassword = document.getElementById('currentPassword').value.trim();
+    const newPassword = document.getElementById('newPassword').value.trim();
+    const confirmPassword = document.getElementById('confirmPassword').value.trim();
+    
+    hideError('passwordError');
+    
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        showError('passwordError', 'All fields are required.');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showError('passwordError', 'New password must be at least 6 characters long.');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showError('passwordError', 'New passwords do not match.');
+        return;
+    }
+    
+    try {
+        const response = await fetch("{% url 'auth_app:request_password_change' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword,
+                confirm_password: confirmPassword
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Show verification code step
+            document.getElementById('passwordStep').style.display = 'none';
+            document.getElementById('codeStep').style.display = 'block';
+            showSuccess('codeSuccess', data.message);
+        } else {
+            showError('passwordError', data.error || 'Failed to send verification code.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('passwordError', 'Network error. Please try again.');
+    }
+}
+
+// Step 2: Verify code and change password
+async function verifyPasswordChange() {
+    const code = document.getElementById('verificationCode').value.trim();
+    
+    hideError('codeError');
+    hideSuccess('codeSuccess');
+    
+    if (!code) {
+        showError('codeError', 'Please enter the verification code.');
+        return;
+    }
+    
+    if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+        showError('codeError', 'Please enter a valid 6-digit code.');
+        return;
+    }
+    
+    try {
+        const response = await fetch("{% url 'auth_app:verify_password_change' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                code: code
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('codeSuccess', data.message);
+            
+            // Close modal after 2 seconds and reload page
+            setTimeout(() => {
+                closePasswordModal();
+                location.reload();
+            }, 2000);
+        } else {
+            showError('codeError', data.error || 'Failed to verify code.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('codeError', 'Network error. Please try again.');
+    }
+}
+
+// Resend verification code
+async function resendCode() {
+    hideError('codeError');
+    hideSuccess('codeSuccess');
+    
+    try {
+        const response = await fetch("{% url 'auth_app:resend_password_change_code' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccess('codeSuccess', data.message);
+        } else {
+            showError('codeError', data.error || 'Failed to resend code.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('codeError', 'Network error. Please try again.');
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('passwordModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePasswordModal();
+    }
+});
+
+// Allow Enter key to submit in each step
+document.getElementById('currentPassword')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') requestPasswordChange();
+});
+
+document.getElementById('newPassword')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') requestPasswordChange();
+});
+
+document.getElementById('confirmPassword')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') requestPasswordChange();
+});
+
+document.getElementById('verificationCode')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') verifyPasswordChange();
+});
+</script>
 {% endblock %}

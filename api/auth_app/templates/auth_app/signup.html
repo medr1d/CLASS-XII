@@ -9,7 +9,7 @@
 </div>
 
 <div class="auth-body">
-    <!-- Display messages -->
+    
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{{ message.tags }}" role="alert">
@@ -28,7 +28,7 @@
     <form method="post" id="signupForm">
         {% csrf_token %}
         
-        <!-- Username Field -->
+        
         <div class="form-group">
             <label class="form-label" for="username">Username</label>
             <input type="text" 
@@ -44,7 +44,7 @@
             <div id="usernameValidation" class="form-validation"></div>
         </div>
 
-        <!-- Email Field -->
+        
         <div class="form-group">
             <label class="form-label" for="email">Email Address</label>
             <input type="email" 
@@ -57,7 +57,7 @@
             <div id="emailValidation" class="form-validation"></div>
         </div>
 
-        <!-- Password Field -->
+        
         <div class="form-group">
             <label class="form-label" for="password">Password</label>
             <input type="password" 
@@ -70,7 +70,7 @@
             <div id="passwordValidation" class="form-validation"></div>
         </div>
 
-        <!-- Confirm Password Field -->
+        
         <div class="form-group">
             <label class="form-label" for="confirm_password">Confirm Password</label>
             <input type="password" 
@@ -83,13 +83,13 @@
             <div id="confirmPasswordValidation" class="form-validation"></div>
         </div>
 
-        <!-- Submit Button -->
+        
         <button type="submit" class="btn">
             Create Account
         </button>
     </form>
 
-    <!-- Login Link -->
+    
     <div class="text-center mt-4">
         <p style="margin-bottom: 0; color: var(--text-muted);">
             Already have an account? 

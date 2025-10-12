@@ -9,7 +9,7 @@
 </div>
 
 <div class="auth-body">
-    <!-- Display messages -->
+    
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{{ message.tags }}" role="alert">
@@ -29,21 +29,21 @@
         {% endfor %}
     {% endif %}
     
-    <!-- Info Box -->
+    
     <div class="info-box" style="background: rgba(0, 255, 0, 0.05); border: 2px solid var(--accent-color); border-radius: 8px; padding: 20px; margin-bottom: 25px;">
         <p style="margin: 0; color: var(--text-primary); line-height: 1.6;">
-            📧 We've sent a 6-digit verification code to:<br>
+            We've sent a 6-digit verification code to:<br>
             <strong style="color: var(--accent-color); font-size: 1.1em;">{{ email }}</strong>
         </p>
         <p style="margin: 10px 0 0 0; color: var(--text-secondary); font-size: 0.9em;">
-            ⏱️ Code expires in 10 minutes
+            ⏱Code expires in 10 minutes
         </p>
     </div>
 
     <form method="post" id="verifyForm">
         {% csrf_token %}
         
-        <!-- Verification Code Field -->
+        
         <div class="form-group">
             <label class="form-label" for="code">Verification Code</label>
             <input type="text" 
@@ -62,13 +62,13 @@
             </small>
         </div>
 
-        <!-- Submit Button -->
+        
         <button type="submit" class="btn" style="margin-top: 10px;">
             Verify Email
         </button>
     </form>
 
-    <!-- Resend Code Section -->
+    
     <div class="text-center mt-4">
         <p style="margin-bottom: 15px; color: var(--text-muted);">
             Didn't receive the code?
@@ -76,7 +76,7 @@
         <form method="post" action="{% url 'auth_app:resend_code' %}" style="display: inline;">
             {% csrf_token %}
             <button type="submit" class="text-link" style="background: none; border: none; cursor: pointer; text-decoration: underline; color: var(--accent-color); font-family: 'Courier New', monospace; font-size: 1em; padding: 0;">
-                📤 Resend Code
+                Resend Code
             </button>
         </form>
         

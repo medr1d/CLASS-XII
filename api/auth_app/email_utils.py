@@ -4,6 +4,7 @@ Email utility functions for sending verification codes.
 from django.core.mail import send_mail
 from django.conf import settings
 import logging
+import smtplib
 
 logger = logging.getLogger(__name__)
 
@@ -43,68 +44,89 @@ CLASS XII PYTHON Team
 <head>
     <style>
         body {{
-            font-family: 'Courier New', monospace;
-            background-color: #000;
-            color: #0f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-color: #ffffff;
+            color: #000000;
             padding: 20px;
+            margin: 0;
         }}
         .container {{
             max-width: 600px;
             margin: 0 auto;
-            background: #0a0a0a;
-            border: 2px solid #0f0;
-            border-radius: 10px;
+            background: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 8px;
             padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }}
         .header {{
             text-align: center;
             margin-bottom: 30px;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 20px;
         }}
         .header h1 {{
-            color: #0f0;
+            color: #000000;
             font-size: 24px;
-            letter-spacing: 3px;
+            font-weight: 700;
+            letter-spacing: 1px;
             margin: 0;
         }}
         .code-box {{
-            background: #000;
-            border: 3px solid #0f0;
+            background: #f5f5f5;
+            border: 2px solid #000000;
             border-radius: 8px;
             padding: 30px;
             text-align: center;
             margin: 30px 0;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
         }}
         .code {{
             font-size: 42px;
             font-weight: bold;
             letter-spacing: 10px;
-            color: #0f0;
-            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            color: #000000;
+            font-family: 'Courier New', monospace;
         }}
         .message {{
             line-height: 1.8;
-            color: #0f0;
+            color: #000000;
+            font-size: 16px;
+        }}
+        .message p {{
+            margin: 15px 0;
         }}
         .footer {{
             margin-top: 30px;
             padding-top: 20px;
-            border-top: 1px solid #0f0;
+            border-top: 1px solid #cccccc;
             text-align: center;
-            color: #0a0;
+            color: #666666;
             font-size: 12px;
         }}
         .warning {{
-            color: #ff0;
+            color: #666666;
             margin-top: 20px;
             font-size: 14px;
+            text-align: center;
+        }}
+        .label {{
+            color: #666666;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }}
+        .expiry {{
+            color: #666666;
+            margin-top: 10px;
+            font-size: 12px;
         }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>→ CLASS XII PYTHON ASSEMBLY ←</h1>
+            <h1>CLASS XII PYTHON ASSEMBLY</h1>
         </div>
         
         <div class="message">
@@ -113,13 +135,13 @@ CLASS XII PYTHON Team
         </div>
         
         <div class="code-box">
-            <div style="color: #0a0; margin-bottom: 10px; font-size: 14px;">YOUR VERIFICATION CODE</div>
+            <div class="label">YOUR VERIFICATION CODE</div>
             <div class="code">{code}</div>
-            <div style="color: #0a0; margin-top: 10px; font-size: 12px;">Valid for 10 minutes</div>
+            <div class="expiry">Valid for 10 minutes</div>
         </div>
         
         <div class="warning">
-            ⚠️ If you didn't request this code, please ignore this email.
+            <p>If you didn't request this code, please ignore this email.</p>
         </div>
         
         <div class="footer">
@@ -219,55 +241,75 @@ CLASS XII PYTHON Team
 <head>
     <style>
         body {{
-            font-family: 'Courier New', monospace;
-            background-color: #000;
-            color: #0f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-color: #ffffff;
+            color: #000000;
             padding: 20px;
+            margin: 0;
         }}
         .container {{
             max-width: 600px;
             margin: 0 auto;
-            background: #0a0a0a;
-            border: 2px solid #0f0;
-            border-radius: 10px;
+            background: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 8px;
             padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }}
         .header {{
             text-align: center;
             margin-bottom: 30px;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 20px;
         }}
         .header h1 {{
-            color: #0f0;
+            color: #000000;
             font-size: 24px;
-            letter-spacing: 3px;
+            font-weight: 700;
+            letter-spacing: 1px;
             margin: 0;
         }}
         .code-box {{
-            background: #000;
-            border: 3px solid #0f0;
+            background: #f5f5f5;
+            border: 2px solid #000000;
             border-radius: 8px;
             padding: 30px;
             text-align: center;
             margin: 30px 0;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
         }}
         .code {{
             font-size: 42px;
             font-weight: bold;
             letter-spacing: 10px;
-            color: #0f0;
-            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            color: #000000;
+            font-family: 'Courier New', monospace;
         }}
         .message {{
             line-height: 1.8;
-            color: #0f0;
+            color: #000000;
+            font-size: 16px;
+        }}
+        .message p {{
+            margin: 15px 0;
         }}
         .footer {{
             margin-top: 30px;
             padding-top: 20px;
-            border-top: 1px solid #0f0;
+            border-top: 1px solid #cccccc;
             text-align: center;
-            color: #0a0;
+            color: #666666;
+            font-size: 12px;
+        }}
+        .label {{
+            color: #666666;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }}
+        .expiry {{
+            color: #666666;
+            margin-top: 10px;
             font-size: 12px;
         }}
     </style>
@@ -275,7 +317,7 @@ CLASS XII PYTHON Team
 <body>
     <div class="container">
         <div class="header">
-            <h1>→ NEW VERIFICATION CODE ←</h1>
+            <h1>NEW VERIFICATION CODE</h1>
         </div>
         
         <div class="message">
@@ -284,9 +326,9 @@ CLASS XII PYTHON Team
         </div>
         
         <div class="code-box">
-            <div style="color: #0a0; margin-bottom: 10px; font-size: 14px;">YOUR NEW VERIFICATION CODE</div>
+            <div class="label">YOUR NEW VERIFICATION CODE</div>
             <div class="code">{code}</div>
-            <div style="color: #0a0; margin-top: 10px; font-size: 12px;">Valid for 10 minutes</div>
+            <div class="expiry">Valid for 10 minutes</div>
         </div>
         
         <div class="footer">
@@ -311,4 +353,189 @@ CLASS XII PYTHON Team
         return True
     except Exception as e:
         logger.error(f"Failed to resend verification code to {email}: {str(e)}")
+        return False
+
+
+def send_password_change_code(email, username, code):
+    """
+    Send password change verification code email to user.
+    
+    Args:
+        email: Recipient email address
+        username: Username of the user
+        code: 6-digit verification code
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    subject = 'Password Change Verification - CLASS XII PYTHON'
+    
+    message = f"""
+Hello {username},
+
+You have requested to change your password.
+
+Your verification code is: {code}
+
+This code will expire in 10 minutes.
+
+If you did not request this change, please ignore this email and your password will remain unchanged.
+
+Best regards,
+CLASS XII PYTHON Team
+"""
+    
+    html_message = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            padding: 20px;
+            margin: 0;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }}
+        .header {{
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 20px;
+        }}
+        .header h1 {{
+            color: #000000;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin: 0;
+        }}
+        .code-box {{
+            background: #f5f5f5;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+        }}
+        .code {{
+            font-size: 42px;
+            font-weight: bold;
+            letter-spacing: 10px;
+            color: #000000;
+            font-family: 'Courier New', monospace;
+        }}
+        .message {{
+            line-height: 1.8;
+            color: #000000;
+            font-size: 16px;
+        }}
+        .message p {{
+            margin: 15px 0;
+        }}
+        .footer {{
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #cccccc;
+            text-align: center;
+            color: #666666;
+            font-size: 12px;
+        }}
+        .warning {{
+            color: #666666;
+            margin-top: 20px;
+            font-size: 14px;
+            text-align: center;
+        }}
+        .label {{
+            color: #666666;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }}
+        .expiry {{
+            color: #666666;
+            margin-top: 10px;
+            font-size: 12px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PASSWORD CHANGE REQUEST</h1>
+        </div>
+        
+        <div class="message">
+            <p>Hello <strong>{username}</strong>,</p>
+            <p>You have requested to change your password. Please use the verification code below to confirm this change.</p>
+        </div>
+        
+        <div class="code-box">
+            <div class="label">VERIFICATION CODE</div>
+            <div class="code">{code}</div>
+            <div class="expiry">Valid for 10 minutes</div>
+        </div>
+        
+        <div class="warning">
+            <p>If you didn't request this password change, please ignore this email and your password will remain unchanged.</p>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated message. Please do not reply.</p>
+            <p>© 2025 CLASS XII PYTHON ASSEMBLY</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+    
+    try:
+        # Debug email configuration
+        logger.info(f"Sending password change code to {email}")
+        logger.info(f"Email configuration - Host: {settings.EMAIL_HOST}, Port: {settings.EMAIL_PORT}")
+        
+        # Manual SMTP connection for debugging
+        if settings.EMAIL_USE_SSL:
+            server = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        else:
+            server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+            if settings.EMAIL_USE_TLS:
+                server.starttls()
+            
+        logger.info(f"Attempting login with user: {settings.EMAIL_HOST_USER}")
+        server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+        
+        logger.info("SMTP login successful! Sending password change email...")
+        server.quit()
+        
+        # If manual connection works, try Django send_mail
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        logger.info(f"Password change code sent successfully to {email}")
+        return True
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error(f"SMTP Authentication Error: {str(e)}")
+        return False
+    except smtplib.SMTPException as e:
+        logger.error(f"SMTP Error: {str(e)}")
+        return False
+    except Exception as e:
+        logger.error(f"Failed to send password change code to {email}: {str(e)}")
         return False
