@@ -132,6 +132,10 @@ CLASS XII PYTHON Team
 """
     
     try:
+        # Debug email configuration
+        logger.info(f"Email configuration - Host: {settings.EMAIL_HOST}, Port: {settings.EMAIL_PORT}, TLS: {settings.EMAIL_USE_TLS}")
+        logger.info(f"From email: {settings.EMAIL_HOST_USER}")
+        
         send_mail(
             subject=subject,
             message=message,
@@ -144,6 +148,7 @@ CLASS XII PYTHON Team
         return True
     except Exception as e:
         logger.error(f"Failed to send verification email to {email}: {str(e)}")
+        logger.error(f"Email settings - Host: {settings.EMAIL_HOST}, User: {settings.EMAIL_HOST_USER}")
         return False
 
 
