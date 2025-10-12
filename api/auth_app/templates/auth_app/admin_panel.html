@@ -145,7 +145,6 @@
                             <th>Username</th>
                             <th>Email</th>
                             <th>Paid user</th>
-                            <th>Access</th>
                             <th>Control</th>
                         </tr>
                     </thead>
@@ -162,13 +161,6 @@
                                 <span class="badge {% if user.profile.paidUser %}badge-paid{% else %}badge-free{% endif %}" id="badge-{{ user.id }}">
                                     {% if user.profile.paidUser %}● PAID{% else %}○ FREE{% endif %}
                                 </span>
-                            </td>
-                            <td id="access-{{ user.id }}">
-                                {% if user.profile.paidUser %}
-                                <span style="color: #fff;">✓ ENABLED</span>
-                                {% else %}
-                                <span style="color: #555;">✗ DISABLED</span>
-                                {% endif %}
                             </td>
                             <td>
                                 <div class="toggle-wrapper">
@@ -196,25 +188,17 @@
     </div>
     
     <script>
-        function getCookie(name) {
-            let value = '; ' + document.cookie;
-            let parts = value.split('; ' + name + '=');
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
-        
         function toggle(userId, checkbox) {
             const row = document.getElementById('row-' + userId);
             const badge = document.getElementById('badge-' + userId);
             const label = document.getElementById('label-' + userId);
-            const access = document.getElementById('access-' + userId);
             
             row.classList.add('loading');
             
             fetch('/auth/api/update-paid-status/', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Csrftoken': getCookie('csrftoken')
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     user_id: userId,
@@ -234,13 +218,11 @@
                         label.classList.add('on');
                         badge.className = 'badge badge-paid';
                         badge.innerHTML = '● PAID';
-                        access.innerHTML = '<span style="color: #fff;">✓ ENABLED</span>';
                     } else {
                         label.textContent = 'OFF';
                         label.classList.remove('on');
                         badge.className = 'badge badge-free';
                         badge.innerHTML = '○ FREE';
-                        access.innerHTML = '<span style="color: #555;">✗ DISABLED</span>';
                     }
                     updateStats();
                     row.style.background = 'rgba(255, 255, 255, 0.1)';
