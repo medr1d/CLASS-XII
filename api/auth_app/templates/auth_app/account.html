@@ -632,6 +632,38 @@
             color: var(--text-primary);
         }
 
+        /* Loading Spinner */
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .loading-spinner.active {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--text-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
         /* Custom Scrollbar */
         .modal-content::-webkit-scrollbar {
             width: 12px;
@@ -820,24 +852,29 @@
                 <div id="passwordStep" class="modal-step">
                     <div class="form-group">
                         <label class="form-label">Current Password</label>
-                        <input type="password" id="currentPassword" class="form-input" placeholder="Enter current password" required>
+                        <input type="password" id="currentPassword" class="form-input" placeholder="Enter current password" required onkeypress="if(event.key==='Enter') requestPasswordChange()">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">New Password</label>
-                        <input type="password" id="newPassword" class="form-input" placeholder="Enter new password (min 6 characters)" required>
+                        <input type="password" id="newPassword" class="form-input" placeholder="Enter new password (min 6 characters)" required onkeypress="if(event.key==='Enter') requestPasswordChange()">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Confirm New Password</label>
-                        <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm new password" required>
+                        <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm new password" required onkeypress="if(event.key==='Enter') requestPasswordChange()">
                     </div>
                     
                     <div id="passwordError" class="alert alert-error"></div>
                     
+                    <div id="loadingSpinner" class="loading-spinner">
+                        <div class="spinner"></div>
+                        <div class="loading-text">Sending verification code...</div>
+                    </div>
+                    
                     <div class="modal-actions">
                         <button type="button" class="btn btn-danger" onclick="closePasswordModal()">Cancel</button>
-                        <button type="button" class="btn btn-primary" onclick="requestPasswordChange()">Send Verification Code</button>
+                        <button type="button" id="sendCodeBtn" class="btn btn-primary" onclick="requestPasswordChange()">Send Verification Code</button>
                     </div>
                 </div>
                 
@@ -845,7 +882,7 @@
                 <div id="codeStep" class="modal-step" style="display: none;">
                     <div class="form-group">
                         <label class="form-label">Verification Code</label>
-                        <input type="text" id="verificationCode" class="form-input" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" required>
+                        <input type="text" id="verificationCode" class="form-input" placeholder="Enter 6-digit code" maxlength="6" pattern="[0-9]{6}" required onkeypress="if(event.key==='Enter') verifyPasswordChange()">
                         <small class="form-hint">Check your email ({{ user.email }}) for the verification code</small>
                     </div>
                     
@@ -929,6 +966,8 @@
             const currentPassword = document.getElementById('currentPassword').value.trim();
             const newPassword = document.getElementById('newPassword').value.trim();
             const confirmPassword = document.getElementById('confirmPassword').value.trim();
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const sendCodeBtn = document.getElementById('sendCodeBtn');
             
             hideError('passwordError');
             
@@ -947,6 +986,12 @@
                 return;
             }
             
+            // Show loading spinner and disable button
+            loadingSpinner.classList.add('active');
+            sendCodeBtn.disabled = true;
+            sendCodeBtn.style.opacity = '0.6';
+            sendCodeBtn.style.cursor = 'not-allowed';
+            
             try {
                 const response = await fetch("{% url 'auth_app:request_password_change' %}", {
                     method: 'POST',
@@ -960,6 +1005,12 @@
                         confirm_password: confirmPassword
                     })
                 });
+                
+                // Hide loading spinner and re-enable button
+                loadingSpinner.classList.remove('active');
+                sendCodeBtn.disabled = false;
+                sendCodeBtn.style.opacity = '1';
+                sendCodeBtn.style.cursor = 'pointer';
                 
                 if (!response.ok) {
                     // Try to parse as JSON first
@@ -990,6 +1041,12 @@
                     showError('passwordError', data.error || 'Failed to send verification code.');
                 }
             } catch (error) {
+                // Hide loading spinner and re-enable button on error
+                loadingSpinner.classList.remove('active');
+                sendCodeBtn.disabled = false;
+                sendCodeBtn.style.opacity = '1';
+                sendCodeBtn.style.cursor = 'pointer';
+                
                 console.error('Error:', error);
                 showError('passwordError', 'Network error. Please try again.');
             }
