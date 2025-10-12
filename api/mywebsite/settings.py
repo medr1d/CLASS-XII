@@ -117,7 +117,8 @@ STATIC_URL = os.getenv('STATIC_URL', '/static/')
 STATIC_ROOT = os.path.join(BASE_DIR, os.getenv('STATIC_ROOT', 'staticfiles'))
 
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
+    BASE_DIR / 'static',  # api/static (for app-specific static files)
+    BASE_DIR.parent / 'static',  # root static (for shared static files like favicon)
 ]
 
 MEDIA_URL = os.getenv('MEDIA_URL', '/media/')
