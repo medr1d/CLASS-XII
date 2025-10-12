@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from homepage.models import UserProfile
 import json
 import re
@@ -194,6 +194,7 @@ def admin_panel_view(request):
     })
 
 @login_required
+@csrf_protect
 @require_http_methods(["POST"])
 def update_paid_status(request):
     if not request.user.is_superuser:

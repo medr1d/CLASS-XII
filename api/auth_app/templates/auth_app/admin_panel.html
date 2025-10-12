@@ -144,7 +144,7 @@
                             <th>ID</th>
                             <th>Username</th>
                             <th>Email</th>
-                            <th>Status</th>
+                            <th>Paid user</th>
                             <th>Access</th>
                             <th>Control</th>
                         </tr>
@@ -214,7 +214,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'X-Csrftoken': getCookie('csrftoken')
                 },
                 body: JSON.stringify({
                     user_id: userId,
@@ -266,7 +266,7 @@
             boxes.forEach(cb => { if (cb.checked) paid++; else free++; });
             document.getElementById('paid').textContent = paid;
             document.getElementById('free').textContent = free;
-        }
+        
     </script>
 </body>
 </html>
