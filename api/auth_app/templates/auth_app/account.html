@@ -818,6 +818,20 @@
                                 <div class="theme-desc">Dark Grey-Blue Terminal</div>
                             </div>
                         </div>
+                        <div class="theme-option {% if user.profile and user.profile.theme == 'cloud' %}active{% endif %}" onclick="selectTheme('cloud')">
+                            <div class="theme-radio"></div>
+                            <div class="theme-info">
+                                <div class="theme-name">Cloud Theme</div>
+                                <div class="theme-desc">White & Dark Grey Terminal</div>
+                            </div>
+                        </div>
+                        <div class="theme-option {% if user.profile and user.profile.theme == 'chaos' %}active{% endif %}" onclick="selectTheme('chaos')">
+                            <div class="theme-radio"></div>
+                            <div class="theme-info">
+                                <div class="theme-name">Chaos Theme</div>
+                                <div class="theme-desc">Black & Grey Terminal</div>
+                            </div>
+                        </div>
                     </div>
                     <input type="hidden" name="theme" id="theme-input" value="{% if user.profile %}{{ user.profile.theme }}{% else %}default{% endif %}">
                 </form>

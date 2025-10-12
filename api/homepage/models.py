@@ -5,6 +5,8 @@ class UserProfile(models.Model):
     THEME_CHOICES = [
         ('default', 'Default (Green Matrix)'),
         ('greydom', 'Greydom (Dark Grey-Blue)'),
+        ('cloud', 'Cloud (White & Dark Grey)'),
+        ('chaos', 'Chaos (Black & Grey)'),
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')

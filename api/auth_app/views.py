@@ -221,7 +221,7 @@ def update_theme(request):
     if request.method == 'POST':
         theme = request.POST.get('theme', 'default')
         
-        if theme in ['default', 'greydom']:
+        if theme in ['default', 'greydom', 'cloud', 'chaos']:
             # Get or create user profile
             from homepage.models import UserProfile
             profile, created = UserProfile.objects.get_or_create(user=request.user)

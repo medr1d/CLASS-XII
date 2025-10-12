@@ -23,6 +23,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/mode-python.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-monokai.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-katzenmilch.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-chaos.min.js"></script>
     
     
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
@@ -55,6 +57,36 @@
             --shadow-color: rgba(255, 68, 68, 0.4);
             --glow-color: rgba(255, 68, 68, 0.15);
             --grid-color: rgba(100, 120, 150, 0.05);
+        }
+
+        body.theme-cloud {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --tertiary-color: #475a6d;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #ecf0f1;
+            --border-color: #bdc3c7;
+            --text-color: #2c3e50;
+            --text-bright: #34495e;
+            --shadow-color: rgba(44, 62, 80, 0.2);
+            --glow-color: rgba(44, 62, 80, 0.08);
+            --grid-color: rgba(189, 195, 199, 0.1);
+        }
+
+        body.theme-chaos {
+            --primary-color: #808080;
+            --secondary-color: #666666;
+            --tertiary-color: #4d4d4d;
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0a;
+            --bg-tertiary: #141414;
+            --border-color: #808080;
+            --text-color: #b0b0b0;
+            --text-bright: #d0d0d0;
+            --shadow-color: rgba(128, 128, 128, 0.3);
+            --glow-color: rgba(128, 128, 128, 0.1);
+            --grid-color: rgba(128, 128, 128, 0.05);
         }
 
         * {
@@ -1715,7 +1747,7 @@
         }
     </style>
 </head>
-<body class="{% if user_theme == 'greydom' %}theme-greydom{% endif %}">
+<body class="{% if user_theme == 'greydom' %}theme-greydom{% elif user_theme == 'cloud' %}theme-cloud{% elif user_theme == 'chaos' %}theme-chaos{% endif %}">
     
     <div class="loading-screen" id="loading-screen">
         <div class="boot-sequence">
@@ -2656,6 +2688,10 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
             // Set theme based on user preference
             {% if user_theme == 'greydom' %}
                 aceEditor.setTheme("ace/theme/monokai");
+            {% elif user_theme == 'cloud' %}
+                aceEditor.setTheme("ace/theme/katzenmilch");
+            {% elif user_theme == 'chaos' %}
+                aceEditor.setTheme("ace/theme/chaos");
             {% else %}
                 aceEditor.setTheme("ace/theme/terminal");
             {% endif %}
