@@ -11,4 +11,6 @@ urlpatterns = [
     path('account/update-theme/', views.update_theme, name='update_theme'),
     path('api/check-email/', views.check_email_availability, name='check_email'),
     path('api/check-username/', views.check_username_availability, name='check_username'),
+    path('admin-panel/', views.admin_panel_view, name='admin_panel'),
+    path('api/update-paid-status/', views.update_paid_status, name='update_paid_status'),
 ]

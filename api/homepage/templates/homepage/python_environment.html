@@ -169,9 +169,9 @@
             font-size: 2.5em;
             margin-bottom: 30px;
             text-shadow: 
-                0 0 10px #008800,
-                0 0 20px #008800,
-                0 0 40px #008800;
+                0 0 10px var(--secondary-color),
+                0 0 20px var(--secondary-color),
+                0 0 40px var(--secondary-color);
             animation: bootSequence 3s ease-in-out infinite;
             letter-spacing: 3px;
             text-transform: uppercase;
@@ -182,18 +182,18 @@
         @keyframes pixelGlow {
             0% { 
                 text-shadow: 
-                    2px 2px 0px #004400,
-                    4px 4px 0px #002200,
-                    0 0 20px #008800,
-                    0 0 40px #008800;
+                    2px 2px 0px var(--tertiary-color),
+                    4px 4px 0px var(--bg-tertiary),
+                    0 0 20px var(--secondary-color),
+                    0 0 40px var(--secondary-color);
                 transform: scale(1);
             }
             100% { 
                 text-shadow: 
-                    2px 2px 0px #006600,
-                    4px 4px 0px #004400,
-                    0 0 30px #00aa00,
-                    0 0 60px #00aa00;
+                    2px 2px 0px var(--tertiary-color),
+                    4px 4px 0px var(--tertiary-color),
+                    0 0 30px var(--primary-color),
+                    0 0 60px var(--primary-color);
                 transform: scale(1.02);
             }
         }
@@ -201,11 +201,11 @@
         .retro-computer {
             width: 80px;
             height: 60px;
-            border: 3px solid #008800;
+            border: 3px solid var(--secondary-color);
             border-radius: 4px;
             position: relative;
             margin-bottom: 20px;
-            background: #000;
+            background: var(--bg-primary);
             animation: computerBoot 2s ease-in-out infinite;
         }
 
@@ -216,7 +216,7 @@
             left: 5px;
             right: 5px;
             bottom: 15px;
-            background: #008800;
+            background: var(--secondary-color);
             opacity: 0.1;
             animation: screenFlicker 1.5s ease-in-out infinite;
         }
@@ -242,10 +242,10 @@
         .loading-dot {
             width: 8px;
             height: 8px;
-            background: #008800;
+            background: var(--secondary-color);
             margin: 0 3px;
             animation: dotPulse 1.5s ease-in-out infinite;
-            box-shadow: 0 0 10px #008800;
+            box-shadow: 0 0 10px var(--secondary-color);
         }
 
         .loading-dot:nth-child(1) { animation-delay: 0s; }
@@ -258,7 +258,7 @@
             font-size: 1.2em;
             opacity: 0.8;
             animation: typeWriter 2s steps(20) infinite;
-            border-right: 2px solid #008800;
+            border-right: 2px solid var(--secondary-color);
             white-space: nowrap;
             overflow: hidden;
             max-width: fit-content;
@@ -285,7 +285,7 @@
         .progress-bar {
             width: 300px;
             height: 4px;
-            background: rgba(0, 136, 0, 0.2);
+            background: var(--glow-color);
             border: 1px solid var(--border-color);
             margin-top: 20px;
             position: relative;
@@ -296,11 +296,11 @@
             height: 100%;
             background: linear-gradient(90deg, 
                 transparent 0%, 
-                #008800 50%, 
+                var(--secondary-color) 50%, 
                 transparent 100%);
             width: 0%;
             animation: progressLoad 3s ease-in-out infinite;
-            box-shadow: 0 0 10px #008800;
+            box-shadow: 0 0 10px var(--secondary-color);
         }
 
         @keyframes scanlines {
@@ -312,9 +312,9 @@
             0%, 100% { 
                 opacity: 1; 
                 text-shadow: 
-                    0 0 10px #008800,
-                    0 0 20px #008800,
-                    0 0 40px #008800;
+                    0 0 10px var(--secondary-color),
+                    0 0 20px var(--secondary-color),
+                    0 0 40px var(--secondary-color);
             }
             50% { 
                 opacity: 0.7; 
@@ -328,11 +328,11 @@
         @keyframes computerBoot {
             0%, 100% { 
                 border-color: var(--secondary-color); 
-                box-shadow: 0 0 20px rgba(0, 136, 0, 0.5);
+                box-shadow: 0 0 20px var(--glow-color);
             }
             50% { 
                 border-color: var(--tertiary-color); 
-                box-shadow: 0 0 40px rgba(0, 136, 0, 0.8);
+                box-shadow: 0 0 40px var(--shadow-color);
             }
         }
 
@@ -350,12 +350,12 @@
             0%, 100% { 
                 transform: scale(1); 
                 opacity: 0.5;
-                box-shadow: 0 0 10px #008800;
+                box-shadow: 0 0 10px var(--secondary-color);
             }
             50% { 
                 transform: scale(1.5); 
                 opacity: 1;
-                box-shadow: 0 0 20px #008800;
+                box-shadow: 0 0 20px var(--secondary-color);
             }
         }
 
@@ -452,11 +452,11 @@
 
         @keyframes selectedPulse {
             0%, 100% { 
-                box-shadow: 0 0 15px rgba(0, 136, 0, 0.3);
+                box-shadow: 0 0 15px var(--glow-color);
                 border-color: var(--secondary-color);
             }
             50% { 
-                box-shadow: 0 0 25px rgba(0, 136, 0, 0.6);
+                box-shadow: 0 0 25px var(--shadow-color);
                 border-color: var(--tertiary-color);
             }
         }
@@ -868,7 +868,7 @@
 
         /* Enhanced Focus and Notebook Mode Buttons */
         .focus-button {
-            background: linear-gradient(45deg, #000000 0%, #008800 50%, #000000 100%);
+            background: linear-gradient(45deg, var(--bg-primary) 0%, var(--secondary-color) 50%, var(--bg-primary) 100%);
             border: 2px solid var(--border-color);
             color: #ffffff;
             padding: 8px 16px;
@@ -882,24 +882,24 @@
             overflow: hidden;
             text-transform: uppercase;
             letter-spacing: 1px;
-            box-shadow: 0 0 10px rgba(0, 136, 0, 0.1);
+            box-shadow: 0 0 10px var(--glow-color);
         }
 
         .focus-button:hover {
-            background: linear-gradient(45deg, #008800 0%, #00aa00 50%, #008800 100%);
-            box-shadow: 0 0 15px rgba(0, 136, 0, 0.3);
+            background: linear-gradient(45deg, var(--secondary-color) 0%, var(--primary-color) 50%, var(--secondary-color) 100%);
+            box-shadow: 0 0 15px var(--glow-color);
             transform: translateY(-2px);
         }
 
         .focus-button:active {
             transform: translateY(0);
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 10px var(--shadow-color);
         }
 
         .focus-button.active {
-            background: linear-gradient(45deg, #ff4444 0%, #ff8888 50%, #ff4444 100%);
-            border-color: #ff4444;
-            box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+            background: linear-gradient(45deg, var(--primary-color) 0%, var(--text-bright) 50%, var(--primary-color) 100%);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px var(--shadow-color);
         }
 
         .expand-button {
@@ -1087,7 +1087,7 @@
         }
 
         .execute-button {
-            background: linear-gradient(45deg, #006600 0%, #008800 50%, #006600 100%);
+            background: linear-gradient(45deg, var(--tertiary-color) 0%, var(--secondary-color) 50%, var(--tertiary-color) 100%);
             border: 1px solid var(--border-color);
             color: #ffffff;
             padding: 8px 15px;
@@ -1101,7 +1101,7 @@
             overflow: hidden;
             text-transform: uppercase;
             letter-spacing: 1px;
-            box-shadow: 0 0 8px rgba(0, 136, 0, 0.2);
+            box-shadow: 0 0 8px var(--glow-color);
         }
 
         .execute-button::before {
@@ -1113,17 +1113,17 @@
             height: 100%;
             background: linear-gradient(90deg,
                 transparent 0%,
-                rgba(0, 255, 0, 0.3) 50%,
+                var(--shadow-color) 50%,
                 transparent 100%);
             transition: left 0.4s ease;
         }
 
         .execute-button:hover {
-            background: #00ff00;
-            color: #000;
+            background: var(--text-bright);
+            color: var(--bg-primary);
             border-color: var(--text-bright);
             text-shadow: none;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+            box-shadow: 0 0 20px var(--shadow-color);
             transform: translateY(-2px) scale(1.02);
         }
 
@@ -1489,7 +1489,7 @@
         }
 
         .nb-btn {
-            background: rgba(0, 136, 0, 0.2);
+            background: var(--glow-color);
             border: 1px solid var(--border-color);
             color: var(--text-bright);
             padding: 8px 16px;
@@ -1501,8 +1501,8 @@
         }
 
         .nb-btn:hover {
-            background: rgba(0, 136, 0, 0.3);
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            background: var(--shadow-color);
+            box-shadow: 0 0 10px var(--shadow-color);
         }
 
         .notebook-cell {
@@ -1809,7 +1809,7 @@
                 <div class="notebook-header">
                     <div class="notebook-title">Python Notebook (Jupyter-style)</div>
                     <div class="notebook-controls">
-                        <button class="nb-btn" onclick="toggleNotebookMode()" style="background: rgba(136, 0, 0, 0.3); border-color: #880000; color: #ff6666;">← Back to Editor</button>
+                        <button class="nb-btn" onclick="toggleNotebookMode()">← Back to Editor</button>
                         <button class="nb-btn" onclick="addNotebookCell('code')">+ Code</button>
                         <button class="nb-btn" onclick="addNotebookCell('markdown')">+ Markdown</button>
                         <button class="nb-btn" onclick="runAllCells()">Run All</button>
@@ -3462,11 +3462,12 @@ except Exception as e:
         function loadScriptList() {
             const fileList = document.getElementById('file-list');
             fileList.innerHTML = '';
+            const computedStyle = getComputedStyle(document.body);
             
             
             const dataSection = document.createElement('li');
             dataSection.innerHTML = '<strong>Data Files:</strong>';
-            dataSection.style.color = '#00ff00';
+            dataSection.style.color = computedStyle.getPropertyValue('--text-bright');
             dataSection.style.marginBottom = '10px';
             fileList.appendChild(dataSection);
             
@@ -3539,7 +3540,7 @@ except Exception as e:
             
             const scriptSection = document.createElement('li');
             scriptSection.innerHTML = '<strong>Saved Scripts:</strong>';
-            scriptSection.style.color = '#00ff00';
+            scriptSection.style.color = computedStyle.getPropertyValue('--text-bright');
             scriptSection.style.marginBottom = '10px';
             fileList.appendChild(scriptSection);
             

@@ -146,6 +146,21 @@ SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'False').lower() == 'true
 CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False').lower() == 'true'
 SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
 
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_USE_SESSIONS = True
+
+CSRF_TRUSTED_ORIGINS = ['https://www.themedium.in']
+if os.getenv('VERCEL'):
+    CSRF_TRUSTED_ORIGINS.extend([
+        'https://*.vercel.app',
+        'https://*.themedium.in'
+    ])
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

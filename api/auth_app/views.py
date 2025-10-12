@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from homepage.models import UserProfile
 import json
 import re
 
@@ -165,3 +166,74 @@ def check_username_availability(request):
 
 def home_view(request):
     return render(request, 'auth_app/index.html')
+
+@login_required
+def admin_panel_view(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'Access denied. Admin privileges required.')
+        return redirect('homepage:python_environment')
+    
+    users = User.objects.all().select_related('profile').order_by('-date_joined')
+    
+    users_data = []
+    for user in users:
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        users_data.append({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'is_superuser': user.is_superuser,
+            'is_active': user.is_active,
+            'date_joined': user.date_joined,
+            'paidUser': profile.paidUser,
+            'theme': profile.theme,
+        })
+    
+    return render(request, 'auth_app/admin_panel.html', {
+        'users': users_data,
+        'total_users': len(users_data),
+        'paid_users': len([u for u in users_data if u['paidUser']]),
+        'admin_users': len([u for u in users_data if u['is_superuser']]),
+        'free_users': len([u for u in users_data if not u['paidUser']]),
+    })
+
+@login_required
+@require_http_methods(["POST"])
+def update_paid_status(request):
+    if not request.user.is_superuser:
+        return JsonResponse({
+            'success': False,
+            'error': 'Unauthorized. Admin access required.'
+        }, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        user_id = data.get('user_id')
+        paid_status = data.get('paid_status')
+        
+        if user_id is None or paid_status is None:
+            return JsonResponse({
+                'success': False,
+                'error': 'Missing required parameters'
+            }, status=400)
+        
+        user = User.objects.get(id=user_id)
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        profile.paidUser = paid_status
+        profile.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'User {user.username} paid status updated to {paid_status}'
+        })
+        
+    except User.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'User not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

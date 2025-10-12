@@ -1,0 +1,670 @@
+{% extends 'auth_app/base.html' %}
+
+{% block title %}Admin Panel - CLASS 12 PYTHON ASSEMBLY{% endblock %}
+
+{% block content %}
+<style>
+    .admin-panel-container {
+        max-width: 1400px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .admin-header {
+        text-align: center;
+        margin-bottom: 40px;
+        animation: fadeInDown 0.6s ease-out;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .admin-header h1 {
+        font-size: 2.5rem;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        margin-bottom: 10px;
+        text-shadow: 
+            0 0 10px rgba(255, 255, 255, 0.3),
+            0 0 20px rgba(255, 255, 255, 0.2);
+        animation: pulseGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+        0%, 100% {
+            text-shadow: 
+                0 0 10px rgba(255, 255, 255, 0.3),
+                0 0 20px rgba(255, 255, 255, 0.2);
+        }
+        50% {
+            text-shadow: 
+                0 0 15px rgba(255, 255, 255, 0.5),
+                0 0 30px rgba(255, 255, 255, 0.3);
+        }
+    }
+
+    .admin-header p {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+        animation: fadeIn 0.8s ease-out 0.2s both;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, var(--secondary-bg) 0%, var(--tertiary-bg) 100%);
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 25px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--accent-color);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .stat-card:hover::before {
+        left: 100%;
+    }
+
+    .stat-value {
+        font-size: 3rem;
+        font-weight: bold;
+        color: var(--accent-color);
+        margin-bottom: 10px;
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    }
+
+    .stat-label {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .table-container {
+        background: linear-gradient(135deg, var(--secondary-bg) 0%, var(--tertiary-bg) 100%);
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.8s ease-out 0.4s both;
+    }
+
+    .table-header {
+        background: var(--primary-bg);
+        padding: 20px 30px;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .table-header h2 {
+        font-size: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .table-wrapper::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+
+    .table-wrapper::-webkit-scrollbar-track {
+        background: var(--primary-bg);
+    }
+
+    .table-wrapper::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 6px;
+        border: 2px solid var(--primary-bg);
+    }
+
+    .table-wrapper::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-color);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+
+    thead {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--primary-bg);
+    }
+
+    th {
+        padding: 15px 20px;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: bold;
+        color: var(--accent-color);
+        border-bottom: 2px solid var(--border-color);
+        background: var(--primary-bg);
+    }
+
+    tbody tr {
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    tbody tr:hover {
+        background: rgba(255, 255, 255, 0.05);
+        transform: scale(1.01);
+    }
+
+    td {
+        padding: 15px 20px;
+        color: var(--text-secondary);
+    }
+
+    .user-id {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .username {
+        color: var(--text-primary);
+        font-weight: bold;
+        font-size: 1.05rem;
+    }
+
+    .email {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .badge-success {
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ecdc4;
+        border: 1px solid #4ecdc4;
+    }
+
+    .badge-danger {
+        background: rgba(255, 107, 107, 0.2);
+        color: #ff6b6b;
+        border: 1px solid #ff6b6b;
+    }
+
+    .badge-warning {
+        background: rgba(254, 202, 87, 0.2);
+        color: #feca57;
+        border: 1px solid #feca57;
+    }
+
+    .badge-info {
+        background: rgba(128, 128, 128, 0.2);
+        color: #888888;
+        border: 1px solid #888888;
+    }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--border-color);
+        transition: 0.4s;
+        border-radius: 30px;
+        border: 2px solid var(--border-color);
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background-color: var(--text-muted);
+        transition: 0.4s;
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    input:checked + .slider {
+        background-color: rgba(78, 205, 196, 0.3);
+        border-color: #4ecdc4;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(28px);
+        background-color: #4ecdc4;
+        box-shadow: 0 2px 10px rgba(78, 205, 196, 0.5);
+    }
+
+    .slider:hover {
+        border-color: var(--accent-color);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-icon {
+        background: var(--secondary-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-icon:hover {
+        background: var(--tertiary-bg);
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .back-button {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: linear-gradient(135deg, var(--secondary-bg) 0%, var(--tertiary-bg) 100%);
+        border: 2px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-family: 'Courier New', monospace;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        z-index: 100;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .back-button:hover {
+        background: var(--primary-bg);
+        border-color: var(--accent-color);
+        transform: translateX(-5px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .loading-indicator {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--secondary-bg);
+        border: 2px solid var(--accent-color);
+        border-radius: 8px;
+        padding: 30px 50px;
+        z-index: 1000;
+        text-align: center;
+    }
+
+    .loading-indicator.active {
+        display: block;
+    }
+
+    .loading-spinner {
+        border: 4px solid var(--border-color);
+        border-top: 4px solid var(--accent-color);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .alert {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 6px;
+        border: 2px solid;
+        z-index: 1000;
+        animation: slideInRight 0.5s ease-out;
+        max-width: 400px;
+        font-family: 'Courier New', monospace;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .alert-success {
+        background: rgba(78, 205, 196, 0.2);
+        border-color: #4ecdc4;
+        color: #4ecdc4;
+    }
+
+    .alert-error {
+        background: rgba(255, 107, 107, 0.2);
+        border-color: #ff6b6b;
+        color: #ff6b6b;
+    }
+
+    .date-display {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 50px;
+        color: var(--text-muted);
+        font-size: 1.2rem;
+        letter-spacing: 1px;
+    }
+
+    @media (max-width: 768px) {
+        .admin-header h1 {
+            font-size: 1.8rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .table-wrapper {
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 10px;
+        }
+    }
+</style>
+
+<a href="{% url 'homepage:python_environment' %}" class="back-button">← Back</a>
+
+<div class="admin-panel-container">
+    <div class="admin-header">
+        <h1>→ Admin Control Panel</h1>
+        <p>User Management Dashboard</p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" id="messageAlert">
+                <strong>
+                    {% if message.tags == 'error' %}
+                        [ERROR]:
+                    {% elif message.tags == 'success' %}
+                        [SUCCESS]:
+                    {% endif %}
+                </strong>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_users }}</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ paid_users }}</div>
+            <div class="stat-label">Paid Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ admin_users }}</div>
+            <div class="stat-label">Administrators</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ free_users }}</div>
+            <div class="stat-label">Free Users</div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header">
+            <h2>→ User Database</h2>
+        </div>
+        <div class="table-wrapper">
+            {% if users %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Role</th>
+                            <th>Theme</th>
+                            <th>Paid User</th>
+                            <th>Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr data-user-id="{{ user.id }}">
+                                <td class="user-id">#{{ user.id }}</td>
+                                <td class="username">{{ user.username }}</td>
+                                <td class="email">{{ user.email }}</td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.is_superuser %}
+                                        <span class="badge badge-warning">Admin</span>
+                                    {% else %}
+                                        <span class="badge badge-info">User</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">{{ user.theme|upper }}</span>
+                                </td>
+                                <td>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" 
+                                               class="paid-toggle" 
+                                               data-user-id="{{ user.id }}"
+                                               {% if user.paidUser %}checked{% endif %}
+                                               {% if user.is_superuser %}disabled{% endif %}>
+                                        <span class="slider"></span>
+                                    </label>
+                                </td>
+                                <td class="date-display">{{ user.date_joined|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="no-data">No users found in the database.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="loading-indicator" id="loadingIndicator">
+    <div class="loading-spinner"></div>
+    <div style="color: var(--text-primary); letter-spacing: 1px;">PROCESSING...</div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const paidToggles = document.querySelectorAll('.paid-toggle');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function showAlert(message, type) {
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `<strong>[${type.toUpperCase()}]:</strong> ${message}`;
+            document.body.appendChild(alert);
+
+            setTimeout(() => {
+                alert.style.animation = 'slideInRight 0.5s ease-out reverse';
+                setTimeout(() => alert.remove(), 500);
+            }, 3000);
+        }
+
+        paidToggles.forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const userId = this.dataset.userId;
+                const paidStatus = this.checked;
+                const originalState = !paidStatus;
+
+                loadingIndicator.classList.add('active');
+
+                fetch('{% url "auth_app:update_paid_status" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        paid_status: paidStatus
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingIndicator.classList.remove('active');
+                    
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                    } else {
+                        this.checked = originalState;
+                        showAlert(data.error || 'Failed to update user status', 'error');
+                    }
+                })
+                .catch(error => {
+                    loadingIndicator.classList.remove('active');
+                    this.checked = originalState;
+                    showAlert('Network error. Please try again.', 'error');
+                    console.error('Error:', error);
+                });
+            });
+        });
+
+        setTimeout(() => {
+            const messageAlert = document.getElementById('messageAlert');
+            if (messageAlert) {
+                messageAlert.style.animation = 'slideInRight 0.5s ease-out reverse';
+                setTimeout(() => messageAlert.remove(), 500);
+            }
+        }, 3000);
+    });
+</script>
+{% endblock %}

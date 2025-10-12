@@ -96,6 +96,11 @@
             → Python Environment
         </a>
         
+        {% if user.is_superuser %}
+        <a href="{% url 'auth_app:admin_panel' %}" class="btn btn-outline" style="background: linear-gradient(135deg, rgba(254, 202, 87, 0.1) 0%, rgba(254, 202, 87, 0.2) 100%); border-color: #feca57; color: #feca57;">
+            → Admin Panel
+        </a>
+        {% endif %}
 
     </div>
 
