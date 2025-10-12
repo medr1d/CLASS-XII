@@ -467,13 +467,6 @@
         }
 
         /* Logout Section */
-        .logout-section {
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 2px solid var(--border-color);
-            animation: fadeIn 1s ease;
-        }
-
         /* Modal Styles */
         .modal-overlay {
             position: fixed;
@@ -528,6 +521,7 @@
             font-size: 1.8rem;
             font-weight: 700;
             letter-spacing: -0.5px;
+            font-family: 'Courier New', 'Courier', monospace;
         }
 
         .modal-close {
@@ -564,6 +558,7 @@
 
         .form-label {
             display: block;
+            font-family: 'Courier New', 'Courier', monospace;
             color: var(--text-primary);
             font-weight: 600;
             text-transform: uppercase;
@@ -810,17 +805,6 @@
             </a>
             {% endif %}
         </div>
-
-        <!-- Logout Section -->
-        <div class="logout-section">
-            <form method="post" action="{% url 'auth_app:logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-danger" style="width: 100%;">
-                    <i class="fas fa-power-off"></i>
-                    Sign Out of Account
-                </button>
-            </form>
-        </div>
     </div>
 
     <!-- Password Change Modal -->
@@ -992,6 +976,24 @@
                     })
                 });
                 
+                if (!response.ok) {
+                    // Try to parse as JSON first
+                    let errorMessage = 'Failed to send verification code.';
+                    try {
+                        const data = await response.json();
+                        errorMessage = data.error || errorMessage;
+                    } catch (e) {
+                        // If not JSON, it's likely an authentication redirect or server error
+                        if (response.status === 401 || response.status === 403) {
+                            errorMessage = 'Your session has expired. Please refresh the page and try again.';
+                        } else {
+                            errorMessage = `Server error (${response.status}). Please try again.`;
+                        }
+                    }
+                    showError('passwordError', errorMessage);
+                    return;
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
@@ -1037,6 +1039,24 @@
                     })
                 });
                 
+                if (!response.ok) {
+                    // Try to parse as JSON first
+                    let errorMessage = 'Failed to verify code.';
+                    try {
+                        const data = await response.json();
+                        errorMessage = data.error || errorMessage;
+                    } catch (e) {
+                        // If not JSON, it's likely an authentication redirect or server error
+                        if (response.status === 401 || response.status === 403) {
+                            errorMessage = 'Your session has expired. Please refresh the page and try again.';
+                        } else {
+                            errorMessage = `Server error (${response.status}). Please try again.`;
+                        }
+                    }
+                    showError('codeError', errorMessage);
+                    return;
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
@@ -1069,6 +1089,24 @@
                         'X-CSRFToken': csrftoken
                     }
                 });
+                
+                if (!response.ok) {
+                    // Try to parse as JSON first
+                    let errorMessage = 'Failed to resend code.';
+                    try {
+                        const data = await response.json();
+                        errorMessage = data.error || errorMessage;
+                    } catch (e) {
+                        // If not JSON, it's likely an authentication redirect or server error
+                        if (response.status === 401 || response.status === 403) {
+                            errorMessage = 'Your session has expired. Please refresh the page and try again.';
+                        } else {
+                            errorMessage = `Server error (${response.status}). Please try again.`;
+                        }
+                    }
+                    showError('codeError', errorMessage);
+                    return;
+                }
                 
                 const data = await response.json();
                 
