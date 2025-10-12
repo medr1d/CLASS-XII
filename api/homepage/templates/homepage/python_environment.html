@@ -28,14 +28,14 @@
     <style>
         /* Theme Variables */
         :root {
-            --primary-color: #00cc00;
-            --secondary-color: #008800;
-            --tertiary-color: #006600;
+            --primary-color: var(--text-color);
+            --secondary-color: var(--secondary-color);
+            --tertiary-color: var(--tertiary-color);
             --bg-primary: #000000;
             --bg-secondary: #050505;
             --bg-tertiary: #0a0a0a;
-            --border-color: #008800;
-            --text-color: #00cc00;
+            --border-color: var(--secondary-color);
+            --text-color: var(--text-color);
             --text-bright: #00ff00;
             --shadow-color: rgba(0, 136, 0, 0.3);
             --glow-color: rgba(0, 255, 0, 0.2);
@@ -138,7 +138,7 @@
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            color: #00cc00;
+            color: var(--text-color);
             overflow: hidden;
         }
 
@@ -228,7 +228,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #008800;
+            color: var(--secondary-color);
             font-size: 16px;
             animation: pixelBlink 1s infinite;
         }
@@ -277,7 +277,7 @@
             top: 10%;
             left: 10%;
             right: 10%;
-            color: #008800;
+            color: var(--secondary-color);
             font-size: 12px;
             animation: bootText 3s ease-in-out;
             opacity: 0.7;
@@ -287,7 +287,7 @@
             width: 300px;
             height: 4px;
             background: rgba(0, 136, 0, 0.2);
-            border: 1px solid #008800;
+            border: 1px solid var(--border-color);
             margin-top: 20px;
             position: relative;
             overflow: hidden;
@@ -328,11 +328,11 @@
 
         @keyframes computerBoot {
             0%, 100% { 
-                border-color: #008800; 
+                border-color: var(--secondary-color); 
                 box-shadow: 0 0 20px rgba(0, 136, 0, 0.5);
             }
             50% { 
-                border-color: #006600; 
+                border-color: var(--tertiary-color); 
                 box-shadow: 0 0 40px rgba(0, 136, 0, 0.8);
             }
         }
@@ -447,28 +447,28 @@
 
         @keyframes blink-caret {
             from, to { border-color: transparent }
-            50% { border-color: #008800; }
+            50% { border-color: var(--secondary-color); }
         }
 
 
         @keyframes selectedPulse {
             0%, 100% { 
                 box-shadow: 0 0 15px rgba(0, 136, 0, 0.3);
-                border-color: #008800;
+                border-color: var(--secondary-color);
             }
             50% { 
                 box-shadow: 0 0 25px rgba(0, 136, 0, 0.6);
-                border-color: #006600;
+                border-color: var(--tertiary-color);
             }
         }
 
         .file-manager {
             background: linear-gradient(180deg, #000000 0%, #050505 20%, #000000 40%, #080808 60%, #000000 80%, #050505 100%);
-            border-right: 1px solid #008800;
+            border-right: 1px solid var(--border-color);
             padding: 10px;
             overflow-y: auto;
             scrollbar-width: thin;
-            scrollbar-color: #008800 #000000;
+            scrollbar-color: var(--secondary-color) #000000;
             position: relative;
             z-index: 2;
             box-shadow: inset 0 0 20px rgba(0, 136, 0, 0.05);
@@ -493,7 +493,7 @@
         }
 
         .file-manager h3 {
-            color: #008800;
+            color: var(--secondary-color);
             margin-bottom: 15px;
             font-size: 14px;
             border-bottom: 1px solid #333;
@@ -555,8 +555,8 @@
 
         .file-item:hover {
             background: #222;
-            border-color: #008800;
-            color: #008800;
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
             text-shadow: 0 0 5px #008800;
             transform: translateX(5px);
         }
@@ -567,8 +567,8 @@
 
         .file-item.selected {
             background: #333;
-            border-color: #008800;
-            color: #008800;
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
             text-shadow: 0 0 10px #008800;
             box-shadow: 0 0 15px rgba(0, 136, 0, 0.3);
             animation: selectedPulse 2s ease-in-out infinite;
@@ -621,8 +621,8 @@
 
         .file-button:hover {
             background: #444;
-            border-color: #00ff00;
-            color: #00ff00;
+            border-color: var(--text-bright);
+            color: var(--text-bright);
             text-shadow: 0 0 10px #00ff00;
             box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
             transform: translateY(-2px);
@@ -733,7 +733,7 @@
             height: 100%;
             background: transparent;
             color: transparent;
-            caret-color: #008800;
+            caret-color: var(--secondary-color);
             border: 0;
             margin: 0;
             padding: 15px;
@@ -764,12 +764,12 @@
             overflow: auto;
 
             scrollbar-width: thin;
-            scrollbar-color: #008800 #111;
+            scrollbar-color: var(--secondary-color) #111;
             transition: all 0.3s ease;
         }
 
         .editor-textarea:focus {
-            caret-color: #008800;
+            caret-color: var(--secondary-color);
             filter: drop-shadow(0 0 5px rgba(0, 136, 0, 0.5));
         }
 
@@ -870,7 +870,7 @@
         /* Enhanced Focus and Notebook Mode Buttons */
         .focus-button {
             background: linear-gradient(45deg, #000000 0%, #008800 50%, #000000 100%);
-            border: 2px solid #008800;
+            border: 2px solid var(--border-color);
             color: #ffffff;
             padding: 8px 16px;
             cursor: pointer;
@@ -932,8 +932,8 @@
 
         .expand-button:hover {
             background: #555;
-            border-color: #00ff00;
-            color: #00ff00;
+            border-color: var(--text-bright);
+            color: var(--text-bright);
             text-shadow: 0 0 5px #00ff00;
             transform: scale(1.1);
         }
@@ -986,7 +986,7 @@
             transition: all 0.3s ease;
         }
         .python-builtin:hover {
-            color: #00ff00;
+            color: var(--text-bright);
             text-shadow: 0 0 10px #00ff00;
             transform: scale(1.05);
         }
@@ -1089,7 +1089,7 @@
 
         .execute-button {
             background: linear-gradient(45deg, #006600 0%, #008800 50%, #006600 100%);
-            border: 1px solid #008800;
+            border: 1px solid var(--border-color);
             color: #ffffff;
             padding: 8px 15px;
             cursor: pointer;
@@ -1122,7 +1122,7 @@
         .execute-button:hover {
             background: #00ff00;
             color: #000;
-            border-color: #00ff00;
+            border-color: var(--text-bright);
             text-shadow: none;
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
             transform: translateY(-2px) scale(1.02);
@@ -1145,7 +1145,7 @@
         .terminal-output {
             flex: 1;
             background: linear-gradient(180deg, #000000 0%, #050505 30%, #000000 70%, #080808 100%);
-            color: #00cc00;
+            color: var(--text-color);
             padding: 15px;
             font-family: 'Courier New', monospace;
             font-size: 13px;
@@ -1159,7 +1159,7 @@
             z-index: 2;
             text-shadow: 0 0 1px #00cc00;
             scrollbar-width: thin;
-            scrollbar-color: #00ff00 #111;
+            scrollbar-color: var(--text-bright) #111;
         }
 
 
@@ -1219,7 +1219,7 @@
         .terminal-cursor::after {
             content: '█';
             animation: terminalBlink 1s infinite;
-            color: #00ff00;
+            color: var(--text-bright);
             text-shadow: 0 0 10px #00ff00;
         }
 
@@ -1252,11 +1252,11 @@
 
         .file-viewers {
             background: linear-gradient(180deg, #000000 0%, #050505 20%, #000000 40%, #080808 60%, #000000 80%, #050505 100%);
-            border-left: 1px solid #008800;
+            border-left: 1px solid var(--border-color);
             padding: 10px;
             overflow-y: auto;
             scrollbar-width: thin;
-            scrollbar-color: #008800 #000000;
+            scrollbar-color: var(--secondary-color) #000000;
             position: relative;
             z-index: 2;
             box-shadow: inset 0 0 20px rgba(0, 136, 0, 0.05);
@@ -1304,7 +1304,7 @@
         }
 
         .file-viewer h3 {
-            color: #00ff00;
+            color: var(--text-bright);
             margin-bottom: 10px;
             font-size: 12px;
             border-bottom: 1px solid #333;
@@ -1327,14 +1327,14 @@
             white-space: pre-wrap;
             word-break: break-all;
             scrollbar-width: thin;
-            scrollbar-color: #00ff00 #0a0a0a;
+            scrollbar-color: var(--text-bright) #0a0a0a;
             border-radius: 3px;
             box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
             transition: all 0.3s ease;
         }
 
         .file-content:hover {
-            border-color: #00ff00;
+            border-color: var(--text-bright);
             box-shadow: 
                 inset 0 0 10px rgba(0, 255, 0, 0.2),
                 0 0 15px rgba(0, 255, 0, 0.3);
@@ -1366,7 +1366,7 @@
             padding: 5px 15px;
             border-top: 1px solid #333;
             font-size: 11px;
-            color: #00ff00;
+            color: var(--text-bright);
             text-shadow: 0 0 5px #00ff00;
             position: relative;
             z-index: 2;
@@ -1474,12 +1474,12 @@
             margin-bottom: 20px;
             padding: 15px;
             background: rgba(0, 136, 0, 0.1);
-            border: 1px solid #008800;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
         }
 
         .notebook-title {
-            color: #00ff00;
+            color: var(--text-bright);
             font-size: 1.4em;
             font-weight: bold;
         }
@@ -1491,8 +1491,8 @@
 
         .nb-btn {
             background: rgba(0, 136, 0, 0.2);
-            border: 1px solid #008800;
-            color: #00ff00;
+            border: 1px solid var(--border-color);
+            color: var(--text-bright);
             padding: 8px 16px;
             border-radius: 3px;
             cursor: pointer;
@@ -1510,25 +1510,25 @@
             margin-bottom: 15px;
             border: 1px solid #333;
             border-radius: 5px;
-            background: #111;
+            background: var(--bg-secondary);
             overflow: hidden;
             transition: all 0.3s;
         }
 
         .notebook-cell.selected {
-            border-color: #008800;
+            border-color: var(--secondary-color);
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
         }
 
         /* Custom Ace Editor Green-on-Black Theme Override */
         .ace_editor {
             background-color: #000000 !important;
-            color: #00cc00 !important;
+            color: var(--text-color) !important;
         }
 
         .ace_gutter {
             background-color: #050505 !important;
-            color: #008800 !important;
+            color: var(--secondary-color) !important;
             border-right: 1px solid #006600 !important;
         }
 
@@ -1541,7 +1541,7 @@
         }
 
         .ace_cursor {
-            color: #00ff00 !important;
+            color: var(--text-bright) !important;
             border-left: 2px solid #00ff00 !important;
         }
 
@@ -1550,16 +1550,16 @@
         }
 
         .ace_keyword {
-            color: #00ff00 !important;
+            color: var(--text-bright) !important;
             font-weight: bold !important;
         }
 
         .ace_string {
-            color: #00cc00 !important;
+            color: var(--text-color) !important;
         }
 
         .ace_comment {
-            color: #006600 !important;
+            color: var(--tertiary-color) !important;
             font-style: italic !important;
         }
 
@@ -1610,7 +1610,7 @@
         .cell-btn {
             background: linear-gradient(45deg, #000000 0%, #0a0a0a 50%, #000000 100%);
             border: 1px solid #006600;
-            color: #00cc00;
+            color: var(--text-color);
             cursor: pointer;
             padding: 6px 8px;
             border-radius: 4px;
@@ -1641,9 +1641,9 @@
         .cell-textarea {
             width: 100%;
             min-height: 80px;
-            background: #000000;
+            background: var(--bg-primary);
             border: none;
-            color: #00ff00;
+            color: var(--text-bright);
             font-family: 'Courier New', monospace;
             font-size: 14px;
             padding: 12px;
@@ -1662,9 +1662,9 @@
 
         .cell-output {
             border-top: 1px solid #333;
-            background: #050505;
+            background: var(--bg-secondary);
             padding: 12px;
-            color: #fff;
+            color: var(--text-color);
             font-family: 'Courier New', monospace;
             font-size: 13px;
             min-height: 30px;
@@ -1697,8 +1697,8 @@
         }
 
         .add-cell-btn:hover {
-            border-color: #008800;
-            color: #00ff00;
+            border-color: var(--secondary-color);
+            color: var(--text-bright);
             background: rgba(0, 136, 0, 0.2);
         }
 
@@ -4169,7 +4169,7 @@ sys.stderr = sys.__stderr__
         function showKeyboardShortcuts() {
             const helpContent = `
 <div style="background: #111; color: #fff; padding: 20px; border-radius: 8px; max-width: 500px;">
-    <h3 style="color: #00ff00; margin-top: 0;">⌨️ Keyboard Shortcuts</h3>
+    <h3 style="color: var(--text-bright); margin-top: 0;">⌨️ Keyboard Shortcuts</h3>
     
     <h4 style="color: #ccc; margin-bottom: 10px;">Cell Execution:</h4>
     <div style="font-family: monospace; margin-bottom: 15px;">
@@ -4387,5 +4387,320 @@ sys.stderr = _old_stderr
         }
 
     </script>
+
+    <!-- Settings Cog UI -->
+    <div class="settings-widget">
+        <button class="settings-cog" id="settings-toggle" title="Settings">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6m5.2-13.2l-3.9 3.9m-6.6 6.6l-3.9 3.9m16.4-3.9l-3.9-3.9m-6.6-6.6l-3.9-3.9"></path>
+            </svg>
+        </button>
+        <div class="settings-dropdown" id="settings-dropdown">
+            <div class="settings-header">Settings</div>
+            <div class="settings-section">
+                <label class="settings-label">Theme</label>
+                <div class="theme-selector">
+                    <div class="theme-option" data-theme="default">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #000 0%, #008800 100%);"></div>
+                        <div class="theme-info">
+                            <div class="theme-name">Default</div>
+                            <div class="theme-desc">Green Matrix</div>
+                        </div>
+                        <div class="theme-check">✓</div>
+                    </div>
+                    <div class="theme-option" data-theme="greydom">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #1a1d2e 0%, #ff4444 100%);"></div>
+                        <div class="theme-info">
+                            <div class="theme-name">Greydom</div>
+                            <div class="theme-desc">Dark Grey-Blue</div>
+                        </div>
+                        <div class="theme-check">✓</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Settings Widget Styles */
+        .settings-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .settings-cog {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--shadow-color);
+        }
+
+        .settings-cog:hover {
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 6px 20px var(--glow-color);
+            border-color: var(--text-bright);
+        }
+
+        .settings-cog svg {
+            animation: spin 20s linear infinite;
+            animation-play-state: paused;
+        }
+
+        .settings-cog:hover svg {
+            animation-play-state: running;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .settings-dropdown {
+            position: absolute;
+            bottom: 60px;
+            right: 0;
+            width: 320px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px var(--shadow-color);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .settings-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .settings-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: bold;
+            color: var(--text-bright);
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .settings-section {
+            padding: 15px 20px;
+        }
+
+        .settings-label {
+            display: block;
+            color: var(--text-color);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .theme-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .theme-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-option:hover {
+            border-color: var(--border-color);
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px var(--glow-color);
+        }
+
+        .theme-option.active {
+            border-color: var(--text-bright);
+            background: var(--bg-tertiary);
+            box-shadow: 0 4px 12px var(--glow-color);
+        }
+
+        .theme-preview {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .theme-info {
+            flex: 1;
+        }
+
+        .theme-name {
+            font-weight: bold;
+            color: var(--text-bright);
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .theme-desc {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .theme-check {
+            color: var(--text-bright);
+            font-size: 20px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .theme-option.active .theme-check {
+            opacity: 1;
+        }
+
+        /* Scrollbar for dropdown */
+        .settings-dropdown::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .settings-dropdown::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .settings-dropdown::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+    </style>
+
+    <script>
+        // Settings Widget Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const settingsToggle = document.getElementById('settings-toggle');
+            const settingsDropdown = document.getElementById('settings-dropdown');
+            const themeOptions = document.querySelectorAll('.theme-option');
+
+            // Get current theme from body class or default
+            let currentTheme = document.body.classList.contains('theme-greydom') ? 'greydom' : 'default';
+
+            // Set active theme on load
+            updateActiveTheme(currentTheme);
+
+            // Toggle dropdown
+            settingsToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                settingsDropdown.classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!settingsDropdown.contains(e.target) && e.target !== settingsToggle) {
+                    settingsDropdown.classList.remove('show');
+                }
+            });
+
+            // Theme selection
+            themeOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const theme = this.getAttribute('data-theme');
+                    changeTheme(theme);
+                });
+            });
+
+            function updateActiveTheme(theme) {
+                themeOptions.forEach(opt => {
+                    if (opt.getAttribute('data-theme') === theme) {
+                        opt.classList.add('active');
+                    } else {
+                        opt.classList.remove('active');
+                    }
+                });
+            }
+
+            function changeTheme(theme) {
+                // Update body class
+                document.body.classList.remove('theme-default', 'theme-greydom');
+                if (theme !== 'default') {
+                    document.body.classList.add(`theme-${theme}`);
+                }
+
+                // Update Ace Editor theme if it exists (both main editor and aceEditor variable)
+                if (typeof editor !== 'undefined' && editor) {
+                    if (theme === 'greydom') {
+                        editor.setTheme('ace/theme/monokai');
+                    } else {
+                        editor.setTheme('ace/theme/terminal');
+                    }
+                }
+                
+                if (typeof aceEditor !== 'undefined' && aceEditor) {
+                    if (theme === 'greydom') {
+                        aceEditor.setTheme('ace/theme/monokai');
+                    } else {
+                        aceEditor.setTheme('ace/theme/terminal');
+                    }
+                }
+
+                // Update active state
+                updateActiveTheme(theme);
+                currentTheme = theme;
+
+                // Save theme preference to server
+                fetch('/auth/account/update-theme/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: `theme=${theme}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Theme saved successfully');
+                    }
+                })
+                .catch(error => console.error('Error saving theme:', error));
+            }
+
+            // Helper function to get CSRF token
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        });
+    </script>
+
 </body>
 </html>
