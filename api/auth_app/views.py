@@ -574,6 +574,14 @@ def verify_password_change(request):
         except PasswordChangeRequest.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'No password change request found. Please start over.'}, status=404)
         
+        # Debug logging
+        print(f"[DEBUG] User entered code: '{code}' (type: {type(code)})")
+        print(f"[DEBUG] Stored code: '{change_request.verification_code}' (type: {type(change_request.verification_code)})")
+        print(f"[DEBUG] Codes match: {change_request.verification_code == code}")
+        print(f"[DEBUG] Is expired: {change_request.is_expired()}")
+        print(f"[DEBUG] Is verified: {change_request.verified}")
+        print(f"[DEBUG] Attempts: {change_request.attempts}")
+        
         if change_request.is_expired():
             change_request.delete()
             return JsonResponse({'success': False, 'error': 'Verification code expired. Please request a new one.'}, status=400)
@@ -582,11 +590,16 @@ def verify_password_change(request):
             change_request.delete()
             return JsonResponse({'success': False, 'error': 'Too many failed attempts. Please start over.'}, status=400)
         
-        if change_request.is_valid(code):
+        # Direct comparison instead of using is_valid method for debugging
+        if (change_request.verification_code == code and 
+            not change_request.is_expired() and 
+            not change_request.verified and 
+            change_request.attempts < 5):
             try:
                 request.user.password = change_request.new_password
                 request.user.save(update_fields=['password'])
                 change_request.mark_verified()
+                print(f"[SUCCESS] Password changed for user {request.user.username}")
                 return JsonResponse({'success': True, 'message': 'Password changed successfully!'})
             except Exception as e:
                 print(f"Password update error: {str(e)}")
@@ -594,6 +607,7 @@ def verify_password_change(request):
         else:
             change_request.increment_attempts()
             remaining = 5 - change_request.attempts
+            print(f"[ERROR] Code validation failed. Remaining attempts: {remaining}")
             if remaining > 0:
                 return JsonResponse({'success': False, 'error': f'Incorrect code. {remaining} attempt{"s" if remaining != 1 else ""} remaining.'}, status=400)
             else:
