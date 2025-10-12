@@ -4754,8 +4754,8 @@ sys.stderr = _old_stderr
         .theme-preview-sun-only::after {
             content: '';
             position: absolute;
-            inset: 4px;
-            background: url("{% static 'auth_app/images/sunshine.png' %}") center/70% no-repeat;
+            inset: 2px;
+            background: url("{% static 'auth_app/images/sunshine.png' %}") center/85% no-repeat;
             filter: drop-shadow(0 0 6px rgba(0,0,0,0.4));
         }
 
@@ -4791,6 +4791,32 @@ sys.stderr = _old_stderr
         body.theme-lebron .ace_cursor {
             color: #000 !important;
             border-left: 2px solid #000 !important;
+        }
+
+        /* Notebook mode transparency for LeBron */
+        body.theme-lebron.notebook-mode .container,
+        body.theme-lebron.notebook-mode .main-area,
+        body.theme-lebron.notebook-mode .editor-section,
+        body.theme-lebron.notebook-mode .terminal-section,
+        body.theme-lebron.notebook-mode .notebook-container,
+        body.theme-lebron.notebook-mode .notebook-cell,
+        body.theme-lebron.notebook-mode .cell-container,
+        body.theme-lebron.notebook-mode .cell-input,
+        body.theme-lebron.notebook-mode .cell-output,
+        body.theme-lebron.notebook-mode .notebook-toolbar {
+            background: transparent !important;
+            border-color: rgba(0,0,0,0.4) !important;
+        }
+        
+        body.theme-lebron.notebook-mode .notebook-cell {
+            border: 2px solid rgba(0,0,0,0.6) !important;
+            border-radius: 8px !important;
+        }
+        
+        body.theme-lebron.notebook-mode .cell-type-indicator,
+        body.theme-lebron.notebook-mode .cell-execution-count {
+            color: #000 !important;
+            font-weight: 600 !important;
         }
 
         .settings-dropdown {
@@ -5131,45 +5157,20 @@ sys.stderr = _old_stderr
             ball.style.top = '0px';
             requestAnimationFrame(frame);
             
-            // Optimized drag handlers
-            let dragStart = {x: 0, y: 0, lastX: 0, lastY: 0, time: 0};
-            
-            ball.addEventListener('pointerdown', e => {
-                state.dragging = true;
-                ball.setPointerCapture(e.pointerId);
-                const rect = ball.getBoundingClientRect();
-                dragStart.x = e.clientX - rect.left;
-                dragStart.y = e.clientY - rect.top;
-                dragStart.lastX = e.clientX;
-                dragStart.lastY = e.clientY;
-                dragStart.time = Date.now();
-                state.vx = state.vy = 0;
-                e.preventDefault();
-            });
-            
-            ball.addEventListener('pointermove', e => {
-                if (!state.dragging) return;
+            // Click teleportation handler
+            screen.addEventListener('click', e => {
                 const screenRect = screen.getBoundingClientRect();
-                state.x = Math.max(0, Math.min(e.clientX - screenRect.left - dragStart.x, screenRect.width - physics.ballSize));
-                state.y = Math.max(0, Math.min(e.clientY - screenRect.top - dragStart.y, screenRect.height - physics.ballSize));
+                const targetX = e.clientX - screenRect.left - physics.ballSize / 2;
+                const targetY = e.clientY - screenRect.top - physics.ballSize / 2;
                 
-                // Track velocity for throw
-                const time = Date.now();
-                const dt = Math.max(time - dragStart.time, 1);
-                state.vx = (e.clientX - dragStart.lastX) * 1000 / dt;
-                state.vy = (e.clientY - dragStart.lastY) * 1000 / dt;
+                // Constrain to bounds
+                state.x = Math.max(0, Math.min(targetX, screenRect.width - physics.ballSize));
+                state.y = Math.max(0, Math.min(targetY, screenRect.height - physics.ballSize));
                 
-                dragStart.lastX = e.clientX;
-                dragStart.lastY = e.clientY;
-                dragStart.time = time;
-                e.preventDefault();
-            });
-            
-            ball.addEventListener('pointerup', e => {
-                state.dragging = false;
-                // Apply throw velocity with damping
-                state.vx = Math.max(-800, Math.min(800, state.vx * 0.7));
-                state.vy = Math.max(-800, Math.min(800, state.vy * 0.7));
+                // Add some random velocity after teleport for fun physics
+                state.vx = (Math.random() - 0.5) * 300;
+                state.vy = (Math.random() - 0.5) * 200;
+                
                 e.preventDefault();
             });
         })();
