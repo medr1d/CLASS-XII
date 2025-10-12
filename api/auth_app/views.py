@@ -7,13 +7,33 @@ from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.contrib.auth.hashers import make_password
+from django.utils import timezone
+from datetime import timedelta
 from homepage.models import UserProfile
+from .models import LoginAttempt, EmailVerification
+from .email_utils import send_verification_email, send_verification_code_resend
 import json
 import re
+
+
+def get_client_ip(request):
+    """Get the client's IP address from the request."""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect('auth_app:account')
+    
+    # Clean up old verifications periodically
+    import random
+    if random.randint(1, 100) == 1:
+        EmailVerification.cleanup_old_verifications()
     
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
@@ -38,6 +58,7 @@ def signup_view(request):
             return render(request, 'auth_app/signup.html')
         
         try:
+            # Check if user already exists
             if User.objects.filter(username=username).exists():
                 messages.error(request, 'Username already exists.')
                 return render(request, 'auth_app/signup.html')
@@ -46,14 +67,26 @@ def signup_view(request):
                 messages.error(request, 'Email already registered.')
                 return render(request, 'auth_app/signup.html')
             
-            user = User.objects.create_user(
-                username=username,
+            # Delete any existing unverified verification for this email
+            EmailVerification.objects.filter(email=email, verified=False).delete()
+            
+            # Create email verification record
+            verification = EmailVerification.objects.create(
                 email=email,
-                password=password
+                username=username,
+                password=make_password(password)  # Store hashed password
             )
             
-            messages.success(request, 'Account created successfully! Please log in.')
-            return redirect('auth_app:login')
+            # Send verification email
+            if send_verification_email(email, username, verification.verification_code):
+                # Store email in session for verification page
+                request.session['verification_email'] = email
+                messages.success(request, f'Verification code sent to {email}. Please check your inbox.')
+                return redirect('auth_app:verify_email')
+            else:
+                verification.delete()
+                messages.error(request, 'Failed to send verification email. Please try again.')
+                return render(request, 'auth_app/signup.html')
             
         except IntegrityError:
             messages.error(request, 'Email already registered.')
@@ -61,6 +94,7 @@ def signup_view(request):
         
         except Exception as e:
             messages.error(request, 'Registration failed. Please try again.')
+            print(f"Signup error: {str(e)}")
             return render(request, 'auth_app/signup.html')
     
     return render(request, 'auth_app/signup.html')
@@ -70,6 +104,14 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect('auth_app:account')
     
+    # Get client IP address
+    ip_address = get_client_ip(request)
+    
+    # Clean up old login attempts periodically (1% chance each request)
+    import random
+    if random.randint(1, 100) == 1:
+        LoginAttempt.cleanup_old_attempts()
+    
     if request.method == 'POST':
         email = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password', '')
@@ -78,27 +120,94 @@ def login_view(request):
             messages.error(request, 'Email and password are required.')
             return render(request, 'auth_app/login.html')
         
+        # Check if IP is blocked
+        if LoginAttempt.is_blocked(ip_address):
+            remaining_time = LoginAttempt.get_time_until_unblock(ip_address)
+            minutes = remaining_time // 60
+            seconds = remaining_time % 60
+            
+            if minutes > 0:
+                time_msg = f"{minutes} minute{'s' if minutes != 1 else ''} and {seconds} second{'s' if seconds != 1 else ''}"
+            else:
+                time_msg = f"{seconds} second{'s' if seconds != 1 else ''}"
+            
+            messages.error(
+                request, 
+                f'Too many failed login attempts. Please try again in {time_msg}.'
+            )
+            return render(request, 'auth_app/login.html', {
+                'blocked': True,
+                'remaining_time': remaining_time
+            })
+        
         try:
             user = User.objects.get(email=email)
             authenticated_user = authenticate(request, username=user.username, password=password)
             
             if authenticated_user:
+                # Successful login - record it
+                LoginAttempt.objects.create(
+                    ip_address=ip_address,
+                    attempted_email=email,
+                    successful=True
+                )
+                
                 login(request, authenticated_user)
                 messages.success(request, f'Welcome back, {user.username}!')
                 return redirect('auth_app:account')
             else:
-                messages.error(request, 'Invalid credentials.')
+                # Failed login - record attempt
+                LoginAttempt.objects.create(
+                    ip_address=ip_address,
+                    attempted_email=email,
+                    successful=False
+                )
+                
+                remaining = LoginAttempt.get_remaining_attempts(ip_address)
+                if remaining > 0:
+                    messages.error(
+                        request, 
+                        f'Invalid credentials. {remaining} attempt{"s" if remaining != 1 else ""} remaining.'
+                    )
+                else:
+                    messages.error(
+                        request, 
+                        'Invalid credentials. Your account has been temporarily locked due to too many failed attempts.'
+                    )
                 return render(request, 'auth_app/login.html')
                 
         except User.DoesNotExist:
-            messages.error(request, 'No account found with this email.')
+            # Record failed attempt even for non-existent users
+            LoginAttempt.objects.create(
+                ip_address=ip_address,
+                attempted_email=email,
+                successful=False
+            )
+            
+            remaining = LoginAttempt.get_remaining_attempts(ip_address)
+            if remaining > 0:
+                messages.error(
+                    request, 
+                    f'No account found with this email. {remaining} attempt{"s" if remaining != 1 else ""} remaining.'
+                )
+            else:
+                messages.error(
+                    request, 
+                    'No account found with this email. Too many failed attempts - please try again later.'
+                )
             return render(request, 'auth_app/login.html')
         
         except Exception as e:
             messages.error(request, 'Login failed. Please try again.')
             return render(request, 'auth_app/login.html')
     
-    return render(request, 'auth_app/login.html')
+    # GET request - show remaining attempts if any failed attempts exist
+    remaining = LoginAttempt.get_remaining_attempts(ip_address)
+    context = {}
+    if remaining < 10:
+        context['remaining_attempts'] = remaining
+    
+    return render(request, 'auth_app/login.html', context)
 
 
 @login_required
@@ -175,7 +284,7 @@ def admin_panel_view(request):
         messages.error(request, 'Access denied. Admin privileges required.')
         return redirect('auth_app:account')
     
-    users = User.objects.all().select_related('profile').order_by('-date_joined')
+    users = User.objects.all().select_related('profile').order_by('date_joined')
     
     paid_count = 0
     super_count = 0
@@ -286,3 +395,120 @@ def update_paid_status(request):
             'success': False,
             'error': f'Server error: {str(e)}'
         }, status=500)
+
+
+def verify_email_view(request):
+    """Handle email verification with 6-digit code."""
+    # Check if email is in session
+    email = request.session.get('verification_email')
+    if not email:
+        messages.error(request, 'No verification in progress. Please sign up first.')
+        return redirect('auth_app:signup')
+    
+    # Get verification record
+    try:
+        verification = EmailVerification.objects.get(email=email, verified=False)
+    except EmailVerification.DoesNotExist:
+        messages.error(request, 'Verification expired or not found. Please sign up again.')
+        del request.session['verification_email']
+        return redirect('auth_app:signup')
+    
+    # Check if expired
+    if verification.is_expired():
+        messages.error(request, 'Verification code expired. Please sign up again.')
+        verification.delete()
+        del request.session['verification_email']
+        return redirect('auth_app:signup')
+    
+    # Check if too many attempts
+    if verification.attempts >= 5:
+        messages.error(request, 'Too many failed attempts. Please sign up again.')
+        verification.delete()
+        del request.session['verification_email']
+        return redirect('auth_app:signup')
+    
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        
+        if not code:
+            messages.error(request, 'Please enter the verification code.')
+            return render(request, 'auth_app/verify_email.html', {'email': email})
+        
+        if len(code) != 6 or not code.isdigit():
+            messages.error(request, 'Please enter a valid 6-digit code.')
+            return render(request, 'auth_app/verify_email.html', {'email': email})
+        
+        # Verify code
+        if verification.is_valid(code):
+            try:
+                # Create the user account
+                user = User.objects.create_user(
+                    username=verification.username,
+                    email=verification.email,
+                    password=verification.password  # Already hashed
+                )
+                user.password = verification.password  # Set the pre-hashed password
+                user.save()
+                
+                # Mark verification as complete
+                verification.mark_verified()
+                
+                # Clean up session
+                del request.session['verification_email']
+                
+                # Auto-login the user
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                
+                messages.success(request, f'Email verified! Welcome to CLASS XII PYTHON, {user.username}!')
+                return redirect('auth_app:account')
+                
+            except Exception as e:
+                print(f"User creation error: {str(e)}")
+                messages.error(request, 'Account creation failed. Please try again.')
+                return render(request, 'auth_app/verify_email.html', {'email': email})
+        else:
+            # Incorrect code
+            verification.increment_attempts()
+            remaining = 5 - verification.attempts
+            
+            if remaining > 0:
+                messages.error(request, f'Incorrect code. {remaining} attempt{"s" if remaining != 1 else ""} remaining.')
+            else:
+                messages.error(request, 'Too many failed attempts. Please sign up again.')
+                verification.delete()
+                del request.session['verification_email']
+                return redirect('auth_app:signup')
+            
+            return render(request, 'auth_app/verify_email.html', {'email': email})
+    
+    return render(request, 'auth_app/verify_email.html', {'email': email})
+
+
+@require_http_methods(["POST"])
+def resend_code_view(request):
+    """Resend verification code to user's email."""
+    email = request.session.get('verification_email')
+    if not email:
+        messages.error(request, 'No verification in progress.')
+        return redirect('auth_app:signup')
+    
+    try:
+        verification = EmailVerification.objects.get(email=email, verified=False)
+        
+        # Generate new code and extend expiration
+        verification.verification_code = EmailVerification.generate_code()
+        verification.expires_at = timezone.now() + timedelta(minutes=10)
+        verification.attempts = 0  # Reset attempts
+        verification.save()
+        
+        # Send new code
+        if send_verification_code_resend(email, verification.username, verification.verification_code):
+            messages.success(request, 'New verification code sent! Check your email.')
+        else:
+            messages.error(request, 'Failed to send email. Please try again.')
+            
+    except EmailVerification.DoesNotExist:
+        messages.error(request, 'Verification not found. Please sign up again.')
+        return redirect('auth_app:signup')
+    
+    return redirect('auth_app:verify_email')

@@ -1,0 +1,119 @@
+{% extends 'auth_app/base.html' %}
+
+{% block title %}Verify Email - CLASS 12 PYTHON ASSEMBLY{% endblock %}
+
+{% block content %}
+<div class="auth-header">
+    <h1>→ Verify Your Email</h1>
+    <p>check your inbox for the verification code</p>
+</div>
+
+<div class="auth-body">
+    <!-- Display messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                <strong>
+                    {% if message.tags == 'error' %}
+                        [ERROR]:
+                    {% elif message.tags == 'success' %}
+                        [SUCCESS]:
+                    {% elif message.tags == 'warning' %}
+                        [WARNING]:
+                    {% elif message.tags == 'info' %}
+                        [INFO]:
+                    {% endif %}
+                </strong>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Info Box -->
+    <div class="info-box" style="background: rgba(0, 255, 0, 0.05); border: 2px solid var(--accent-color); border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+        <p style="margin: 0; color: var(--text-primary); line-height: 1.6;">
+            📧 We've sent a 6-digit verification code to:<br>
+            <strong style="color: var(--accent-color); font-size: 1.1em;">{{ email }}</strong>
+        </p>
+        <p style="margin: 10px 0 0 0; color: var(--text-secondary); font-size: 0.9em;">
+            ⏱️ Code expires in 10 minutes
+        </p>
+    </div>
+
+    <form method="post" id="verifyForm">
+        {% csrf_token %}
+        
+        <!-- Verification Code Field -->
+        <div class="form-group">
+            <label class="form-label" for="code">Verification Code</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="code" 
+                   name="code" 
+                   placeholder="000000"
+                   required
+                   maxlength="6"
+                   pattern="[0-9]{6}"
+                   autocomplete="off"
+                   inputmode="numeric"
+                   style="font-size: 24px; letter-spacing: 8px; text-align: center; font-weight: bold;">
+            <small style="color: var(--text-muted); margin-top: 8px; display: block;">
+                Enter the 6-digit code from your email
+            </small>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn" style="margin-top: 10px;">
+            Verify Email
+        </button>
+    </form>
+
+    <!-- Resend Code Section -->
+    <div class="text-center mt-4">
+        <p style="margin-bottom: 15px; color: var(--text-muted);">
+            Didn't receive the code?
+        </p>
+        <form method="post" action="{% url 'auth_app:resend_code' %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="text-link" style="background: none; border: none; cursor: pointer; text-decoration: underline; color: var(--accent-color); font-family: 'Courier New', monospace; font-size: 1em; padding: 0;">
+                📤 Resend Code
+            </button>
+        </form>
+        
+        <p style="margin-top: 20px; margin-bottom: 0; color: var(--text-muted);">
+            Wrong email? 
+            <a href="{% url 'auth_app:signup' %}" class="text-link">Start over</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    // Auto-format code input
+    const codeInput = document.getElementById('code');
+    
+    codeInput.addEventListener('input', function(e) {
+        // Remove non-digits
+        this.value = this.value.replace(/\D/g, '');
+        
+        // Limit to 6 digits
+        if (this.value.length > 6) {
+            this.value = this.value.slice(0, 6);
+        }
+    });
+    
+    // Auto-submit when 6 digits entered
+    codeInput.addEventListener('input', function(e) {
+        if (this.value.length === 6) {
+            // Optional: Auto-submit after slight delay
+            // setTimeout(() => {
+            //     document.getElementById('verifyForm').submit();
+            // }, 500);
+        }
+    });
+    
+    // Focus on load
+    window.addEventListener('load', function() {
+        codeInput.focus();
+    });
+</script>
+{% endblock %}

@@ -5,6 +5,8 @@ app_name = 'auth_app'
 
 urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
+    path('verify-email/', views.verify_email_view, name='verify_email'),
+    path('resend-code/', views.resend_code_view, name='resend_code'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('account/', views.account_view, name='account'),

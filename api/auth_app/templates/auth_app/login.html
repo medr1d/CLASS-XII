@@ -24,8 +24,19 @@
             </div>
         {% endfor %}
     {% endif %}
+    
+    <!-- Rate Limit Warning -->
+    {% if blocked %}
+        <div class="alert alert-error" role="alert" style="background: rgba(255, 0, 0, 0.1); border: 2px solid #ff0000;">
+            <strong>🔒 [LOCKED]:</strong> Too many failed login attempts. Please wait before trying again.
+        </div>
+    {% elif remaining_attempts and remaining_attempts < 10 %}
+        <div class="alert alert-warning" role="alert" style="background: rgba(255, 165, 0, 0.1); border: 2px solid #ffa500;">
+            <strong>⚠️ [WARNING]:</strong> {{ remaining_attempts }} login attempt{{ remaining_attempts|pluralize }} remaining before temporary lockout.
+        </div>
+    {% endif %}
 
-    <form method="post" id="loginForm">
+    <form method="post" id="loginForm" {% if blocked %}style="opacity: 0.5; pointer-events: none;"{% endif %}>
         {% csrf_token %}
         
         <!-- Email Field -->
@@ -38,7 +49,8 @@
                    placeholder="user@domain.com"
                    required
                    maxlength="254"
-                   autocomplete="email">
+                   autocomplete="email"
+                   {% if blocked %}disabled{% endif %}>
         </div>
 
         <!-- Password Field -->
@@ -50,7 +62,8 @@
                    name="password" 
                    placeholder="your password"
                    required
-                   autocomplete="current-password">
+                   autocomplete="current-password"
+                   {% if blocked %}disabled{% endif %}>
             <button type="button" 
                     class="password-toggle position-absolute top-50 end-0 translate-middle-y me-3" 
                     id="togglePassword">
@@ -67,8 +80,8 @@
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="btn">
-            Sign In
+        <button type="submit" class="btn" {% if blocked %}disabled{% endif %}>
+            {% if blocked %}🔒 Locked{% else %}Sign In{% endif %}
         </button>
     </form>
 
