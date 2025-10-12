@@ -197,39 +197,42 @@ def admin_panel_view(request):
 @login_required
 @require_http_methods(["POST"])
 def update_paid_status(request):
+    print('update_paid_status called by:', request.user)
     if not request.user.is_superuser:
+        print('User is not superuser')
         return JsonResponse({
             'success': False,
             'error': 'Unauthorized. Admin access required.'
         }, status=403)
-    
     try:
         data = json.loads(request.body)
+        print('Received data:', data)
         user_id = data.get('user_id')
         paid_status = data.get('paid_status')
-        
         if user_id is None or paid_status is None:
+            print('Missing required parameters')
             return JsonResponse({
                 'success': False,
                 'error': 'Missing required parameters'
             }, status=400)
-        
         user = User.objects.get(id=user_id)
         profile, created = UserProfile.objects.get_or_create(user=user)
+        print(f'Updating user {user.username} paidUser from {profile.paidUser} to {paid_status}')
         profile.paidUser = paid_status
         profile.save()
-        
+        print('Update successful')
         return JsonResponse({
             'success': True,
             'message': f'User {user.username} paid status updated to {paid_status}'
         })
-        
     except User.DoesNotExist:
+        print('User not found')
         return JsonResponse({
             'success': False,
             'error': 'User not found'
         }, status=404)
     except Exception as e:
+        print('Exception:', str(e))
         return JsonResponse({
             'success': False,
             'error': str(e)
