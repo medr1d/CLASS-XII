@@ -8,6 +8,7 @@ class LoginAttempt(models.Model):
     email = models.EmailField(blank=True, null=True)
     
     class Meta:
+        app_label = 'auth_app'
         ordering = ['-attempted_at']
         indexes = [
             models.Index(fields=['ip_address', 'attempted_at']),
