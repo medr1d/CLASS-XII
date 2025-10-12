@@ -135,7 +135,36 @@ CLASS XII PYTHON Team
         # Debug email configuration
         logger.info(f"Email configuration - Host: {settings.EMAIL_HOST}, Port: {settings.EMAIL_PORT}, TLS: {settings.EMAIL_USE_TLS}")
         logger.info(f"From email: {settings.EMAIL_HOST_USER}")
+        logger.info(f"Password set: {'Yes' if settings.EMAIL_HOST_PASSWORD else 'No'}")
+        logger.info(f"Password length: {len(settings.EMAIL_HOST_PASSWORD) if settings.EMAIL_HOST_PASSWORD else 0}")
         
+        # Test SMTP connection manually for better debugging
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        logger.info("Attempting manual SMTP connection...")
+        
+        # Use SSL connection if EMAIL_USE_SSL is True, otherwise use regular SMTP
+        if getattr(settings, 'EMAIL_USE_SSL', False):
+            logger.info("Using SSL connection...")
+            server = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        else:
+            server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+            
+        server.set_debuglevel(1)  # Enable SMTP debugging
+        
+        if settings.EMAIL_USE_TLS and not getattr(settings, 'EMAIL_USE_SSL', False):
+            logger.info("Starting TLS...")
+            server.starttls()
+            
+        logger.info(f"Attempting login with user: {settings.EMAIL_HOST_USER}")
+        server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+        
+        logger.info("SMTP login successful! Sending email via Django send_mail...")
+        server.quit()
+        
+        # If manual connection works, try Django send_mail
         send_mail(
             subject=subject,
             message=message,
@@ -146,6 +175,13 @@ CLASS XII PYTHON Team
         )
         logger.info(f"Verification email sent successfully to {email}")
         return True
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error(f"SMTP Authentication Error: {str(e)}")
+        logger.error("This usually means wrong username/password or app-specific password needed")
+        return False
+    except smtplib.SMTPException as e:
+        logger.error(f"SMTP Error: {str(e)}")
+        return False
     except Exception as e:
         logger.error(f"Failed to send verification email to {email}: {str(e)}")
         logger.error(f"Email settings - Host: {settings.EMAIL_HOST}, User: {settings.EMAIL_HOST_USER}")

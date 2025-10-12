@@ -132,12 +132,19 @@ LOGOUT_REDIRECT_URL = '/'
 SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', 86400))
 SESSION_SAVE_EVERY_REQUEST = os.getenv('SESSION_SAVE_EVERY_REQUEST', 'True').lower() == 'true'
 
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 25))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() == 'true'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+# Email Configuration for Zoho Mail with Custom Domain (SSL)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtppro.zoho.in')  # Use smtppro for custom domains
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '465'))  # SSL port
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() == 'true'  # Disable TLS for SSL
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'True').lower() == 'true'   # Enable SSL
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'noreply@themedium.in')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+SERVER_EMAIL = EMAIL_HOST_USER
+
+# Additional email timeout settings for Zoho
+EMAIL_TIMEOUT = 30
 
 SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False').lower() == 'true'
 SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', 0))
@@ -174,20 +181,14 @@ LOGGING = {
             'handlers': ['console'],
             'level': os.getenv('LOG_LEVEL', 'INFO'),
         },
+        'auth_app.email_utils': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
 }
 
 BLOB_READ_WRITE_TOKEN = os.getenv('BLOB_READ_WRITE_TOKEN', '')
 
 MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/django_auth')
-
-# Email Configuration for Zoho
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.zoho.in')  # Zoho SMTP for custom domains
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
-EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() == 'true'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')  # Your full email (e.g., noreply@themedium.in)
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')  # Your Zoho password or app-specific password
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
-SERVER_EMAIL = EMAIL_HOST_USER
