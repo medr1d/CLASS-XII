@@ -34,7 +34,7 @@
 
         body {
             font-family: 'Courier New', monospace;
-            background: linear-gradient(180deg, #000000 0%, #0a1a0a 15%, #000000 30%, #0a1a0a 45%, #000000 60%, #0a1a0a 75%, #000000 90%, #0a1a0a 100%);
+            background: linear-gradient(180deg, #000000 0%, #050505 15%, #000000 30%, #0a0a0a 45%, #000000 60%, #050505 75%, #000000 90%, #0a0a0a 100%);
             color: #d4d4d4;
             height: 100vh;
             overflow: hidden;
@@ -101,7 +101,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(180deg, #000000 0%, #0a1a0a 50%, #000000 100%);
+            background: linear-gradient(180deg, #000000 0%, #050505 50%, #000000 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -432,7 +432,7 @@
         }
 
         .file-manager {
-            background: linear-gradient(180deg, #000000 0%, #0a1a0a 20%, #000000 40%, #0a1a0a 60%, #000000 80%, #0a1a0a 100%);
+            background: linear-gradient(180deg, #000000 0%, #050505 20%, #000000 40%, #080808 60%, #000000 80%, #050505 100%);
             border-right: 1px solid #008800;
             padding: 10px;
             overflow-y: auto;
@@ -609,7 +609,7 @@
         .main-area {
             display: flex;
             flex-direction: column;
-            background: linear-gradient(180deg, #000000 0%, #0a1a0a 30%, #000000 70%, #0a1a0a 100%);
+            background: linear-gradient(180deg, #000000 0%, #050505 30%, #000000 70%, #080808 100%);
         }
 
         .editor-section {
@@ -838,7 +838,7 @@
 
         /* Enhanced Focus and Notebook Mode Buttons */
         .focus-button {
-            background: linear-gradient(45deg, #0a1a0a 0%, #008800 50%, #0a1a0a 100%);
+            background: linear-gradient(45deg, #000000 0%, #008800 50%, #000000 100%);
             border: 2px solid #008800;
             color: #ffffff;
             padding: 8px 16px;
@@ -1113,7 +1113,7 @@
 
         .terminal-output {
             flex: 1;
-            background: linear-gradient(180deg, #000000 0%, #0a1a0a 30%, #000000 70%, #0a1a0a 100%);
+            background: linear-gradient(180deg, #000000 0%, #050505 30%, #000000 70%, #080808 100%);
             color: #00cc00;
             padding: 15px;
             font-family: 'Courier New', monospace;
@@ -1151,7 +1151,7 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: linear-gradient(180deg, #000000 0%, #0a1a0a 50%, #000000 100%);
+            background: linear-gradient(180deg, #000000 0%, #050505 50%, #000000 100%);
             border-radius: 5px;
         }
 
@@ -1171,7 +1171,7 @@
         }
 
         .terminal-output::-webkit-scrollbar-track {
-            background: linear-gradient(180deg, #000000 0%, #0a1a0a 50%, #000000 100%);
+            background: linear-gradient(180deg, #000000 0%, #050505 50%, #000000 100%);
         }
 
         .terminal-output::-webkit-scrollbar-thumb {
@@ -1220,7 +1220,7 @@
         }
 
         .file-viewers {
-            background: linear-gradient(180deg, #000000 0%, #0a1a0a 20%, #000000 40%, #0a1a0a 60%, #000000 80%, #0a1a0a 100%);
+            background: linear-gradient(180deg, #000000 0%, #050505 20%, #000000 40%, #080808 60%, #000000 80%, #050505 100%);
             border-left: 1px solid #008800;
             padding: 10px;
             overflow-y: auto;
@@ -1314,7 +1314,7 @@
         }
 
         .file-content::-webkit-scrollbar-track {
-            background: #0a0a0a;
+            background: #000000;
             border-radius: 3px;
         }
 
@@ -1378,7 +1378,7 @@
         }
 
         .focus-mode .background-blur {
-            filter: blur(5px) brightness(0.3);
+            filter: blur(5px);
             transition: all 0.3s ease;
         }
 
@@ -1421,7 +1421,7 @@
             height: 100%;
             overflow-y: auto;
             padding: 20px;
-            background: #0a0a0a;
+            background: #000000;
         }
 
         .notebook-mode .notebook-container {
@@ -1496,11 +1496,17 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 999;
             display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .cell-overlay.active {
@@ -1514,50 +1520,68 @@
             top: 50% !important;
             left: 50% !important;
             transform: translate(-50%, -50%) !important;
-            box-shadow: 0 0 50px 10px rgba(0, 136, 0, 0.2) !important;
-            background: linear-gradient(180deg, #000000 0%, #0a1a0a 30%, #000000 70%, #0a1a0a 100%) !important;
+            box-shadow: 0 0 50px 10px rgba(0, 255, 0, 0.4) !important;
+            background: #000000 !important;
             width: 95vw !important;
             height: 90vh !important;
             max-width: none !important;
             color: #00cc00 !important;
-            border: 2px solid #008800 !important;
+            border: 2px solid #00ff00 !important;
             border-radius: 10px !important;
             overflow: auto !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
+            animation: expandCell 0.3s ease-out;
+        }
+
+        @keyframes expandCell {
+            from {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
         }
 
         .notebook-cell.expanded .cell-header {
-            background: linear-gradient(90deg, #000000 0%, #0a1a0a 50%, #000000 100%) !important;
-            color: #00cc00 !important;
-            border-bottom: 1px solid #008800 !important;
+            background: #0a0a0a !important;
+            color: #00ff00 !important;
+            border-bottom: 2px solid #00ff00 !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             z-index: 1001 !important;
             position: relative !important;
+            padding: 12px 15px !important;
+            font-size: 14px !important;
         }
 
         .notebook-cell.expanded .cell-textarea {
             background: #000000 !important;
-            color: #00cc00 !important;
+            color: #00ff00 !important;
             border: 1px solid #006600 !important;
-            text-shadow: 0 0 1px #00cc00 !important;
+            text-shadow: 0 0 1px #00ff00 !important;
             min-height: 70vh !important;
             font-size: 16px !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             z-index: 1001 !important;
             position: relative !important;
+            line-height: 1.6 !important;
+            padding: 15px !important;
         }
 
         .notebook-cell.expanded .cell-output {
-            background: #0a1a0a !important;
-            color: #00cc00 !important;
+            background: #050505 !important;
+            color: #00ff00 !important;
             border: 1px solid #006600 !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             z-index: 1001 !important;
             position: relative !important;
+            padding: 15px !important;
+            font-size: 14px !important;
         }
 
         /* Ensure all child elements of expanded cell are not affected by backdrop blur */
@@ -1573,17 +1597,17 @@
         }
 
         .ace_gutter {
-            background-color: #0a1a0a !important;
+            background-color: #050505 !important;
             color: #008800 !important;
             border-right: 1px solid #006600 !important;
         }
 
         .ace_gutter-active-line {
-            background-color: #0d2d0d !important;
+            background-color: #0a0a0a !important;
         }
 
         .ace_marker-layer .ace_active-line {
-            background-color: #0a1a0a !important;
+            background-color: #080808 !important;
         }
 
         .ace_cursor {
@@ -1654,7 +1678,7 @@
         }
 
         .cell-btn {
-            background: linear-gradient(45deg, #0a1a0a 0%, #0d2d0d 50%, #0a1a0a 100%);
+            background: linear-gradient(45deg, #000000 0%, #0a0a0a 50%, #000000 100%);
             border: 1px solid #006600;
             color: #00cc00;
             cursor: pointer;
@@ -1669,7 +1693,7 @@
         }
 
         .cell-btn:hover {
-            background: linear-gradient(45deg, #0d2d0d 0%, #008800 50%, #0d2d0d 100%);
+            background: linear-gradient(45deg, #0a0a0a 0%, #008800 50%, #0a0a0a 100%);
             color: #ffffff;
             box-shadow: 0 0 10px rgba(0, 136, 0, 0.2);
             transform: translateY(-1px);
@@ -1687,7 +1711,7 @@
         .cell-textarea {
             width: 100%;
             min-height: 80px;
-            background: #0a0a0a;
+            background: #000000;
             border: none;
             color: #00ff00;
             font-family: 'Courier New', monospace;
