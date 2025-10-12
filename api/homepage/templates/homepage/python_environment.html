@@ -60,18 +60,18 @@
         }
 
         body.theme-cloud {
-            --primary-color: #2c3e50;
-            --secondary-color: #34495e;
-            --tertiary-color: #475a6d;
+            --primary-color: #000000;
+            --secondary-color: #1a1a1a;
+            --tertiary-color: #2d2d2d;
             --bg-primary: #ffffff;
-            --bg-secondary: #f8f9fa;
-            --bg-tertiary: #ecf0f1;
-            --border-color: #bdc3c7;
-            --text-color: #2c3e50;
-            --text-bright: #34495e;
-            --shadow-color: rgba(44, 62, 80, 0.2);
-            --glow-color: rgba(44, 62, 80, 0.08);
-            --grid-color: rgba(189, 195, 199, 0.1);
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f5f5f5;
+            --border-color: #cccccc;
+            --text-color: #000000;
+            --text-bright: #000000;
+            --shadow-color: rgba(0, 0, 0, 0.15);
+            --glow-color: rgba(0, 0, 0, 0.05);
+            --grid-color: rgba(0, 0, 0, 0.03);
         }
 
         body.theme-chaos {
@@ -666,7 +666,7 @@
 
         .file-button:active {
             transform: translateY(0);
-            box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+            box-shadow: 0 0 5px var(--shadow-color);
         }
 
         .main-area {
@@ -821,15 +821,15 @@
         }
 
         .editor-textarea::-webkit-scrollbar-thumb {
-            background: linear-gradient(45deg, #008800, #006600);
+            background: linear-gradient(45deg, var(--secondary-color), var(--tertiary-color));
             border-radius: 6px;
             border: 2px solid #111;
-            box-shadow: 0 0 10px rgba(0, 136, 0, 0.5);
+            box-shadow: 0 0 10px var(--shadow-color);
         }
 
         .editor-textarea::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(45deg, #006600, #008800);
-            box-shadow: 0 0 15px rgba(0, 136, 0, 0.8);
+            background: linear-gradient(45deg, var(--tertiary-color), var(--secondary-color));
+            box-shadow: 0 0 15px var(--shadow-color);
         }
 
         .editor-textarea::-webkit-scrollbar-corner {
@@ -957,7 +957,7 @@
             height: 100%;
             background: linear-gradient(90deg,
                 transparent 0%,
-                rgba(0, 255, 0, 0.2) 50%,
+                var(--glow-color) 50%,
                 transparent 100%);
             transition: left 0.3s ease;
         }
@@ -966,7 +966,7 @@
             background: #555;
             border-color: var(--text-bright);
             color: var(--text-bright);
-            text-shadow: 0 0 5px #00ff00;
+            text-shadow: 0 0 5px var(--text-bright);
             transform: scale(1.1);
         }
 
@@ -1019,7 +1019,7 @@
         }
         .python-builtin:hover {
             color: var(--text-bright);
-            text-shadow: 0 0 10px #00ff00;
+            text-shadow: 0 0 10px var(--text-bright);
             transform: scale(1.05);
         }
         .python-default { 
@@ -1031,7 +1031,7 @@
         .python-tooltip {
             position: absolute;
             background: #2a2a2a;
-            border: 1px solid #00ff00;
+            border: 1px solid var(--border-color);
             color: #fff;
             padding: 8px 12px;
             border-radius: 4px;
@@ -1039,7 +1039,7 @@
             font-family: 'Courier New', monospace;
             max-width: 300px;
             z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0, 255, 0, 0.3);
+            box-shadow: 0 2px 8px var(--shadow-color);
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.2s ease-in-out;
@@ -1058,7 +1058,7 @@
             height: 0;
             border-left: 6px solid transparent;
             border-right: 6px solid transparent;
-            border-bottom: 6px solid #00ff00;
+            border-bottom: 6px solid var(--border-color);
         }
 
         .terminal-section {
@@ -1081,8 +1081,8 @@
                 0deg,
                 transparent,
                 transparent 2px,
-                rgba(0, 255, 0, 0.03) 2px,
-                rgba(0, 255, 0, 0.03) 4px
+                var(--grid-color) 2px,
+                var(--grid-color) 4px
             );
             pointer-events: none;
             z-index: 1;
@@ -1097,8 +1097,8 @@
             width: 100%;
             height: 100%;
             background: radial-gradient(ellipse at center, 
-                rgba(0, 255, 0, 0.1) 0%, 
-                rgba(0, 255, 0, 0.05) 50%, 
+                var(--glow-color) 0%, 
+                var(--glow-color) 50%, 
                 rgba(0, 0, 0, 0.3) 100%);
             pointer-events: none;
             z-index: 1;
@@ -1202,7 +1202,7 @@
             height: auto;
             border: 2px solid var(--text-bright);
             border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 15px var(--shadow-color);
             background: #fff;
             padding: 5px;
         }
@@ -1252,12 +1252,12 @@
             content: '█';
             animation: terminalBlink 1s infinite;
             color: var(--text-bright);
-            text-shadow: 0 0 10px #00ff00;
+            text-shadow: 0 0 10px var(--text-bright);
         }
 
         .terminal-typing {
             overflow: hidden;
-            border-right: 2px solid #00ff00;
+            border-right: 2px solid var(--text-bright);
             white-space: nowrap;
             margin: 0 auto;
             animation: 
@@ -1361,15 +1361,15 @@
             scrollbar-width: thin;
             scrollbar-color: var(--text-bright) #0a0a0a;
             border-radius: 3px;
-            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
+            box-shadow: inset 0 0 10px var(--glow-color);
             transition: all 0.3s ease;
         }
 
         .file-content:hover {
             border-color: var(--text-bright);
             box-shadow: 
-                inset 0 0 10px rgba(0, 255, 0, 0.2),
-                0 0 15px rgba(0, 255, 0, 0.3);
+                inset 0 0 10px var(--glow-color),
+                0 0 15px var(--shadow-color);
         }
 
         .file-content::-webkit-scrollbar {
@@ -1382,9 +1382,9 @@
         }
 
         .file-content::-webkit-scrollbar-thumb {
-            background: linear-gradient(45deg, #00ff00, #00cc00);
+            background: linear-gradient(45deg, var(--text-bright), var(--primary-color));
             border-radius: 3px;
-            box-shadow: 0 0 3px rgba(0, 255, 0, 0.5);
+            box-shadow: 0 0 3px var(--shadow-color);
         }
 
         .binary-hex {
@@ -1561,7 +1561,7 @@
         .ace_gutter {
             background-color: #050505 !important;
             color: var(--secondary-color) !important;
-            border-right: 1px solid #006600 !important;
+            border-right: 1px solid var(--tertiary-color) !important;
         }
 
         .ace_gutter-active-line {
@@ -1574,11 +1574,11 @@
 
         .ace_cursor {
             color: var(--text-bright) !important;
-            border-left: 2px solid #00ff00 !important;
+            border-left: 2px solid var(--text-bright) !important;
         }
 
         .ace_selection {
-            background-color: #004400 !important;
+            background-color: var(--glow-color) !important;
         }
 
         .ace_keyword {
@@ -1596,15 +1596,15 @@
         }
 
         .ace_function {
-            color: #00ff88 !important;
+            color: var(--text-bright) !important;
         }
 
         .ace_variable {
-            color: #00aa00 !important;
+            color: var(--secondary-color) !important;
         }
 
         .ace_constant.ace_numeric {
-            color: #00dd00 !important;
+            color: var(--primary-color) !important;
         }
 
         .ace_scrollbar {
@@ -4454,6 +4454,22 @@ sys.stderr = _old_stderr
                         </div>
                         <div class="theme-check">✓</div>
                     </div>
+                    <div class="theme-option" data-theme="cloud">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #ffffff 0%, #2c3e50 100%);"></div>
+                        <div class="theme-info">
+                            <div class="theme-name">Cloud</div>
+                            <div class="theme-desc">White & Grey</div>
+                        </div>
+                        <div class="theme-check">✓</div>
+                    </div>
+                    <div class="theme-option" data-theme="chaos">
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #000000 0%, #808080 100%);"></div>
+                        <div class="theme-info">
+                            <div class="theme-name">Chaos</div>
+                            <div class="theme-desc">Black & Grey</div>
+                        </div>
+                        <div class="theme-check">✓</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -4549,17 +4565,17 @@ sys.stderr = _old_stderr
         .theme-selector {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 6px;
         }
 
         .theme-option {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px;
+            gap: 8px;
+            padding: 8px;
             background: var(--bg-secondary);
             border: 2px solid transparent;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -4577,9 +4593,9 @@ sys.stderr = _old_stderr
         }
 
         .theme-preview {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
+            width: 35px;
+            height: 35px;
+            border-radius: 6px;
             border: 2px solid var(--border-color);
             flex-shrink: 0;
         }
@@ -4591,18 +4607,18 @@ sys.stderr = _old_stderr
         .theme-name {
             font-weight: bold;
             color: var(--text-bright);
-            font-size: 14px;
-            margin-bottom: 2px;
+            font-size: 12px;
+            margin-bottom: 1px;
         }
 
         .theme-desc {
-            font-size: 11px;
+            font-size: 10px;
             color: #888;
         }
 
         .theme-check {
             color: var(--text-bright);
-            font-size: 20px;
+            font-size: 16px;
             font-weight: bold;
             opacity: 0;
             transition: opacity 0.3s ease;
@@ -4673,26 +4689,27 @@ sys.stderr = _old_stderr
 
             function changeTheme(theme) {
                 // Update body class
-                document.body.classList.remove('theme-default', 'theme-greydom');
+                document.body.classList.remove('theme-default', 'theme-greydom', 'theme-cloud', 'theme-chaos');
                 if (theme !== 'default') {
                     document.body.classList.add(`theme-${theme}`);
                 }
 
                 // Update Ace Editor theme if it exists (both main editor and aceEditor variable)
+                let aceTheme = 'ace/theme/terminal'; // default
+                if (theme === 'greydom') {
+                    aceTheme = 'ace/theme/monokai';
+                } else if (theme === 'cloud') {
+                    aceTheme = 'ace/theme/katzenmilch';
+                } else if (theme === 'chaos') {
+                    aceTheme = 'ace/theme/chaos';
+                }
+                
                 if (typeof editor !== 'undefined' && editor) {
-                    if (theme === 'greydom') {
-                        editor.setTheme('ace/theme/monokai');
-                    } else {
-                        editor.setTheme('ace/theme/terminal');
-                    }
+                    editor.setTheme(aceTheme);
                 }
                 
                 if (typeof aceEditor !== 'undefined' && aceEditor) {
-                    if (theme === 'greydom') {
-                        aceEditor.setTheme('ace/theme/monokai');
-                    } else {
-                        aceEditor.setTheme('ace/theme/terminal');
-                    }
+                    aceEditor.setTheme(aceTheme);
                 }
 
                 // Update active state
