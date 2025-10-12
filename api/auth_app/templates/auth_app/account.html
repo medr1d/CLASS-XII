@@ -78,10 +78,10 @@
             <div class="form-group">
                 <label class="form-label">Python Environment Theme</label>
                 <select name="theme" id="theme-select" class="form-input" onchange="this.form.submit()">
-                    <option value="default" {% if user.profile.theme == 'default' %}selected{% endif %}>
+                    <option value="default" {% if not user.profile or user.profile.theme == 'default' %}selected{% endif %}>
                         Default (Green Matrix)
                     </option>
-                    <option value="greydom" {% if user.profile.theme == 'greydom' %}selected{% endif %}>
+                    <option value="greydom" {% if user.profile and user.profile.theme == 'greydom' %}selected{% endif %}>
                         Greydom (Dark Grey-Blue)
                     </option>
                 </select>
