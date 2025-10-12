@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import ensure_csrf_cookie
 from homepage.models import UserProfile
 import json
 import re
@@ -168,6 +169,7 @@ def home_view(request):
     return render(request, 'auth_app/index.html')
 
 @login_required
+@ensure_csrf_cookie
 def admin_panel_view(request):
     if not request.user.is_superuser:
         messages.error(request, 'Access denied. Admin privileges required.')
@@ -175,26 +177,20 @@ def admin_panel_view(request):
     
     users = User.objects.all().select_related('profile').order_by('-date_joined')
     
-    users_data = []
+    paid_count = 0
+    super_count = 0
+    
     for user in users:
-        profile, created = UserProfile.objects.get_or_create(user=user)
-        users_data.append({
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'is_superuser': user.is_superuser,
-            'is_active': user.is_active,
-            'date_joined': user.date_joined,
-            'paidUser': profile.paidUser,
-            'theme': profile.theme,
-        })
+        if hasattr(user, 'profile') and user.profile.paidUser:
+            paid_count += 1
+        if user.is_superuser:
+            super_count += 1
     
     return render(request, 'auth_app/admin_panel.html', {
-        'users': users_data,
-        'total_users': len(users_data),
-        'paid_users': len([u for u in users_data if u['paidUser']]),
-        'admin_users': len([u for u in users_data if u['is_superuser']]),
-        'free_users': len([u for u in users_data if not u['paidUser']]),
+        'users': users,
+        'paid_users_count': paid_count,
+        'free_users_count': len(users) - paid_count,
+        'superusers_count': super_count,
     })
 
 @login_required
