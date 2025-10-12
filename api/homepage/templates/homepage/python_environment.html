@@ -450,11 +450,14 @@
         }
 
         .loading-screen.theme-lebron .retro-computer {
-            width: 100px;
-            height: 100px;
+            width: 180px; /* enlarged for prominence */
+            height: 180px;
             border: none;
-            background: transparent url("{% static 'auth_app/images/basketball.png' %}") center/contain no-repeat;
-            animation: basketballSpin 2s linear infinite;
+            background: transparent url("{% static 'auth_app/images/basketball.png' %}") center/70% no-repeat;
+            animation: basketballSpin 3s linear infinite;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .loading-screen.theme-lebron .retro-computer::before,
@@ -676,14 +679,8 @@
         }
 
         body.theme-lebron .file-item::after {
-            content: '';
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 16px;
-            height: 16px;
-            background: url("{% static 'auth_app/images/sunshine.png' %}") center/contain no-repeat;
+            /* Remove small per-file icon for cleaner premium aesthetic */
+            content: none;
         }
 
         /* LeBron Theme - Make ALL backgrounds transparent */
@@ -4665,7 +4662,9 @@ sys.stderr = _old_stderr
                     </div>
                     {% if user.profile.paidUser %}
                     <div class="theme-option" data-theme="lebron">
-                        <div class="theme-preview" style="background: url('{% static 'auth_app/images/lebron.jpg' %}') center/cover;"></div>
+                        <div class="theme-preview theme-preview-lebron">
+                            <span class="theme-icon-sun" aria-hidden="true"></span>
+                        </div>
                         <div class="theme-info">
                             <div class="theme-name">LeBron</div>
                             <div class="theme-desc">Premium 👑</div>
@@ -4719,8 +4718,10 @@ sys.stderr = _old_stderr
         }
 
         body.theme-lebron .settings-cog {
-            background: transparent url("{% static 'auth_app/images/basketball.png' %}") center/contain no-repeat;
-            border: none;
+            background: transparent url("{% static 'auth_app/images/basketball.png' %}") center/70% no-repeat;
+            border: 2px solid rgba(0,0,0,0.4);
+            width: 56px;
+            height: 56px;
         }
 
         body.theme-lebron .settings-cog svg {
@@ -4729,6 +4730,22 @@ sys.stderr = _old_stderr
 
         body.theme-lebron .settings-cog:hover {
             transform: scale(1.1) rotate(45deg);
+        }
+
+        /* LeBron preview & sunshine icon */
+        .theme-preview-lebron {
+            position: relative;
+            background: url("{% static 'auth_app/images/lebron.jpg' %}") center/cover;
+        }
+        .theme-icon-sun {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 22px;
+            height: 22px;
+            background: url("{% static 'auth_app/images/sunshine.png' %}") center/contain no-repeat;
+            filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
+            pointer-events: none;
         }
 
         .settings-dropdown {
