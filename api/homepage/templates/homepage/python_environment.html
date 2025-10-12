@@ -89,6 +89,31 @@
             --grid-color: rgba(128, 128, 128, 0.05);
         }
 
+        body.theme-lebron {
+            --primary-color: #000000;
+            --secondary-color: #000000;
+            --tertiary-color: #000000;
+            --bg-primary: transparent;
+            --bg-secondary: transparent;
+            --bg-tertiary: transparent;
+            --border-color: #000000;
+            --text-color: #000000;
+            --text-bright: #000000;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --glow-color: rgba(0, 0, 0, 0.1);
+            --grid-color: rgba(0, 0, 0, 0.05);
+        }
+
+        body.theme-lebron::before {
+            background-image: url("{% static 'auth_app/images/lebron.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            opacity: 1;
+            z-index: -1;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -403,6 +428,46 @@
             100% { opacity: 0.8; }
         }
 
+        @keyframes basketballSpin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .loading-screen.theme-lebron {
+            background: #ffb3d9 !important;
+        }
+
+        .loading-screen.theme-lebron::before {
+            display: none;
+        }
+
+        .loading-screen.theme-lebron .loading-title {
+            color: #000000 !important;
+            text-shadow: none !important;
+        }
+
+        .loading-screen.theme-lebron .retro-computer {
+            width: 100px;
+            height: 100px;
+            border: none;
+            background: transparent url("{% static 'auth_app/images/basketball.png' %}") center/contain no-repeat;
+            animation: basketballSpin 2s linear infinite;
+        }
+
+        .loading-screen.theme-lebron .retro-computer::before,
+        .loading-screen.theme-lebron .retro-computer::after {
+            display: none;
+        }
+
+        .loading-screen.theme-lebron .loading-dot {
+            background: #000000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .loading-screen.theme-lebron .loading-progress {
+            color: #000000 !important;
+        }
+
         @keyframes bootText {
             0% { opacity: 0; transform: translateY(20px); }
             20% { opacity: 1; transform: translateY(0); }
@@ -605,6 +670,17 @@
             text-shadow: 0 0 10px var(--text-bright);
             box-shadow: 0 0 15px var(--shadow-color);
             animation: selectedPulse 2s ease-in-out infinite;
+        }
+
+        body.theme-lebron .file-item::after {
+            content: '';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            background: url("{% static 'auth_app/images/sunshine.png' %}") center/contain no-repeat;
         }
 
         .file-controls {
@@ -1592,6 +1668,44 @@
             background-color: #f0f0f0 !important;
         }
 
+        body.theme-lebron .ace_editor {
+            background-color: transparent !important;
+            color: #000000 !important;
+        }
+
+        body.theme-lebron .ace_gutter {
+            background-color: rgba(255, 255, 255, 0.3) !important;
+            color: #000000 !important;
+            border-right: 1px solid #000000 !important;
+        }
+
+        body.theme-lebron .ace_gutter-active-line {
+            background-color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        body.theme-lebron .ace_marker-layer .ace_active-line {
+            background-color: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        body.theme-lebron .ace_cursor {
+            color: #000000 !important;
+            border-left: 2px solid #000000 !important;
+        }
+
+        body.theme-lebron .ace_selection {
+            background-color: rgba(0, 0, 0, 0.2) !important;
+        }
+
+        body.theme-lebron .ace_keyword,
+        body.theme-lebron .ace_string,
+        body.theme-lebron .ace_comment,
+        body.theme-lebron .ace_function,
+        body.theme-lebron .ace_variable,
+        body.theme-lebron .ace_constant,
+        body.theme-lebron .ace_support {
+            color: #000000 !important;
+        }
+
         .ace_cursor {
             color: var(--text-bright) !important;
             border-left: 2px solid var(--text-bright) !important;
@@ -1767,9 +1881,9 @@
         }
     </style>
 </head>
-<body class="{% if user_theme == 'greydom' %}theme-greydom{% elif user_theme == 'cloud' %}theme-cloud{% elif user_theme == 'chaos' %}theme-chaos{% endif %}">
+<body class="{% if user_theme == 'greydom' %}theme-greydom{% elif user_theme == 'cloud' %}theme-cloud{% elif user_theme == 'chaos' %}theme-chaos{% elif user_theme == 'lebron' %}theme-lebron{% endif %}">
     
-    <div class="loading-screen" id="loading-screen">
+    <div class="loading-screen {% if user_theme == 'lebron' %}theme-lebron{% endif %}" id="loading-screen">
         <div class="boot-sequence">
             > INITIALIZING PYTHON TERMINAL v3.11.4<br>
             > Loading Python Environment...<br>
@@ -4490,6 +4604,16 @@ sys.stderr = _old_stderr
                         </div>
                         <div class="theme-check">✓</div>
                     </div>
+                    {% if user.profile.paidUser %}
+                    <div class="theme-option" data-theme="lebron">
+                        <div class="theme-preview" style="background: url('{% static 'auth_app/images/lebron.jpg' %}') center/cover;"></div>
+                        <div class="theme-info">
+                            <div class="theme-name">LeBron</div>
+                            <div class="theme-desc">Premium 👑</div>
+                        </div>
+                        <div class="theme-check">✓</div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -4533,6 +4657,19 @@ sys.stderr = _old_stderr
 
         .settings-cog:hover svg {
             transform: rotate(90deg);
+        }
+
+        body.theme-lebron .settings-cog {
+            background: transparent url("{% static 'auth_app/images/basketball.png' %}") center/contain no-repeat;
+            border: none;
+        }
+
+        body.theme-lebron .settings-cog svg {
+            display: none;
+        }
+
+        body.theme-lebron .settings-cog:hover {
+            transform: scale(1.1) rotate(45deg);
         }
 
         .settings-dropdown {
@@ -4709,9 +4846,18 @@ sys.stderr = _old_stderr
 
             function changeTheme(theme) {
                 // Update body class
-                document.body.classList.remove('theme-default', 'theme-greydom', 'theme-cloud', 'theme-chaos');
+                document.body.classList.remove('theme-default', 'theme-greydom', 'theme-cloud', 'theme-chaos', 'theme-lebron');
                 if (theme !== 'default') {
                     document.body.classList.add(`theme-${theme}`);
+                }
+
+                // Update loading screen class for LeBron theme
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.classList.remove('theme-lebron');
+                    if (theme === 'lebron') {
+                        loadingScreen.classList.add('theme-lebron');
+                    }
                 }
 
                 // Update Ace Editor theme if it exists (both main editor and aceEditor variable)
@@ -4722,6 +4868,8 @@ sys.stderr = _old_stderr
                     aceTheme = 'ace/theme/katzenmilch';
                 } else if (theme === 'chaos') {
                     aceTheme = 'ace/theme/chaos';
+                } else if (theme === 'lebron') {
+                    aceTheme = 'ace/theme/terminal';
                 }
                 
                 if (typeof editor !== 'undefined' && editor) {

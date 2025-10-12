@@ -7,6 +7,7 @@ class UserProfile(models.Model):
         ('greydom', 'Greydom (Dark Grey-Blue)'),
         ('cloud', 'Cloud (White & Dark Grey)'),
         ('chaos', 'Chaos (Black & Grey)'),
+        ('lebron', 'LeBron (Premium)'),
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
