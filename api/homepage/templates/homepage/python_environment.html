@@ -4774,6 +4774,25 @@ sys.stderr = _old_stderr
         body.theme-lebron .ace_variable, 
         body.theme-lebron .ace_identifier { font-weight: 600 !important; }
 
+        /* Transparent code cells with black outlines for LeBron */
+        body.theme-lebron .ace_editor,
+        body.theme-lebron .ace_scroller,
+        body.theme-lebron .ace_content {
+            background: transparent !important;
+            border: 2px solid rgba(0,0,0,0.6) !important;
+        }
+        body.theme-lebron .ace_gutter {
+            background: transparent !important;
+            border-right: 1px solid rgba(0,0,0,0.4) !important;
+        }
+        body.theme-lebron .ace_active-line {
+            background: rgba(0,0,0,0.1) !important;
+        }
+        body.theme-lebron .ace_cursor {
+            color: #000 !important;
+            border-left: 2px solid #000 !important;
+        }
+
         .settings-dropdown {
             position: absolute;
             bottom: 60px;
@@ -5021,73 +5040,137 @@ sys.stderr = _old_stderr
             }
         });
 
-        // LeBron bouncing basketball physics
+        // Optimized LeBron bouncing basketball physics
         (function(){
             const screen = document.getElementById('loading-screen');
-            if(!screen) return;
+            if(!screen || !screen.classList.contains('theme-lebron')) return;
             const ball = screen.querySelector('.retro-computer');
             if(!ball) return;
-            let vx = 120; // px/s
-            let vy = 60;  // px/s
-            const gravity = 500; // px/s^2
-            const elasticity = 0.75;
-            const friction = 0.995;
-            let dragging = false;
-            let lastTime = null;
-            let rect = () => screen.getBoundingClientRect();
-
-            function frame(ts){
-                if(!lastTime) lastTime = ts;
-                const dt = (ts - lastTime)/1000;
-                lastTime = ts;
-                if(!dragging){
-                    vy += gravity * dt;
-                    let x = parseFloat(ball.dataset.x || (ball.offsetLeft)) ;
-                    let y = parseFloat(ball.dataset.y || (ball.offsetTop)) ;
-                    x += vx * dt;
-                    y += vy * dt;
-                    const r = 90; // half of 180px ball
-                    const bounds = rect();
-                    const minX = 0;
-                    const maxX = bounds.width - ball.offsetWidth;
-                    const minY = 0;
-                    const maxY = bounds.height - ball.offsetHeight;
-                    if (x < minX){ x = minX; vx = -vx * elasticity; }
-                    if (x > maxX){ x = maxX; vx = -vx * elasticity; }
-                    if (y < minY){ y = minY; vy = -vy * elasticity; }
-                    if (y > maxY){ y = maxY; vy = -vy * elasticity; }
-                    vx *= friction;
-                    vy *= friction;
-                    ball.style.position = 'absolute';
-                    ball.style.left = x + 'px';
-                    ball.style.top = y + 'px';
-                    ball.dataset.x = x;
-                    ball.dataset.y = y;
+            
+            // Physics state
+            let state = {
+                x: ball.offsetLeft || 100,
+                y: ball.offsetTop || 100,
+                vx: 120, vy: 60,
+                dragging: false,
+                lastTime: 0
+            };
+            
+            // Cached constants for performance
+            const physics = {
+                gravity: 400,
+                elasticity: 0.8,
+                friction: 0.998,
+                minVelocity: 0.5,
+                ballSize: 180
+            };
+            
+            let bounds = screen.getBoundingClientRect();
+            let boundsCache = Date.now();
+            
+            // Optimized frame loop with 60fps throttling
+            function frame(ts) {
+                // Throttle to ~60fps max
+                if (ts - state.lastTime < 16) {
+                    requestAnimationFrame(frame);
+                    return;
                 }
+                
+                const dt = Math.min((ts - state.lastTime) / 1000, 0.033); // Cap dt
+                state.lastTime = ts;
+                
+                if (!state.dragging) {
+                    // Update physics
+                    state.vy += physics.gravity * dt;
+                    state.x += state.vx * dt;
+                    state.y += state.vy * dt;
+                    
+                    // Refresh bounds cache every 500ms
+                    if (ts - boundsCache > 500) {
+                        bounds = screen.getBoundingClientRect();
+                        boundsCache = ts;
+                    }
+                    
+                    // Collision detection with bounds
+                    const maxX = bounds.width - physics.ballSize;
+                    const maxY = bounds.height - physics.ballSize;
+                    
+                    if (state.x <= 0) {
+                        state.x = 0;
+                        state.vx = Math.abs(state.vx) * physics.elasticity;
+                    } else if (state.x >= maxX) {
+                        state.x = maxX;
+                        state.vx = -Math.abs(state.vx) * physics.elasticity;
+                    }
+                    
+                    if (state.y <= 0) {
+                        state.y = 0;
+                        state.vy = Math.abs(state.vy) * physics.elasticity;
+                    } else if (state.y >= maxY) {
+                        state.y = maxY;
+                        state.vy = -Math.abs(state.vy) * physics.elasticity;
+                    }
+                    
+                    // Apply friction and minimum velocity
+                    state.vx *= physics.friction;
+                    state.vy *= physics.friction;
+                    
+                    if (Math.abs(state.vx) < physics.minVelocity) state.vx = 0;
+                    if (Math.abs(state.vy) < physics.minVelocity && state.y >= maxY - 1) state.vy = 0;
+                    
+                    // Batch DOM updates
+                    ball.style.transform = `translate(${state.x}px, ${state.y}px)`;
+                }
+                
                 requestAnimationFrame(frame);
             }
+            
+            // Initialize position and start loop
+            ball.style.position = 'absolute';
+            ball.style.left = '0px';
+            ball.style.top = '0px';
             requestAnimationFrame(frame);
-
-            let startOffset = {x:0,y:0};
+            
+            // Optimized drag handlers
+            let dragStart = {x: 0, y: 0, lastX: 0, lastY: 0, time: 0};
+            
             ball.addEventListener('pointerdown', e => {
-                dragging = true;
+                state.dragging = true;
                 ball.setPointerCapture(e.pointerId);
-                startOffset.x = e.clientX - (parseFloat(ball.dataset.x)||ball.offsetLeft);
-                startOffset.y = e.clientY - (parseFloat(ball.dataset.y)||ball.offsetTop);
-                vx = 0; vy = 0;
+                const rect = ball.getBoundingClientRect();
+                dragStart.x = e.clientX - rect.left;
+                dragStart.y = e.clientY - rect.top;
+                dragStart.lastX = e.clientX;
+                dragStart.lastY = e.clientY;
+                dragStart.time = Date.now();
+                state.vx = state.vy = 0;
+                e.preventDefault();
             });
+            
             ball.addEventListener('pointermove', e => {
-                if(!dragging) return;
-                const x = e.clientX - startOffset.x;
-                const y = e.clientY - startOffset.y;
-                ball.style.left = x + 'px';
-                ball.style.top = y + 'px';
-                ball.dataset.x = x;
-                ball.dataset.y = y;
+                if (!state.dragging) return;
+                const screenRect = screen.getBoundingClientRect();
+                state.x = Math.max(0, Math.min(e.clientX - screenRect.left - dragStart.x, screenRect.width - physics.ballSize));
+                state.y = Math.max(0, Math.min(e.clientY - screenRect.top - dragStart.y, screenRect.height - physics.ballSize));
+                
+                // Track velocity for throw
+                const time = Date.now();
+                const dt = Math.max(time - dragStart.time, 1);
+                state.vx = (e.clientX - dragStart.lastX) * 1000 / dt;
+                state.vy = (e.clientY - dragStart.lastY) * 1000 / dt;
+                
+                dragStart.lastX = e.clientX;
+                dragStart.lastY = e.clientY;
+                dragStart.time = time;
+                e.preventDefault();
             });
+            
             ball.addEventListener('pointerup', e => {
-                dragging = false;
-                // Give a little throw velocity based on last movement (optional improvement later)
+                state.dragging = false;
+                // Apply throw velocity with damping
+                state.vx = Math.max(-800, Math.min(800, state.vx * 0.7));
+                state.vy = Math.max(-800, Math.min(800, state.vy * 0.7));
+                e.preventDefault();
             });
         })();
     </script>
