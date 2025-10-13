@@ -967,23 +967,13 @@
 
         // Functions
         function updateTheme(theme) {
-            // Get CSRF token from cookie
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
+            // Get CSRF token from meta tag (session-based CSRF)
+            const csrftoken = document.querySelector('meta[name="csrf-token"]')?.content;
             
-            const csrftoken = getCookie('csrftoken');
+            if (!csrftoken) {
+                console.error('CSRF token not found in meta tag');
+                return;
+            }
             
             fetch('{% url "auth_app:update_theme" %}', {
                 method: 'POST',

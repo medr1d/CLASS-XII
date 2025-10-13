@@ -1830,8 +1830,8 @@
         }
 
         .cell-btn {
-            background: linear-gradient(45deg, #000000 0%, #0a0a0a 50%, #000000 100%);
-            border: 1px solid #006600;
+            background: linear-gradient(45deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-primary) 100%);
+            border: 1px solid var(--border-color);
             color: var(--text-color);
             cursor: pointer;
             padding: 6px 8px;
@@ -1839,21 +1839,21 @@
             font-size: 12px;
             font-weight: bold;
             transition: all 0.3s ease;
-            box-shadow: 0 0 5px rgba(0, 136, 0, 0.1);
+            box-shadow: 0 0 5px var(--glow-color);
             min-width: 30px;
             text-align: center;
         }
 
         .cell-btn:hover {
-            background: linear-gradient(45deg, #0a0a0a 0%, #008800 50%, #0a0a0a 100%);
-            color: #ffffff;
-            box-shadow: 0 0 10px rgba(0, 136, 0, 0.2);
+            background: linear-gradient(45deg, var(--bg-secondary) 0%, var(--secondary-color) 50%, var(--bg-secondary) 100%);
+            color: var(--text-bright);
+            box-shadow: 0 0 10px var(--shadow-color);
             transform: translateY(-1px);
         }
 
         .cell-btn:active {
             transform: translateY(0);
-            box-shadow: 0 0 5px rgba(0, 255, 0, 0.2);
+            box-shadow: 0 0 5px var(--shadow-color);
         }
 
         .cell-input {
@@ -2349,7 +2349,7 @@
                     </div>
                 </div>
                 
-                <div class="notebook-toolbar" style="padding: 10px; background: rgba(0, 136, 0, 0.05); border-radius: 5px; margin-bottom: 15px; font-size: 12px; color: #888;">
+                <div class="notebook-toolbar" style="padding: 10px; background: var(--bg-tertiary); border-radius: 5px; margin-bottom: 15px; font-size: 12px; color: #888;">
                     <strong>Quick Tips:</strong> 
                     <code>Shift+Enter</code> = Run & Next | 
                     <code>Ctrl+Enter</code> = Run | 
@@ -4035,9 +4035,18 @@ except Exception as e:
             const computedStyle = getComputedStyle(document.body);
             const textColor = computedStyle.getPropertyValue('--text-bright').trim() || '#0f0';
             
+            // Count data files
+            let dataFileCount = 3; // Default files (text.txt, tester.csv, binary.dat)
+            let customDataFileCount = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('data_file_')) {
+                    customDataFileCount++;
+                }
+            }
             
             const dataSection = document.createElement('li');
-            dataSection.innerHTML = '<strong>Data Files:</strong>';
+            dataSection.innerHTML = `<strong>Data Files (${dataFileCount + customDataFileCount}):</strong>`;
             dataSection.style.color = textColor;
             dataSection.style.marginBottom = '10px';
             fileList.appendChild(dataSection);
@@ -4108,9 +4117,17 @@ except Exception as e:
             separator.innerHTML = '<hr style="border-color: #333; margin: 10px 0;">';
             fileList.appendChild(separator);
             
+            // Count saved scripts
+            let scriptCount = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('python_script_')) {
+                    scriptCount++;
+                }
+            }
             
             const scriptSection = document.createElement('li');
-            scriptSection.innerHTML = '<strong>Saved Scripts:</strong>';
+            scriptSection.innerHTML = `<strong>Saved Scripts (${scriptCount}):</strong>`;
             scriptSection.style.color = textColor;
             scriptSection.style.marginBottom = '10px';
             fileList.appendChild(scriptSection);
@@ -5797,10 +5814,10 @@ print(f"Hello {name}! You are {age} years old.")
             <div class="pm-section">
                 <div class="pm-section-title">QUICK INSTALL</div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-                    <button class="pm-btn" onclick="installQuickPackage('requests')">requests</button>
+                    <button class="pm-btn" onclick="installQuickPackage('mysql-connector-python')">mysql</button>
                     <button class="pm-btn" onclick="installQuickPackage('pillow')">pillow</button>
-                    <button class="pm-btn" onclick="installQuickPackage('faker')">faker</button>
-                    <button class="pm-btn" onclick="installQuickPackage('tqdm')">tqdm</button>
+                    <button class="pm-btn" onclick="installQuickPackage('requests')">requests</button>
+                    <button class="pm-btn" onclick="installQuickPackage('openpyxl')">openpyxl</button>
                 </div>
             </div>
             
@@ -5838,7 +5855,7 @@ print(f"Hello {name}! You are {age} years old.")
 
     <script>
         // Package Manager Functionality
-        let installedPackages = new Set(['numpy', 'pandas', 'matplotlib', 'scipy', 'scikit-learn', 'seaborn', 'sympy', 'networkx', 'plotly', 'bokeh', 'altair', 'wordcloud', 'beautifulsoup4', 'requests', 'pillow', 'openpyxl', 'faker', 'tqdm', 'rich', 'pydantic']);
+        let installedPackages = new Set(['numpy', 'pandas', 'matplotlib', 'scipy', 'scikit-learn', 'seaborn', 'sympy', 'networkx', 'plotly', 'bokeh', 'altair', 'wordcloud', 'beautifulsoup4', 'requests', 'pillow', 'openpyxl', 'rich', 'pydantic']);
         
         function updatePMStatus(message) {
             const statusEl = document.getElementById('pm-status');

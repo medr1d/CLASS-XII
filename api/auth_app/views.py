@@ -7,7 +7,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Q, Count
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -242,6 +242,7 @@ def account_view(request):
     })
 
 @login_required
+@ensure_csrf_cookie
 def update_theme(request):
     if request.method == 'POST':
         # Handle both JSON and form data
