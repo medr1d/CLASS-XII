@@ -3510,71 +3510,12 @@ builtins.open = restricted_open
                 
             } catch (error) {
                 console.error("Main initialization failed:", error);
-                updateLoadingProgress("Trying minimal setup...");
-                
-                // Fallback: ultra-minimal setup
-                try {
-                    updateTerminal("⚠️  Main setup failed, trying minimal configuration...\n");
-                    pyodide = await loadPyodide({
-                        indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
-                    });
-                    
-                    // Load essential packages for minimal setup
-                    await pyodide.loadPackage(["matplotlib"]);
-                    
-                    await pyodide.runPython(`
-import sys
-import numpy as np
-import matplotlib.pyplot as plt
-
-print("🔧 Minimal Python environment ready!")
-print("Python", sys.version)
-print("📦 Available: numpy, matplotlib")
-
-# Basic matplotlib setup for web
-import matplotlib
-matplotlib.use('Agg')
-
-def show_plot():
-    try:
-        import io
-        import base64
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png', bbox_inches='tight', dpi=96)
-        buf.seek(0)
-        img_data = base64.b64encode(buf.read()).decode()
-        buf.close()
-        print(f'<img src="data:image/png;base64,{img_data}" style="max-width:100%;height:auto;"/>')
-        plt.close()
-        print("📊 Plot ready! (matplotlib working in minimal mode)")
-    except Exception as e:
-        print(f"Plot error: {e}")
-        plt.close()
-
-plt.show = show_plot
-`);
-                    
-                    // Simple file setup without complex wrappers
-                    try {
-                        pyodide.FS.writeFile('text.txt', 'Hello from minimal setup!');
-                        pyodide.FS.writeFile('tester.csv', 'name,value\ntest,1');
-                    } catch (fsError) {
-                        console.warn('File setup failed:', fsError);
-                    }
-                    
-                    isInitialized = true;
-                    updateTerminal("✅ Minimal Python environment loaded successfully!\n");
-                    updateTerminal("Available: Basic Python + file system\n\n");
-                    
-                } catch (fallbackError) {
-                    console.error("Even fallback failed:", fallbackError);
-                    updateTerminal("❌ Failed to initialize Python environment: " + fallbackError.toString() + "\n");
-                    updateTerminal("Please refresh the page to try again.\n");
-                }
+                updateTerminal("❌ Failed to initialize Python environment: " + error.toString() + "\n");
+                updateTerminal("Please refresh the page to try again.\n");
                 
                 setTimeout(() => {
                     showMainInterface();
-                }, 1000);
+                }, 2000);
             }
         }
 
@@ -4378,7 +4319,7 @@ sys.stderr = StringIO()
                     if (error.name === 'PythonError') {
                         updateTerminal("Error: " + error.message + "\n", true);
                     } else {
-                        throw error;
+                        updateTerminal("Error: " + error.toString() + "\n", true);
                     }
                 }
 
