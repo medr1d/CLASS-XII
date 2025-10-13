@@ -3127,7 +3127,7 @@ except Exception as e:
 try:
     import pandas as pd
     df = pd.read_csv('tester.csv')
-    print("\\n� CSV Data Preview:")
+    print("\\n📊 CSV Data Preview:")
     print(df.head(3))
     print(f"Dataset shape: {df.shape}")
 except Exception as e:
@@ -3138,7 +3138,24 @@ print("• Install more packages: await install_package('requests')")
 print("• Try notebook mode for Jupyter-like experience")
 print("✨ Environment ready - happy coding!")`;
 
-            aceEditor.setValue(defaultContent, -1);
+            // Try to load user code from textarea, fallback to default if problematic
+            let userCode = document.getElementById('code_content').value.trim();
+            let codeToUse = defaultContent;
+            
+            // Basic validation - check if user code exists and doesn't have obvious template issues
+            if (userCode && userCode.length > 0 && !userCode.includes('{{') && !userCode.includes('}}')) {
+                // Additional check - make sure it doesn't have obvious syntax issues
+                try {
+                    // Simple heuristic check for function definitions followed by try blocks
+                    if (!userCode.match(/def\s+\w+\s*\([^)]*\):\s*\n\s*try:/)) {
+                        codeToUse = userCode;
+                    }
+                } catch (e) {
+                    console.warn('User code validation failed, using default:', e);
+                }
+            }
+            
+            aceEditor.setValue(codeToUse, -1);
             
 
             aceEditor.session.on('change', function() {
