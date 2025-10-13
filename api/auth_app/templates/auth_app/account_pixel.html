@@ -1,883 +1,1025 @@
-{% extends "auth_app/base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Dashboard - PYTHON ASSEMBLY</title>
+    {% load static %}
+    
+    <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}Account - YTHON{% endblock %}
+        body {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-{% block content %}
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-    
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        image-rendering: pixelated;
-        image-rendering: -moz-crisp-edges;
-        image-rendering: crisp-edges;
-    }
-    
-    body {
-        font-family: 'Press Start 2P', cursive;
-        background: #000;
-        color: #0f0;
-        overflow-x: hidden;
-    }
-    
-    /* Pixelated Grid Background */
-    .pixel-bg {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #000;
-        background-image:
-            repeating-linear-gradient(0deg, transparent, transparent 19px, #0a0a0a 19px, #0a0a0a 20px),
-            repeating-linear-gradient(90deg, transparent, transparent 19px, #0a0a0a 19px, #0a0a0a 20px);
-        background-size: 20px 20px;
-        z-index: 0;
-        animation: gridScroll 20s linear infinite;
-    }
-    
-    @keyframes gridScroll {
-        0% { background-position: 0 0; }
-        100% { background-position: 20px 20px; }
-    }
-    
-    /* Scanlines Effect */
-    .scanlines {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 999;
-        background: repeating-linear-gradient(
-            0deg,
-            transparent,
-            transparent 2px,
-            rgba(0, 255, 0, 0.03) 2px,
-            rgba(0, 255, 0, 0.03) 4px
-        );
-        animation: scanline 10s linear infinite;
-    }
-    
-    @keyframes scanline {
-        0% { transform: translateY(0); }
-        100% { transform: translateY(10px); }
-    }
-    
-    .container {
-        position: relative;
-        z-index: 1;
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 40px 20px;
-    }
-    
-    /* Pixel Border Box */
-    .pixel-box {
-        background: #000;
-        border: 4px solid #0f0;
-        box-shadow: 
-            0 0 0 4px #000,
-            0 0 0 8px #0f0,
-            0 0 20px #0f0;
-        padding: 30px;
-        margin-bottom: 30px;
-        position: relative;
-    }
-    
-    .pixel-box::before {
-        content: '';
-        position: absolute;
-        top: -4px;
-        left: -4px;
-        right: -4px;
-        bottom: -4px;
-        background: linear-gradient(45deg, transparent 48%, #0f0 48%, #0f0 52%, transparent 52%);
-        background-size: 8px 8px;
-        pointer-events: none;
-        opacity: 0.3;
-    }
-    
-    /* Header */
-    .pixel-header {
-        text-align: center;
-        margin-bottom: 40px;
-    }
-    
-    .pixel-header h1 {
-        font-size: 2rem;
-        color: #0f0;
-        text-shadow: 
-            3px 3px 0 #000,
-            4px 4px 0 #0f0;
-        animation: glitch 5s infinite;
-        margin-bottom: 15px;
-    }
-    
-    @keyframes glitch {
-        0%, 90%, 100% {
-            text-shadow: 3px 3px 0 #000, 4px 4px 0 #0f0;
+        /* Header Bar */
+        .header-bar {
+            background: linear-gradient(90deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+            border-bottom: 2px solid #ffffff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        95% {
-            text-shadow: -2px -2px 0 #f0f, 3px 3px 0 #0ff;
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
-    }
-    
-    .pixel-badge {
-        display: inline-block;
-        padding: 8px 16px;
-        background: #000;
-        border: 3px solid #0f0;
-        color: #0f0;
-        font-size: 0.6rem;
-        margin-top: 10px;
-        box-shadow: 0 0 10px #0f0;
-        animation: blink 1s infinite;
-    }
-    
-    @keyframes blink {
-        0%, 50%, 100% { opacity: 1; }
-        25%, 75% { opacity: 0.7; }
-    }
-    
-    .premium-badge {
-        border-color: #ff0;
-        color: #ff0;
-        box-shadow: 0 0 15px #ff0;
-    }
-    
-    /* Stats Grid */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-    
-    .stat-card {
-        background: #000;
-        border: 3px solid #0f0;
-        padding: 20px;
-        text-align: center;
-        position: relative;
-        transition: all 0.3s;
-    }
-    
-    .stat-card:hover {
-        border-color: #ff0;
-        box-shadow: 0 0 20px #ff0;
-        transform: scale(1.05);
-    }
-    
-    .stat-label {
-        font-size: 0.6rem;
-        color: #0a0;
-        margin-bottom: 10px;
-    }
-    
-    .stat-value {
-        font-size: 1.5rem;
-        color: #0f0;
-        text-shadow: 2px 2px 0 #000;
-    }
-    
-    /* Settings Section */
-    .settings-section {
-        margin-bottom: 30px;
-    }
-    
-    .settings-section h2 {
-        font-size: 1.2rem;
-        color: #0f0;
-        margin-bottom: 20px;
-        text-shadow: 2px 2px 0 #000;
-        border-bottom: 3px solid #0f0;
-        padding-bottom: 10px;
-    }
-    
-    .setting-item {
-        background: #000;
-        border: 2px solid #0a0;
-        padding: 20px;
-        margin-bottom: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: all 0.3s;
-    }
-    
-    .setting-item:hover {
-        border-color: #0f0;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
-    }
-    
-    .setting-info h3 {
-        font-size: 0.8rem;
-        color: #0f0;
-        margin-bottom: 8px;
-    }
-    
-    .setting-info p {
-        font-size: 0.6rem;
-        color: #0a0;
-        line-height: 1.5;
-    }
-    
-    /* Pixel Button */
-    .pixel-btn {
-        font-family: 'Press Start 2P', cursive;
-        font-size: 0.7rem;
-        padding: 12px 24px;
-        background: #000;
-        color: #0f0;
-        border: 3px solid #0f0;
-        cursor: pointer;
-        transition: all 0.3s;
-        text-transform: uppercase;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .pixel-btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: #0f0;
-        transition: left 0.3s;
-        z-index: -1;
-    }
-    
-    .pixel-btn:hover::before {
-        left: 0;
-    }
-    
-    .pixel-btn:hover {
-        color: #000;
-        box-shadow: 0 0 20px #0f0;
-    }
-    
-    .pixel-btn.danger {
-        border-color: #f00;
-        color: #f00;
-    }
-    
-    .pixel-btn.danger::before {
-        background: #f00;
-    }
-    
-    .pixel-btn.danger:hover {
-        box-shadow: 0 0 20px #f00;
-    }
-    
-    .pixel-btn:disabled {
-        opacity: 0.3;
-        cursor: not-started;
-    }
-    
-    /* Toggle Switch Pixel Style */
-    .pixel-toggle {
-        width: 80px;
-        height: 40px;
-        background: #000;
-        border: 3px solid #0a0;
-        position: relative;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-    
-    .pixel-toggle.active {
-        border-color: #0f0;
-        box-shadow: 0 0 15px #0f0;
-    }
-    
-    .pixel-toggle-slider {
-        position: absolute;
-        width: 30px;
-        height: 30px;
-        background: #0a0;
-        border: 2px solid #0f0;
-        top: 2px;
-        left: 2px;
-        transition: all 0.3s;
-    }
-    
-    .pixel-toggle.active .pixel-toggle-slider {
-        left: 42px;
-        background: #0f0;
-        box-shadow: 0 0 10px #0f0;
-    }
-    
-    /* Theme Selector */
-    .theme-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 15px;
-    }
-    
-    .theme-card {
-        background: #000;
-        border: 2px solid #0a0;
-        padding: 15px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s;
-        position: relative;
-    }
-    
-    .theme-card:hover {
-        border-color: #0f0;
-        transform: scale(1.05);
-    }
-    
-    .theme-card.active {
-        border-color: #ff0;
-        box-shadow: 0 0 20px #ff0;
-    }
-    
-    .theme-preview {
-        width: 100%;
-        height: 60px;
-        margin-bottom: 10px;
-        border: 2px solid #0a0;
-    }
-    
-    .theme-name {
-        font-size: 0.6rem;
-        color: #0f0;
-    }
-    
-    /* 2FA Section */
-    .twofa-status {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-    
-    .status-indicator {
-        width: 20px;
-        height: 20px;
-        background: #f00;
-        border: 2px solid #f00;
-        box-shadow: 0 0 10px #f00;
-    }
-    
-    .status-indicator.active {
-        background: #0f0;
-        border-color: #0f0;
-        box-shadow: 0 0 10px #0f0;
-        animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-    
-    /* QR Code Modal */
-    .pixel-modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.9);
-        z-index: 1000;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .pixel-modal.show {
-        display: flex;
-    }
-    
-    .modal-content {
-        background: #000;
-        border: 4px solid #0f0;
-        padding: 30px;
-        max-width: 500px;
-        width: 90%;
-        box-shadow: 0 0 30px #0f0;
-    }
-    
-    .modal-header {
-        font-size: 1rem;
-        color: #0f0;
-        margin-bottom: 20px;
-        text-align: center;
-        text-shadow: 2px 2px 0 #000;
-    }
-    
-    .qr-container {
-        background: #fff;
-        padding: 20px;
-        text-align: center;
-        margin: 20px 0;
-        border: 3px solid #0f0;
-    }
-    
-    .backup-codes {
-        background: #000;
-        border: 2px solid #0a0;
-        padding: 15px;
-        margin: 15px 0;
-        font-size: 0.6rem;
-        color: #0f0;
-        font-family: 'Press Start 2P', cursive;
-        line-height: 2;
-    }
-    
-    .modal-actions {
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-        margin-top: 20px;
-    }
-    
-    /* Password Change Section */
-    .password-form {
-        background: #000;
-        border: 2px solid #0a0;
-        padding: 20px;
-    }
-    
-    .form-group {
-        margin-bottom: 15px;
-    }
-    
-    .form-group label {
-        display: block;
-        font-size: 0.6rem;
-        color: #0f0;
-        margin-bottom: 8px;
-    }
-    
-    .form-group input {
-        width: 100%;
-        padding: 12px;
-        background: #000;
-        border: 2px solid #0a0;
-        color: #0f0;
-        font-family: 'Press Start 2P', cursive;
-        font-size: 0.6rem;
-        transition: all 0.3s;
-    }
-    
-    .form-group input:focus {
-        outline: none;
-        border-color: #0f0;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
-    }
-    
-    /* Loading Animation */
-    .pixel-loader {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid #0a0;
-        border-top-color: #0f0;
-        animation: pixelSpin 1s steps(8) infinite;
-    }
-    
-    @keyframes pixelSpin {
-        to { transform: rotate(360deg); }
-    }
-    
-    /* Notification */
-    .pixel-notification {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #000;
-        border: 3px solid #0f0;
-        padding: 20px;
-        font-size: 0.7rem;
-        color: #0f0;
-        box-shadow: 0 0 20px #0f0;
-        z-index: 2000;
-        animation: slideIn 0.5s, slideOut 0.5s 4.5s;
-    }
-    
-    @keyframes slideIn {
-        from { transform: translateX(400px); }
-        to { transform: translateX(0); }
-    }
-    
-    @keyframes slideOut {
-        from { transform: translateX(0); }
-        to { transform: translateX(400px); }
-    }
-    
-    .pixel-notification.error {
-        border-color: #f00;
-        box-shadow: 0 0 20px #f00;
-        color: #f00;
-    }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-        .pixel-header h1 {
-            font-size: 1.2rem;
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
         }
-        
-        .pixel-box {
-            padding: 20px;
-        }
-        
-        .setting-item {
-            flex-direction: column;
-            align-items: flex-start;
+
+        .user-info {
+            display: flex;
+            align-items: center;
             gap: 15px;
         }
-        
-        .theme-grid {
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: #ffffff;
+            color: #000000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
         }
-    }
-</style>
 
-<div class="pixel-bg"></div>
-<div class="scanlines"></div>
+        .user-details h3 {
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
 
-<div class="container">
-    <!-- Header -->
-    <div class="pixel-box pixel-header">
-        <h1>🎮 PLAYER PROFILE 🎮</h1>
-        <div>
-            <span style="color: #0f0; font-size: 0.8rem;">USERNAME: {{ user.username|upper }}</span>
-            {% if user.profile.paidUser %}
-                <div class="pixel-badge premium-badge">⭐ PREMIUM PLAYER ⭐</div>
-            {% else %}
-                <div class="pixel-badge">FREE PLAYER</div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-label">PLAYER ID</div>
-            <div class="stat-value">{{ user.id }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">JOINED</div>
-            <div class="stat-value" style="font-size: 0.7rem;">{{ user.date_joined|date:"Y-m-d" }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">STATUS</div>
-            <div class="stat-value">ACTIVE</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">THEME</div>
-            <div class="stat-value" style="font-size: 0.7rem;">{{ user.profile.theme|upper }}</div>
-        </div>
-    </div>
-    
-    <!-- Two-Factor Authentication -->
-    <div class="pixel-box settings-section">
-        <h2>🔐 TWO-FACTOR AUTH</h2>
-        <div class="setting-item">
-            <div class="setting-info">
-                <h3>2FA SECURITY</h3>
-                <p>Add an extra layer of security to your account with TOTP authentication</p>
-                <div class="twofa-status" style="margin-top: 10px;">
-                    <div class="status-indicator {% if user.two_factor.is_enabled %}active{% endif %}"></div>
-                    <span style="font-size: 0.6rem; color: #0f0;">
-                        {% if user.two_factor.is_enabled %}ENABLED{% else %}DISABLED{% endif %}
-                    </span>
+        .user-details p {
+            font-size: 0.8rem;
+            color: #cccccc;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: transparent;
+            color: #ffffff;
+            border: 1px solid #ffffff;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn:hover {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .btn-danger {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .btn-danger:hover {
+            background: #ff4444;
+            color: #ffffff;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            min-height: calc(100vh - 70px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+            border-right: 2px solid #ffffff;
+            padding: 30px 20px;
+            position: sticky;
+            top: 70px;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+            border-bottom: 1px solid #ffffff;
+            padding-bottom: 10px;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 12px 15px;
+            color: #cccccc;
+            text-decoration: none;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: #ffffff;
+            border-bottom: 2px solid #ffffff;
+            padding-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            border: 2px solid #ffffff;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #cccccc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Settings Cards */
+        .settings-grid {
+            display: grid;
+            gap: 25px;
+        }
+
+        .setting-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            border: 2px solid #ffffff;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .setting-card:hover {
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .setting-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .setting-title {
+            font-size: 1.2rem;
+            color: #ffffff;
+        }
+
+        .setting-description {
+            color: #cccccc;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        /* Theme Grid */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .theme-card {
+            background: #1a1a1a;
+            border: 2px solid #666666;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-card:hover {
+            border-color: #ffffff;
+            background: #2a2a2a;
+        }
+
+        .theme-card.active {
+            border-color: #ffffff;
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .theme-preview {
+            width: 100%;
+            height: 50px;
+            margin-bottom: 10px;
+            border: 1px solid #666666;
+        }
+
+        .theme-name {
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            width: 60px;
+            height: 30px;
+            background: #333333;
+            border: 2px solid #ffffff;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: #ffffff;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: #ffffff;
+            border: 1px solid #000000;
+            top: 1px;
+            left: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            left: 31px;
+            background: #000000;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            background: #000000;
+            border: 2px solid #ffffff;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            border: 1px solid;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            color: #00ff00;
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .status-inactive {
+            color: #ff4444;
+            border-color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+        }
+
+        .status-premium {
+            color: #ffff00;
+            border-color: #ffff00;
+            background: rgba(255, 255, 0, 0.1);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #000000;
+            border: 3px solid #ffffff;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .qr-container {
+            background: #ffffff;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .backup-codes {
+            background: #1a1a1a;
+            border: 1px solid #ffffff;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #ffffff;
+            white-space: pre-line;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: static;
+                height: auto;
+                border-right: none;
+                border-bottom: 2px solid #ffffff;
+            }
+            
+            .stats-grid,
+            .theme-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Bar -->
+    <div class="header-bar">
+        <div class="header-left">
+            <div class="logo">PYTHON ASSEMBLY</div>
+            <div class="user-info">
+                <div class="user-avatar">{{ user.username.0|upper }}</div>
+                <div class="user-details">
+                    <h3>{{ user.username }}</h3>
+                    <p>{{ user.email }}</p>
                 </div>
             </div>
-            <div>
-                {% if user.two_factor.is_enabled %}
-                    <button class="pixel-btn danger" onclick="disable2FA()">DISABLE</button>
-                {% else %}
-                    <button class="pixel-btn" onclick="enable2FA()">ENABLE</button>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'homepage:python_environment' %}" class="btn">
+                ← Back to IDE
+            </a>
+            <a href="{% url 'auth_app:logout' %}" class="btn btn-danger">
+                Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <h2>Account Settings</h2>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" data-section="overview">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-section="profile">Profile Settings</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-section="themes">Theme Preferences</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-section="security">Security</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-section="files">My Files</a>
+                </li>
+                {% if user.is_staff %}
+                <li class="nav-item">
+                    <a href="{% url 'auth_app:admin_panel' %}" class="nav-link">Admin Panel</a>
+                </li>
                 {% endif %}
-            </div>
+            </ul>
         </div>
-    </div>
-    
-    <!-- Theme Settings -->
-    <div class="pixel-box settings-section">
-        <h2>🎨 THEME SELECTION</h2>
-        <div class="theme-grid">
-            <div class="theme-card {% if user.profile.theme == 'default' %}active{% endif %}" onclick="changeTheme('default')">
-                <div class="theme-preview" style="background: linear-gradient(135deg, #0f0 0%, #0a0 100%);"></div>
-                <div class="theme-name">DEFAULT</div>
-            </div>
-            <div class="theme-card {% if user.profile.theme == 'greydom' %}active{% endif %}" onclick="changeTheme('greydom')">
-                <div class="theme-preview" style="background: linear-gradient(135deg, #666 0%, #333 100%);"></div>
-                <div class="theme-name">GREYDOM</div>
-            </div>
-            <div class="theme-card {% if user.profile.theme == 'cloud' %}active{% endif %}" onclick="changeTheme('cloud')">
-                <div class="theme-preview" style="background: linear-gradient(135deg, #fff 0%, #ccc 100%);"></div>
-                <div class="theme-name">CLOUD</div>
-            </div>
-            <div class="theme-card {% if user.profile.theme == 'chaos' %}active{% endif %}" onclick="changeTheme('chaos')">
-                <div class="theme-preview" style="background: linear-gradient(135deg, #000 0%, #444 100%);"></div>
-                <div class="theme-name">CHAOS</div>
-            </div>
-            {% if user.profile.paidUser %}
-            <div class="theme-card {% if user.profile.theme == 'lebron' %}active{% endif %}" onclick="changeTheme('lebron')">
-                <div class="theme-preview" style="background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);"></div>
-                <div class="theme-name">⭐ LEBRON</div>
-            </div>
-            {% else %}
-            <div class="theme-card" style="opacity: 0.5; cursor: not-allowed;" title="Premium only">
-                <div class="theme-preview" style="background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);"></div>
-                <div class="theme-name">🔒 LEBRON</div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    
-    <!-- Password Change -->
-    <div class="pixel-box settings-section">
-        <h2>🔑 CHANGE PASSWORD</h2>
-        <div class="password-form">
-            <div class="form-group">
-                <label>CURRENT PASSWORD</label>
-                <input type="password" id="currentPassword" placeholder="Enter current password">
-            </div>
-            <div class="form-group">
-                <label>NEW PASSWORD</label>
-                <input type="password" id="newPassword" placeholder="Enter new password">
-            </div>
-            <div class="form-group">
-                <label>CONFIRM NEW PASSWORD</label>
-                <input type="password" id="confirmPassword" placeholder="Confirm new password">
-            </div>
-            <button class="pixel-btn" onclick="changePassword()" style="width: 100%;">UPDATE PASSWORD</button>
-        </div>
-    </div>
-    
-    <!-- Account Actions -->
-    <div class="pixel-box" style="text-align: center;">
-        <a href="{% url 'homepage:python_environment' %}" class="pixel-btn" style="display: inline-block; margin: 10px; text-decoration: none;">▶ START CODING</a>
-        <a href="{% url 'auth_app:logout' %}" class="pixel-btn danger" style="display: inline-block; margin: 10px; text-decoration: none;">⏻ LOGOUT</a>
-    </div>
-</div>
 
-<!-- 2FA Setup Modal -->
-<div class="pixel-modal" id="twoFAModal">
-    <div class="modal-content">
-        <div class="modal-header">SETUP 2FA</div>
-        <div id="modalBody">
-            <p style="font-size: 0.6rem; color: #0a0; margin-bottom: 20px; line-height: 1.8;">
-                Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
-            </p>
-            <div class="qr-container" id="qrContainer">
-                <div class="pixel-loader"></div>
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Overview Section -->
+            <div class="content-section active" id="overview">
+                <h1 class="section-title">Account Dashboard</h1>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ user_files_count|default:0 }}</div>
+                        <div class="stat-label">Saved Files</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ days_since_joined|default:0 }}</div>
+                        <div class="stat-label">Days Active</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">
+                            {% if user.profile.paidUser %}
+                                PREMIUM
+                            {% else %}
+                                FREE
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">Account Type</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">
+                            {% if user.twofactorauth.enabled %}
+                                ACTIVE
+                            {% else %}
+                                INACTIVE
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">2FA Status</div>
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3 class="setting-title">Account Status</h3>
+                        {% if user.profile.paidUser %}
+                            <span class="status-indicator status-premium">Premium User</span>
+                        {% else %}
+                            <span class="status-indicator status-active">Free User</span>
+                        {% endif %}
+                    </div>
+                    <div class="setting-description">
+                        Welcome to your Python Assembly account dashboard. From here you can manage your profile, 
+                        customize themes, configure security settings, and view your saved files.
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label>ENTER VERIFICATION CODE</label>
-                <input type="text" id="totpCode" placeholder="000000" maxlength="6" style="text-align: center; letter-spacing: 10px;">
+
+            <!-- Profile Settings Section -->
+            <div class="content-section" id="profile">
+                <h1 class="section-title">Profile Settings</h1>
+                
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3 class="setting-title">Account Information</h3>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-input" value="{{ user.username }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-input" value="{{ user.email }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Member Since</label>
+                        <input type="text" class="form-input" value="{{ user.date_joined|date:'F d, Y' }}" readonly>
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3 class="setting-title">Password Management</h3>
+                    </div>
+                    <div class="setting-description">
+                        Change your account password to keep your account secure.
+                    </div>
+                    <button class="btn" onclick="requestPasswordChange()">Change Password</button>
+                </div>
             </div>
-            <div id="backupCodes" style="display: none;">
-                <p style="font-size: 0.6rem; color: #ff0; margin-bottom: 10px;">
-                    ⚠️ SAVE THESE BACKUP CODES ⚠️
+
+            <!-- Theme Preferences Section -->
+            <div class="content-section" id="themes">
+                <h1 class="section-title">Theme Preferences</h1>
+                
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3 class="setting-title">IDE Theme Selection</h3>
+                    </div>
+                    <div class="setting-description">
+                        Choose your preferred theme for the Python IDE environment.
+                    </div>
+                    
+                    <div class="theme-grid">
+                        <div class="theme-card {% if user.profile.theme == 'default' %}active{% endif %}" data-theme="default">
+                            <div class="theme-preview" style="background: linear-gradient(45deg, #000 50%, #0a0 50%);"></div>
+                            <div class="theme-name">Matrix Green</div>
+                        </div>
+                        <div class="theme-card {% if user.profile.theme == 'greydom' %}active{% endif %}" data-theme="greydom">
+                            <div class="theme-preview" style="background: linear-gradient(45deg, #333 50%, #666 50%);"></div>
+                            <div class="theme-name">Greydom</div>
+                        </div>
+                        <div class="theme-card {% if user.profile.theme == 'cloud' %}active{% endif %}" data-theme="cloud">
+                            <div class="theme-preview" style="background: linear-gradient(45deg, #fff 50%, #ccc 50%);"></div>
+                            <div class="theme-name">Cloud</div>
+                        </div>
+                        <div class="theme-card {% if user.profile.theme == 'chaos' %}active{% endif %}" data-theme="chaos">
+                            <div class="theme-preview" style="background: linear-gradient(45deg, #000 50%, #444 50%);"></div>
+                            <div class="theme-name">Chaos</div>
+                        </div>
+                        {% if user.profile.paidUser %}
+                        <div class="theme-card {% if user.profile.theme == 'lebron' %}active{% endif %}" data-theme="lebron">
+                            <div class="theme-preview" style="background: linear-gradient(45deg, #8b2635 50%, #ffd700 50%);"></div>
+                            <div class="theme-name">LeBron (Premium)</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Section -->
+            <div class="content-section" id="security">
+                <h1 class="section-title">Security Settings</h1>
+                
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3 class="setting-title">Two-Factor Authentication</h3>
+                        {% if user.twofactorauth.enabled %}
+                            <span class="status-indicator status-active">Enabled</span>
+                        {% else %}
+                            <span class="status-indicator status-inactive">Disabled</span>
+                        {% endif %}
+                    </div>
+                    <div class="setting-description">
+                        Add an extra layer of security to your account with two-factor authentication.
+                    </div>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <div class="toggle-switch {% if user.twofactorauth.enabled %}active{% endif %}" id="twofa-toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        {% if user.twofactorauth.enabled %}
+                            <button class="btn btn-danger" onclick="disable2FA()">Disable 2FA</button>
+                        {% else %}
+                            <button class="btn" onclick="enable2FA()">Enable 2FA</button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3 class="setting-title">Account Security</h3>
+                    </div>
+                    <div class="setting-description">
+                        Monitor and manage your account's security status.
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <button class="btn" onclick="requestPasswordChange()">Change Password</button>
+                        <button class="btn btn-danger" onclick="logout()">Logout All Devices</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files Section -->
+            <div class="content-section" id="files">
+                <h1 class="section-title">My Files</h1>
+                
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3 class="setting-title">Saved Python Files</h3>
+                        <span class="status-indicator status-active">{{ user_files_count|default:0 }}/10 Files</span>
+                    </div>
+                    <div class="setting-description">
+                        Manage your saved Python files. You can store up to 10 files in your account.
+                    </div>
+                    
+                    <div id="files-list">
+                        <!-- Files will be loaded here via JavaScript -->
+                        <div style="text-align: center; padding: 40px; color: #888;">
+                            Loading your files...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2FA Modal -->
+    <div class="modal" id="twofa-modal">
+        <div class="modal-content">
+            <div class="modal-header">Enable Two-Factor Authentication</div>
+            <div id="twofa-content">
+                <p style="margin-bottom: 20px; color: #cccccc;">
+                    Scan this QR code with your authenticator app:
                 </p>
-                <div class="backup-codes" id="codesContainer"></div>
+                <div class="qr-container" id="qr-container">
+                    <!-- QR code will be inserted here -->
+                </div>
+                <div class="backup-codes" id="backup-codes" style="display: none;">
+                    <!-- Backup codes will be shown here -->
+                </div>
+                <div style="margin: 20px 0;">
+                    <div class="form-group">
+                        <label class="form-label">Enter 6-digit code from your app:</label>
+                        <input type="text" class="form-input" id="twofa-code" maxlength="6" placeholder="000000">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="verify2FA()">Verify & Enable</button>
+                <button class="btn btn-danger" onclick="closeModal()">Cancel</button>
             </div>
         </div>
-        <div class="modal-actions">
-            <button class="pixel-btn" onclick="verify2FA()">VERIFY</button>
-            <button class="pixel-btn danger" onclick="closeModal()">CANCEL</button>
-        </div>
     </div>
-</div>
 
-<script>
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    const csrftoken = getCookie('csrftoken');
-    
-    function showNotification(message, isError = false) {
-        const notification = document.createElement('div');
-        notification.className = 'pixel-notification' + (isError ? ' error' : '');
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 5000);
-    }
-    
-    function changeTheme(theme) {
-        fetch('{% url "auth_app:update_theme" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': csrftoken
-            },
-            body: 'theme=' + theme
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('THEME UPDATED: ' + theme.toUpperCase());
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(data.error || 'THEME UPDATE FAILED', true);
-            }
-        })
-        .catch(error => showNotification('ERROR: ' + error, true));
-    }
-    
-    function changePassword() {
-        const current = document.getElementById('currentPassword').value;
-        const newPass = document.getElementById('newPassword').value;
-        const confirm = document.getElementById('confirmPassword').value;
-        
-        if (!current || !newPass || !confirm) {
-            showNotification('ALL FIELDS REQUIRED', true);
-            return;
-        }
-        
-        fetch('{% url "auth_app:request_password_change" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
-            },
-            body: JSON.stringify({
-                current_password: current,
-                new_password: newPass,
-                confirm_password: confirm
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('VERIFICATION CODE SENT');
-                const code = prompt('Enter verification code from your email:');
-                if (code) {
-                    verifyPasswordChange(code);
-                }
-            } else {
-                showNotification(data.error || 'PASSWORD CHANGE FAILED', true);
-            }
-        })
-        .catch(error => showNotification('ERROR: ' + error, true));
-    }
-    
-    function verifyPasswordChange(code) {
-        fetch('{% url "auth_app:verify_password_change" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
-            },
-            body: JSON.stringify({ code: code })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('PASSWORD CHANGED SUCCESSFULLY');
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmPassword').value = '';
-            } else {
-                showNotification(data.error || 'VERIFICATION FAILED', true);
-            }
-        })
-        .catch(error => showNotification('ERROR: ' + error, true));
-    }
-    
-    function enable2FA() {
-        document.getElementById('twoFAModal').classList.add('show');
-        fetch('{% url "auth_app:enable_2fa" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('qrContainer').innerHTML = data.qr_code;
-            } else {
-                showNotification(data.error || '2FA SETUP FAILED', true);
-                closeModal();
-            }
-        })
-        .catch(error => {
-            showNotification('ERROR: ' + error, true);
-            closeModal();
+    <script>
+        // Navigation handling
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const sectionId = this.dataset.section;
+                
+                // Update active nav link
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show corresponding section
+                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(sectionId).classList.add('active');
+            });
         });
-    }
-    
-    function verify2FA() {
-        const code = document.getElementById('totpCode').value;
-        if (!code || code.length !== 6) {
-            showNotification('ENTER 6-DIGIT CODE', true);
-            return;
+
+        // Theme selection
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const theme = this.dataset.theme;
+                
+                // Update active theme
+                document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update theme via AJAX
+                updateTheme(theme);
+            });
+        });
+
+        // Functions
+        function updateTheme(theme) {
+            fetch('{% url "auth_app:update_theme" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                                   document.querySelector('meta[name=csrf-token]')?.content
+                },
+                body: JSON.stringify({theme: theme})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Theme updated successfully!', 'success');
+                } else {
+                    showNotification('Failed to update theme', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to update theme', 'error');
+            });
         }
-        
-        fetch('{% url "auth_app:verify_2fa" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
-            },
-            body: JSON.stringify({ code: code })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('backupCodes').style.display = 'block';
-                document.getElementById('codesContainer').innerHTML = data.backup_codes.join('<br>');
-                showNotification('2FA ENABLED SUCCESSFULLY');
-                setTimeout(() => location.reload(), 3000);
-            } else {
-                showNotification(data.error || 'VERIFICATION FAILED', true);
+
+        function requestPasswordChange() {
+            if (confirm('A verification code will be sent to your email. Continue?')) {
+                fetch('{% url "auth_app:request_password_change" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Verification code sent to your email!', 'success');
+                    } else {
+                        showNotification(data.message || 'Failed to send verification code', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Failed to send verification code', 'error');
+                });
             }
-        })
-        .catch(error => showNotification('ERROR: ' + error, true));
-    }
-    
-    function disable2FA() {
-        if (!confirm('ARE YOU SURE YOU WANT TO DISABLE 2FA?')) {
-            return;
         }
-        
-        fetch('{% url "auth_app:disable_2fa" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
+
+        function enable2FA() {
+            fetch('{% url "auth_app:enable_2fa" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('qr-container').innerHTML = data.qr_code;
+                    document.getElementById('backup-codes').innerHTML = data.backup_codes;
+                    document.getElementById('twofa-modal').classList.add('show');
+                } else {
+                    showNotification(data.message || 'Failed to enable 2FA', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to enable 2FA', 'error');
+            });
+        }
+
+        function verify2FA() {
+            const code = document.getElementById('twofa-code').value;
+            if (!code || code.length !== 6) {
+                showNotification('Please enter a 6-digit code', 'error');
+                return;
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('2FA DISABLED');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showNotification(data.error || '2FA DISABLE FAILED', true);
+
+            fetch('{% url "auth_app:verify_2fa" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content
+                },
+                body: JSON.stringify({code: code})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('2FA enabled successfully!', 'success');
+                    closeModal();
+                    location.reload();
+                } else {
+                    showNotification(data.message || 'Invalid code', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to verify code', 'error');
+            });
+        }
+
+        function disable2FA() {
+            if (confirm('Are you sure you want to disable two-factor authentication?')) {
+                fetch('{% url "auth_app:disable_2fa" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('2FA disabled successfully!', 'success');
+                        location.reload();
+                    } else {
+                        showNotification(data.message || 'Failed to disable 2FA', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Failed to disable 2FA', 'error');
+                });
             }
-        })
-        .catch(error => showNotification('ERROR: ' + error, true));
-    }
-    
-    function closeModal() {
-        document.getElementById('twoFAModal').classList.remove('show');
-    }
-</script>
-{% endblock %}
+        }
+
+        function closeModal() {
+            document.getElementById('twofa-modal').classList.remove('show');
+        }
+
+        function logout() {
+            window.location.href = '{% url "auth_app:logout" %}';
+        }
+
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#000' : '#ff4444'};
+                color: ${type === 'success' ? '#00ff00' : '#fff'};
+                border: 2px solid ${type === 'success' ? '#00ff00' : '#ff4444'};
+                padding: 15px 20px;
+                font-family: monospace;
+                font-size: 0.9rem;
+                z-index: 10000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Load files on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserFiles();
+        });
+
+        function loadUserFiles() {
+            fetch('{% url "homepage:get_files" %}')
+                .then(response => response.json())
+                .then(data => {
+                    const filesContainer = document.getElementById('files-list');
+                    
+                    if (data.files && data.files.length > 0) {
+                        filesContainer.innerHTML = data.files.map(file => `
+                            <div style="display: flex; justify-content: space-between; align-items: center; 
+                                        padding: 15px; border: 1px solid #ffffff; margin-bottom: 10px; background: #1a1a1a;">
+                                <div>
+                                    <strong style="color: #ffffff;">${file.filename}</strong>
+                                    <div style="color: #cccccc; font-size: 0.8rem;">
+                                        Modified: ${new Date(file.updated_at).toLocaleDateString()}
+                                    </div>
+                                </div>
+                                <div>
+                                    <button class="btn" onclick="loadFile('${file.filename}')">Load</button>
+                                    <button class="btn btn-danger" onclick="deleteFile('${file.filename}')">Delete</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        filesContainer.innerHTML = `
+                            <div style="text-align: center; padding: 40px; color: #888;">
+                                No files saved yet. Create and save files in the Python IDE!
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading files:', error);
+                    document.getElementById('files-list').innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #ff4444;">
+                            Error loading files
+                        </div>
+                    `;
+                });
+        }
+
+        function loadFile(filename) {
+            window.location.href = `{% url 'homepage:python_environment' %}?load=${encodeURIComponent(filename)}`;
+        }
+
+        function deleteFile(filename) {
+            if (confirm(`Are you sure you want to delete "${filename}"?`)) {
+                const form = new FormData();
+                form.append('action', 'delete_file');
+                form.append('filename', filename);
+                form.append('csrfmiddlewaretoken', document.querySelector('meta[name=csrf-token]')?.content);
+
+                fetch('{% url "homepage:python_environment" %}', {
+                    method: 'POST',
+                    body: form
+                })
+                .then(response => response.text())
+                .then(() => {
+                    showNotification(`File "${filename}" deleted successfully!`, 'success');
+                    loadUserFiles(); // Reload files list
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Failed to delete file', 'error');
+                });
+            }
+        }
+
+        // Add CSS animation for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
