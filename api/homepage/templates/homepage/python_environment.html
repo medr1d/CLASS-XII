@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLASS 12 PYTHON ASSEMBLY</title>
+    <title>PYTHON ASSEMBLY</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
-    <link rel="shortcut icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}" onerror="this.onerror=null; this.href='data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';">
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}" onerror="this.onerror=null; this.href='data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';"
     
     <!-- Google Analytics - Deferred loading for better performance -->
     <script>
@@ -27,21 +27,12 @@
     </script>
     
     
-    <!-- Ace Editor - Optimized loading -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.min.js" async></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/mode-python.min.js" async></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-monokai.min.js" async></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-katzenmilch.min.js" async></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-chaos.min.js" async></script>
+    <!-- Ace Editor - Load synchronously to avoid conflicts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ext-language_tools.min.js"></script>
     
-    
-    <!-- Pyodide - Optimized loading -->
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js" async defer></script>
-    
-    <!-- Pyodide modules -->
-    <script src="{% static 'homepage/js/pyodide-init.js' %}" defer></script>
-    <script src="{% static 'homepage/js/filesystem.js' %}" defer></script>
-    <script src="{% static 'homepage/js/code-executor.js' %}" defer></script>
+    <!-- Pyodide - Load asynchronously -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js" defer></script>
     
     <style>
         :root {
@@ -3039,6 +3030,48 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
     </div>
 
     <script>
+        // ==============================================
+        // UTILITY FUNCTIONS (Must be defined first!)
+        // ==============================================
+        
+        function updateTerminal(message, isError = false) {
+            const terminal = document.getElementById('terminal-output');
+            if (!terminal) return;
+            
+            const span = document.createElement('span');
+            
+            if (message.includes('<img')) {
+                span.innerHTML = message; 
+            } else {
+                span.textContent = message; 
+            }
+            
+            if (isError) {
+                span.style.color = '#f44';
+            }
+            terminal.appendChild(span);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            if (!status) return;
+            
+            status.textContent = message;
+            status.className = type;
+            
+            if (type !== 'info') {
+                setTimeout(() => {
+                    status.textContent = 'Python Terminal Environment Ready';
+                    status.className = '';
+                }, 3000);
+            }
+        }
+
+        // ==============================================
+        // GLOBAL VARIABLES
+        // ==============================================
+        
         let selectedScript = '';
         let currentScript = 'untitled_script';
         let pyodide = null;
@@ -3046,6 +3079,9 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
         let isWaitingForInput = false;
         let inputResolver = null;
 
+        // ==============================================
+        // PYODIDE INITIALIZATION
+        // ==============================================
 
         function updateLoadingProgress(message) {
             const progressElement = document.getElementById('loading-progress');
@@ -3074,35 +3110,49 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
         let aceEditor = null;
 
         function initializeAceEditor() {
-            aceEditor = ace.edit("ace-editor");
+            // Check if Ace is loaded
+            if (typeof ace === 'undefined') {
+                console.error('Ace editor not loaded yet');
+                setTimeout(initializeAceEditor, 100);
+                return;
+            }
             
-            // Set theme based on user preference
-            {% if user_theme == 'greydom' %}
-                aceEditor.setTheme("ace/theme/monokai");
-            {% elif user_theme == 'cloud' %}
-                aceEditor.setTheme("ace/theme/katzenmilch");
-            {% elif user_theme == 'chaos' %}
-                aceEditor.setTheme("ace/theme/chaos");
-            {% else %}
-                aceEditor.setTheme("ace/theme/terminal");
-            {% endif %}
-            
-            aceEditor.session.setMode("ace/mode/python");
-            
+            try {
+                aceEditor = ace.edit("ace-editor");
+                
+                // Set theme based on user preference
+                {% if user_theme == 'greydom' %}
+                    aceEditor.setTheme("ace/theme/monokai");
+                {% elif user_theme == 'cloud' %}
+                    aceEditor.setTheme("ace/theme/katzenmilch");
+                {% elif user_theme == 'chaos' %}
+                    aceEditor.setTheme("ace/theme/chaos");
+                {% else %}
+                    aceEditor.setTheme("ace/theme/terminal");
+                {% endif %}
+                
+                aceEditor.session.setMode("ace/mode/python");
+                
 
-            aceEditor.setOptions({
-                fontSize: "14px",
-                showPrintMargin: false,
-                wrap: true
-            });
+                aceEditor.setOptions({
+                    fontSize: "14px",
+                    showPrintMargin: false,
+                    wrap: true
+                });
 
-            
-            ace.require("ace/ext/language_tools");
-            aceEditor.setOptions({
-                enableBasicAutocompletion: true,
-                enableLiveAutocompletion: true,
-                enableSnippets: true
-            });
+                
+                if (typeof ace.require === 'function') {
+                    ace.require("ace/ext/language_tools");
+                    aceEditor.setOptions({
+                        enableBasicAutocompletion: true,
+                        enableLiveAutocompletion: true,
+                        enableSnippets: true
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to initialize Ace editor:', error);
+                return;
+            }
             const defaultContent = `# 🐍 Python Assembly - Scientific Computing in Browser!
 print("Welcome to your Python environment!")
 print("✅ Environment loaded successfully!")
@@ -3321,20 +3371,171 @@ print("✨ Environment ready - happy coding!")`;
         });
 
 
+        // ==============================================
+        // PYODIDE INITIALIZATION (INLINE)
+        // ==============================================
+        
         async function initPyodide() {
             if (isInitialized) return;
             
             try {
-                // Use the modular initialization
-                pyodide = await initializePyodide(updateLoadingProgress, updateTerminal);
+                // Step 1: Load Pyodide
+                updateLoadingProgress("Loading Pyodide...");
+                updateTerminal("Loading Python environment...\n");
                 
-                // Setup file system
-                await setupVirtualFileSystem(pyodide, updateLoadingProgress);
+                pyodide = await loadPyodide({
+                    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
+                });
+                
+                // Step 2: Load core packages
+                updateLoadingProgress("Loading packages...");
+                updateTerminal("Loading NumPy, Pandas, Matplotlib...\n");
+                await pyodide.loadPackage(["numpy", "matplotlib", "pandas", "micropip"]);
+                
+                // Step 3: Setup matplotlib
+                updateLoadingProgress("Configuring matplotlib...");
+                try {
+                    await pyodide.runPythonAsync(`
+import matplotlib
+import matplotlib.pyplot as plt
+import io
+import base64
+import warnings
+
+warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
+matplotlib.use('Agg')
+
+def show_plot():
+    """Custom show function that outputs plots as base64 images"""
+    try:
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', bbox_inches='tight', dpi=96)
+        buf.seek(0)
+        img_str = base64.b64encode(buf.read()).decode()
+        buf.close()
+        print(f'<img src="data:image/png;base64,{img_str}" style="max-width:100%;height:auto;"/>')
+        plt.close()
+    except Exception as err:
+        print(f'Plot error: {err}')
+        plt.close()
+
+plt.show = show_plot
+`);
+                    updateTerminal("Matplotlib configured\n");
+                } catch (matplotError) {
+                    console.warn("Matplotlib configuration failed:", matplotError);
+                    updateTerminal("Matplotlib: using basic mode\n");
+                }
+                
+                // Step 4: Setup I/O
+                updateLoadingProgress("Configuring input/output...");
+                await pyodide.runPythonAsync(`
+import builtins
+import asyncio
+import os
+
+original_open = builtins.open
+original_input = builtins.input
+
+def sync_web_input(prompt=""):
+    """Synchronous wrapper for web input"""
+    try:
+        import js
+        return js.showInputDialog(prompt) or ""
+    except Exception as e:
+        return ""
+
+def safe_open(filename, mode='r', *args, **kwargs):
+    """Restricted open() that only allows specific files"""
+    allowed_files = ['text.txt', 'tester.csv', 'binary.dat']
+    allowed_paths = ['/lib/python3.11/', '/lib/python311.zip/', '/usr/', '<']
+    
+    basename = os.path.basename(filename)
+    if basename in allowed_files:
+        return original_open(filename, mode, *args, **kwargs)
+    
+    for path in allowed_paths:
+        if filename.startswith(path) or path in filename:
+            return original_open(filename, mode, *args, **kwargs)
+    
+    raise PermissionError(f'Cannot open: {filename}')
+
+builtins.input = sync_web_input
+builtins.open = safe_open
+`);
+                updateTerminal("I/O configured\n");
+                
+                // Step 5: Setup package installer
+                updateLoadingProgress("Setting up package installer...");
+                try {
+                    await pyodide.runPythonAsync(`
+import micropip
+
+async def install_package(package_name):
+    try:
+        print(f'Installing {package_name}...')
+        await micropip.install(package_name)
+        print(f'✓ {package_name} installed')
+        return True
+    except Exception as err:
+        print(f'✗ {package_name} failed: {err}')
+        return False
+`);
+                    updateTerminal("Package installer ready\n");
+                } catch (installerError) {
+                    console.warn("Package installer failed:", installerError);
+                }
+                
+                // Step 6: Setup virtual filesystem
+                updateLoadingProgress("Setting up virtual filesystem...");
+                const defaultFiles = {
+                    'text.txt': `Hello from Python Environment!
+This is your personal text file.
+You can read and modify this file in your Python code.
+Example: open('text.txt', 'r').read()`,
+                    
+                    'tester.csv': `name,age,city,score
+Alice,25,NYC,85
+Bob,30,LA,92
+Carol,28,Chicago,78
+David,35,Houston,95`,
+                    
+                    'binary.dat': 'Sample binary data for Python processing'
+                };
+                
+                // Try to fetch user files from server
+                try {
+                    const response = await fetch('/python/get-files/');
+                    if (response.ok) {
+                        const filesData = await response.json();
+                        defaultFiles['text.txt'] = filesData.text_content || defaultFiles['text.txt'];
+                        defaultFiles['tester.csv'] = filesData.csv_content || defaultFiles['tester.csv'];
+                        defaultFiles['binary.dat'] = filesData.binary_content || defaultFiles['binary.dat'];
+                    }
+                } catch (fetchError) {
+                    console.log('Using default files');
+                }
+                
+                // Write files to Pyodide filesystem
+                for (const [filename, content] of Object.entries(defaultFiles)) {
+                    try {
+                        pyodide.FS.writeFile(filename, content);
+                    } catch (fsError) {
+                        console.warn(`Failed to write ${filename}:`, fsError);
+                    }
+                }
+                
+                updateTerminal("Files loaded\n");
                 
                 // Setup input/output handlers
                 await setupInputOutputHandlers();
                 
                 isInitialized = true;
+                updateTerminal("\n=== Python Environment Ready ===\n");
+                updateTerminal("Packages: numpy, pandas, matplotlib\n");
+                updateTerminal("Use plt.show() to display plots\n");
+                updateTerminal("Use await install_package('name') for more\n\n");
+                
                 setTimeout(() => showMainInterface(), 500);
                 
             } catch (error) {
@@ -3896,66 +4097,89 @@ except Exception as e:
         }
 
 
+        // ==============================================
+        // CODE EXECUTION
+        // ==============================================
+        
         async function executeCode() {
             if (!isInitialized) {
                 await initPyodide();
+                if (!isInitialized) return;
             }
 
             const code = getEditorValue();
-            document.getElementById('run-btn').disabled = true;
+            if (!code || !code.trim()) {
+                updateTerminal("No code to execute\n");
+                return;
+            }
+            
+            const runBtn = document.getElementById('run-btn');
+            runBtn.disabled = true;
+            
+            updateTerminal("\n>>> Executing code...\n");
             
             try {
-                await executeUserCode(code, pyodide, updateTerminal);
+                // Setup output capture
+                await pyodide.runPythonAsync(`
+import sys
+from io import StringIO
+sys.stdout = StringIO()
+sys.stderr = StringIO()
+`);
+                
+                // Show input() notification
+                if (code.includes('input(')) {
+                    updateTerminal("Code contains input() - dialogs will appear\n");
+                }
+                
+                // Execute the code
+                try {
+                    await pyodide.runPythonAsync(code);
+                } catch (execError) {
+                    if (execError.name === 'PythonError') {
+                        updateTerminal("Error: " + execError.message + "\n", true);
+                    } else {
+                        updateTerminal("Error: " + execError.toString() + "\n", true);
+                    }
+                }
+                
+                // Get output
+                const stdout = await pyodide.runPythonAsync("sys.stdout.getvalue()");
+                const stderr = await pyodide.runPythonAsync("sys.stderr.getvalue()");
+                
+                // Restore streams
+                await pyodide.runPythonAsync(`
+sys.stdout = sys.__stdout__
+sys.stderr = sys.__stderr__
+`);
+                
+                // Display results
+                if (stdout) {
+                    updateTerminal(stdout);
+                }
+                if (stderr) {
+                    updateTerminal(stderr, true);
+                }
+                
+                if (!stdout && !stderr) {
+                    updateTerminal("Code executed successfully (no output)\n");
+                }
+                
+                // Update file viewers
+                updateFileViewers();
+                loadScriptList();
+                
             } catch (error) {
-                updateTerminal("Execution error: " + error.message + "\n", true);
+                updateTerminal("Execution error: " + error.toString() + "\n", true);
                 console.error("Execution error:", error);
             }
             
-            document.getElementById('run-btn').disabled = false;
-        }
-            
-            // Auto-save user data
-            if (isLoggedIn) {
-                saveUserData();
-            }
-            
-            loadScriptList();
-            updateFileViewers();
+            runBtn.disabled = false;
         }
 
         function clearTerminal() {
             document.getElementById('terminal-output').textContent = '';
             updateStatus('Terminal cleared', 'success');
-        }
-
-        function updateTerminal(message, isError = false) {
-            const terminal = document.getElementById('terminal-output');
-            const span = document.createElement('span');
-            
-            if (message.includes('<img')) {
-                span.innerHTML = message; 
-            } else {
-                span.textContent = message; 
-            }
-            
-            if (isError) {
-                span.style.color = '#f44';
-            }
-            terminal.appendChild(span);
-            terminal.scrollTop = terminal.scrollHeight;
-        }
-
-        function updateStatus(message, type = 'info') {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.className = type;
-            
-            if (type !== 'info') {
-                setTimeout(() => {
-                    status.textContent = 'Python Terminal Environment Ready';
-                    status.className = '';
-                }, 3000);
-            }
         }
 
         // Async version of input dialog for better Python integration
