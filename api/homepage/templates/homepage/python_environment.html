@@ -1944,6 +1944,192 @@
             color: #888;
             font-size: 11px;
         }
+
+        /* Package Installer Widget */
+        .package-installer {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 280px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            backdrop-filter: blur(10px);
+        }
+
+        .package-installer.collapsed {
+            height: 45px;
+            overflow: hidden;
+        }
+
+        .package-installer.expanded {
+            height: auto;
+            max-height: 300px;
+        }
+
+        .package-installer-header {
+            padding: 12px 15px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--tertiary-color));
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 6px 6px 0 0;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .package-installer-toggle {
+            color: var(--text-bright);
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .package-installer.expanded .package-installer-toggle {
+            transform: rotate(180deg);
+        }
+
+        .package-installer-body {
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: 0 0 6px 6px;
+        }
+
+        .package-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .package-input {
+            flex: 1;
+            padding: 8px 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s ease;
+        }
+
+        .package-input:focus {
+            outline: none;
+            border-color: var(--text-bright);
+            box-shadow: 0 0 8px var(--glow-color);
+        }
+
+        .package-install-btn {
+            padding: 8px 12px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--tertiary-color));
+            border: none;
+            border-radius: 4px;
+            color: var(--text-bright);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .package-install-btn:hover {
+            background: linear-gradient(135deg, var(--tertiary-color), var(--secondary-color));
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .package-install-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .package-status {
+            min-height: 60px;
+            max-height: 120px;
+            overflow-y: auto;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px;
+            font-size: 10px;
+            line-height: 1.4;
+            color: var(--text-secondary);
+            font-family: 'Courier New', monospace;
+        }
+
+        .package-status::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .package-status::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        .package-status::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+
+        .status-success {
+            color: var(--text-bright);
+        }
+
+        .status-error {
+            color: #ff6b6b;
+        }
+
+        .status-info {
+            color: var(--text-secondary);
+        }
+
+        .quick-packages {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .quick-package-btn {
+            padding: 4px 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 9px;
+            transition: all 0.2s ease;
+        }
+
+        .quick-package-btn:hover {
+            background: var(--secondary-color);
+            color: var(--text-bright);
+        }
+
+        /* Theme-specific adjustments */
+        body.theme-cloud .package-installer {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        body.theme-cloud .package-installer-body {
+            background: #f5f5f5;
+        }
+
+        body.theme-cloud .package-status {
+            background: #ffffff;
+        }
+
+        body.theme-lebron .package-installer {
+            background: url('{% static "auth_app/images/lebron.jpg" %}') center/cover;
+            background-blend-mode: overlay;
+            background-color: rgba(139, 38, 53, 0.9);
+        }
     </style>
 </head>
 <body class="{% if user_theme == 'greydom' %}theme-greydom{% elif user_theme == 'cloud' %}theme-cloud{% elif user_theme == 'chaos' %}theme-chaos{% elif user_theme == 'lebron' %}theme-lebron{% endif %}">
@@ -3122,7 +3308,16 @@ print("✨ Environment ready - happy coding!")`;
                 });
                 
                 updateLoadingProgress("Installing essential packages...");
-                await pyodide.loadPackage(["numpy", "matplotlib", "pandas", "micropip"]);
+                // Load packages individually for better error handling
+                const essentialPackages = ["numpy", "matplotlib", "pandas", "micropip"];
+                for (const pkg of essentialPackages) {
+                    try {
+                        updateLoadingProgress(`Loading ${pkg}...`);
+                        await pyodide.loadPackage([pkg]);
+                    } catch (pkgError) {
+                        console.warn(`Failed to load ${pkg}:`, pkgError);
+                    }
+                }
                 
                 updateLoadingProgress("Setting up additional packages...");
                 try {
@@ -3147,7 +3342,9 @@ except Exception as e:
                 
                 updateLoadingProgress("Setting up matplotlib backend...");
                 
-                await pyodide.runPython(`
+                // Set up matplotlib with error handling
+                try {
+                    await pyodide.runPython(`
 import matplotlib
 import matplotlib.pyplot as plt
 import io
@@ -3173,7 +3370,29 @@ def show_plot():
 
 plt.show = show_plot
 print("📊 Matplotlib ready!")
-                `);
+                    `);
+                } catch (matplotlibError) {
+                    console.warn("Matplotlib setup failed, creating stub:", matplotlibError);
+                    // Create matplotlib stub to prevent import errors
+                    await pyodide.runPython(`
+# Matplotlib stub to prevent import errors
+class MatplotlibStub:
+    def __getattr__(self, name):
+        def stub_func(*args, **kwargs):
+            print(f"📊 matplotlib.{name}() called (matplotlib not available)")
+            return self
+        return stub_func
+    def __call__(self, *args, **kwargs):
+        print("📊 matplotlib called (not available)")
+        return self
+
+import sys
+sys.modules['matplotlib'] = MatplotlibStub()
+sys.modules['matplotlib.pyplot'] = MatplotlibStub()
+
+print("⚠️  Matplotlib stub created (plotting not available)")
+                    `);
+                }
                 
                 updateLoadingProgress("Setting up virtual file system...");
                 await setupVirtualFiles();
@@ -3300,12 +3519,26 @@ builtins.open = restricted_open
                         indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
                     });
                     
-                    // Ultra-minimal setup with no additional packages
+                    // Load essential packages for minimal setup
+                    await pyodide.loadPackage(["matplotlib"]);
+                    
                     await pyodide.runPython(`
 import sys
-print("🔧 Ultra-minimal Python environment ready!")
+import numpy as np
+import matplotlib.pyplot as plt
+
+print("🔧 Minimal Python environment ready!")
 print("Python", sys.version)
-print("Basic Python functionality available")
+print("📦 Available: numpy, matplotlib")
+
+# Basic matplotlib setup for web
+import matplotlib
+matplotlib.use('Agg')
+
+def show_plot():
+    print("📊 Plot ready! (matplotlib working in minimal mode)")
+
+plt.show = show_plot
                     `);
                     
                     // Simple file setup without complex wrappers
@@ -5582,6 +5815,134 @@ print(f"Hello {name}! You are {age} years old.")
                 updateTerminal("   • input() function works with popup dialogs\n\n");
             }, 1000);
         });
+    </script>
+
+    <!-- Package Installer Widget -->
+    <div class="package-installer collapsed" id="packageInstaller">
+        <div class="package-installer-header" onclick="togglePackageInstaller()">
+            <span>📦 Package Manager</span>
+            <span class="package-installer-toggle">▲</span>
+        </div>
+        <div class="package-installer-body">
+            <div class="quick-packages">
+                <div class="quick-package-btn" onclick="installQuickPackage('requests')">requests</div>
+                <div class="quick-package-btn" onclick="installQuickPackage('beautifulsoup4')">bs4</div>
+                <div class="quick-package-btn" onclick="installQuickPackage('scipy')">scipy</div>
+                <div class="quick-package-btn" onclick="installQuickPackage('pillow')">pillow</div>
+                <div class="quick-package-btn" onclick="installQuickPackage('sympy')">sympy</div>
+            </div>
+            <div class="package-input-group">
+                <input type="text" class="package-input" id="packageInput" placeholder="Package name (e.g., requests, numpy)" onkeypress="handlePackageInputKeypress(event)">
+                <button class="package-install-btn" onclick="installPackage()" id="installBtn">Install</button>
+            </div>
+            <div class="package-status" id="packageStatus">
+                <div class="status-info">🚀 Ready to install packages...</div>
+                <div class="status-info">💡 Try: requests, beautifulsoup4, scipy, pillow, sympy</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let packageInstallerExpanded = false;
+
+        function togglePackageInstaller() {
+            const installer = document.getElementById('packageInstaller');
+            packageInstallerExpanded = !packageInstallerExpanded;
+            
+            if (packageInstallerExpanded) {
+                installer.classList.remove('collapsed');
+                installer.classList.add('expanded');
+            } else {
+                installer.classList.remove('expanded');
+                installer.classList.add('collapsed');
+            }
+        }
+
+        function updatePackageStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('packageStatus');
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '💬';
+            
+            const statusMessage = document.createElement('div');
+            statusMessage.className = `status-${type}`;
+            statusMessage.innerHTML = `<span style="opacity: 0.6">[${timestamp}]</span> ${icon} ${message}`;
+            
+            statusDiv.appendChild(statusMessage);
+            statusDiv.scrollTop = statusDiv.scrollHeight;
+            
+            // Keep only last 10 messages
+            while (statusDiv.children.length > 10) {
+                statusDiv.removeChild(statusDiv.firstChild);
+            }
+        }
+
+        async function installPackage() {
+            const packageInput = document.getElementById('packageInput');
+            const installBtn = document.getElementById('installBtn');
+            const packageName = packageInput.value.trim();
+            
+            if (!packageName) {
+                updatePackageStatus('Please enter a package name', 'error');
+                return;
+            }
+            
+            if (!window.pyodide) {
+                updatePackageStatus('Pyodide not ready yet. Please wait...', 'error');
+                return;
+            }
+            
+            installBtn.disabled = true;
+            installBtn.textContent = 'Installing...';
+            
+            try {
+                updatePackageStatus(`Installing ${packageName}...`, 'info');
+                
+                // Try micropip first
+                try {
+                    await window.pyodide.runPython(`
+                        import micropip
+                        await micropip.install('${packageName}')
+                    `);
+                    updatePackageStatus(`✨ Successfully installed ${packageName} via micropip`, 'success');
+                } catch (micropipError) {
+                    // Fallback to pyodide.loadPackage for built-in packages
+                    try {
+                        await window.pyodide.loadPackage(packageName);
+                        updatePackageStatus(`✨ Successfully loaded ${packageName} via pyodide`, 'success');
+                    } catch (loadError) {
+                        throw new Error(`Both micropip and pyodide.loadPackage failed: ${micropipError.message}`);
+                    }
+                }
+                
+                packageInput.value = '';
+                
+            } catch (error) {
+                console.error('Package installation error:', error);
+                updatePackageStatus(`Failed to install ${packageName}: ${error.message}`, 'error');
+            } finally {
+                installBtn.disabled = false;
+                installBtn.textContent = 'Install';
+            }
+        }
+
+        function installQuickPackage(packageName) {
+            document.getElementById('packageInput').value = packageName;
+            installPackage();
+        }
+
+        function handlePackageInputKeypress(event) {
+            if (event.key === 'Enter') {
+                installPackage();
+            }
+        }
+
+        // Auto-expand on first visit
+        setTimeout(() => {
+            if (!packageInstallerExpanded) {
+                togglePackageInstaller();
+                updatePackageStatus('🎉 Package installer ready! Click quick buttons or type package names.', 'success');
+            }
+        }, 2000);
     </script>
 
 </body>
