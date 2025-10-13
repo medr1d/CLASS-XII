@@ -13,24 +13,40 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
         }
 
         body {
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-family: 'Press Start 2P', cursive;
             background: #000000;
             color: #ffffff;
             min-height: 100vh;
             overflow-x: hidden;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 7px, rgba(255, 255, 255, 0.03) 7px, rgba(255, 255, 255, 0.03) 8px),
+                repeating-linear-gradient(90deg, transparent, transparent 7px, rgba(255, 255, 255, 0.03) 7px, rgba(255, 255, 255, 0.03) 8px);
+            background-size: 8px 8px;
+            animation: pixelDrift 25s linear infinite;
+        }
+
+        @keyframes pixelDrift {
+            0% { background-position: 0 0; }
+            100% { background-position: 8px 8px; }
         }
 
         /* Header Bar */
         .header-bar {
-            background: linear-gradient(90deg, #000000 0%, #1a1a1a 50%, #000000 100%);
-            border-bottom: 2px solid #ffffff;
+            background: #000000;
+            border-bottom: 4px solid #ffffff;
+            border-image: repeating-linear-gradient(90deg, #ffffff 0, #ffffff 4px, transparent 4px, transparent 8px) 4;
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
@@ -38,6 +54,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 4px 0 #ffffff;
         }
 
         .header-left {
@@ -47,19 +64,28 @@
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 1rem;
             font-weight: bold;
             color: #ffffff;
-            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+            text-shadow: 2px 2px 0 #000000, 4px 4px 0 #ffffff;
+            animation: pixelGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes pixelGlow {
+            0% { text-shadow: 2px 2px 0 #000000, 4px 4px 0 #ffffff; }
+            100% { text-shadow: 2px 2px 0 #000000, 4px 4px 0 #cccccc; }
         }
 
         .admin-badge {
-            padding: 5px 12px;
+            padding: 8px 12px;
             background: #ffffff;
             color: #000000;
-            font-size: 0.8rem;
+            font-size: 0.5rem;
             font-weight: bold;
-            border: 1px solid #ffffff;
+            border: 3px solid #000000;
+            box-shadow: 2px 2px 0 #000000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .header-actions {
@@ -70,32 +96,46 @@
 
         .btn {
             padding: 8px 16px;
-            background: transparent;
+            background: #000000;
             color: #ffffff;
-            border: 1px solid #ffffff;
+            border: 3px solid #ffffff;
             cursor: pointer;
-            font-family: inherit;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.6rem;
+            transition: all 0.2s ease;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            position: relative;
+            text-transform: uppercase;
+            box-shadow: 3px 3px 0 #ffffff;
         }
 
         .btn:hover {
             background: #ffffff;
             color: #000000;
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 #ffffff;
+        }
+
+        .btn:active {
+            transform: translate(3px, 3px);
+            box-shadow: none;
         }
 
         .btn-danger {
-            border-color: #ff4444;
-            color: #ff4444;
+            border-color: #ffffff;
+            color: #ffffff;
+            background: #000000;
+            box-shadow: 3px 3px 0 #ffffff;
         }
 
         .btn-danger:hover {
-            background: #ff4444;
-            color: #ffffff;
+            background: #ffffff;
+            color: #000000;
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 #ffffff;
         }
 
         /* Main Layout */
@@ -107,21 +147,27 @@
         /* Sidebar */
         .sidebar {
             width: 280px;
-            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
-            border-right: 2px solid #ffffff;
+            background: #000000;
+            border-right: 4px solid #ffffff;
+            border-image: repeating-linear-gradient(0deg, #ffffff 0, #ffffff 4px, transparent 4px, transparent 8px) 4;
             padding: 30px 20px;
             position: sticky;
             top: 70px;
             height: calc(100vh - 70px);
             overflow-y: auto;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 15px, rgba(255, 255, 255, 0.02) 15px, rgba(255, 255, 255, 0.02) 16px);
         }
 
         .sidebar h2 {
-            font-size: 1.2rem;
+            font-size: 0.8rem;
             margin-bottom: 20px;
             color: #ffffff;
-            border-bottom: 1px solid #ffffff;
+            border-bottom: 3px solid #ffffff;
             padding-bottom: 10px;
+            text-shadow: 2px 2px 0 #000000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .nav-menu {
@@ -137,23 +183,38 @@
             padding: 12px 15px;
             color: #cccccc;
             text-decoration: none;
-            border: 1px solid transparent;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+            font-size: 0.6rem;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            background: #000000;
         }
 
-        .nav-link:hover,
+        .nav-link:hover {
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid #000000;
+            box-shadow: 2px 2px 0 #000000;
+            transform: translate(-1px, -1px);
+        }
+
         .nav-link.active {
             background: #ffffff;
             color: #000000;
-            border-color: #ffffff;
+            border: 2px solid #000000;
+            box-shadow: 3px 3px 0 #000000;
         }
 
         /* Content Area */
         .content-area {
             flex: 1;
             padding: 30px;
-            background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+            background: #000000;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 14px, rgba(255, 255, 255, 0.02) 14px, rgba(255, 255, 255, 0.02) 16px);
         }
 
         .content-section {
@@ -171,14 +232,34 @@
         }
 
         .section-title {
-            font-size: 1.8rem;
+            font-size: 1.2rem;
             margin-bottom: 30px;
             color: #ffffff;
-            border-bottom: 2px solid #ffffff;
+            border-bottom: 4px solid #ffffff;
             padding-bottom: 15px;
             display: flex;
             align-items: center;
             gap: 15px;
+            text-shadow: 3px 3px 0 #000000;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        .section-title::before {
+            content: '[ADMIN]';
+            font-size: 0.6rem;
+            color: #ffffff;
+            text-shadow: 2px 2px 0 #000000;
+            animation: pixelBlink 1.5s infinite;
+            border: 2px solid #ffffff;
+            padding: 4px 8px;
+            margin-right: 10px;
+        }
+
+        @keyframes pixelBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
         }
 
         /* Stats Grid */
@@ -190,30 +271,48 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-            border: 2px solid #ffffff;
+            background: #000000;
+            border: 4px solid #ffffff;
             padding: 25px;
             text-align: center;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            position: relative;
+            box-shadow: 4px 4px 0 #ffffff;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background: linear-gradient(45deg, transparent 48%, #ffffff 48%, #ffffff 52%, transparent 52%);
+            background-size: 8px 8px;
+            z-index: -1;
+            opacity: 0.3;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 #ffffff;
         }
 
         .stat-value {
-            font-size: 2.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: #ffffff;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            text-shadow: 3px 3px 0 #000000;
+            font-family: 'Press Start 2P', cursive;
         }
 
         .stat-label {
-            font-size: 0.9rem;
+            font-size: 0.6rem;
             color: #cccccc;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 0 #000000;
         }
 
         .stat-change {
@@ -228,14 +327,27 @@
 
         /* Controls Section */
         .controls {
-            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-            border: 2px solid #ffffff;
+            background: #000000;
+            border: 3px solid #ffffff;
             padding: 20px;
             margin-bottom: 30px;
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
             align-items: center;
+            box-shadow: 3px 3px 0 #ffffff;
+            position: relative;
+        }
+
+        .controls::after {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            right: 6px;
+            bottom: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            pointer-events: none;
         }
 
         .search-box {
@@ -248,16 +360,18 @@
             width: 100%;
             padding: 12px 15px;
             background: #000000;
-            border: 2px solid #ffffff;
+            border: 3px solid #ffffff;
             color: #ffffff;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-            font-family: inherit;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+            font-family: 'Press Start 2P', cursive;
+            box-shadow: 2px 2px 0 #ffffff;
         }
 
         .search-box input:focus {
             outline: none;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0 #ffffff;
         }
 
         .filter-group {
