@@ -38,58 +38,31 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'mywebsite.middleware.StaticFileCacheMiddleware',  # Custom static file caching
-    'django.middleware.gzip.GZipMiddleware',  # Add GZip compression
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'mywebsite.middleware.OptimizedResponseMiddleware',  # Custom response optimization
-    'mywebsite.middleware.HTMLMinifyMiddleware',  # HTML minification
 ]
 
 ROOT_URLCONF = 'mywebsite.urls'
 
-if DEBUG:
-    TEMPLATES = [
-        {
-            'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': [],
-            'APP_DIRS': True,
-            'OPTIONS': {
-                'context_processors': [
-                    'django.template.context_processors.debug',
-                    'django.template.context_processors.request',
-                    'django.contrib.auth.context_processors.auth',
-                    'django.contrib.messages.context_processors.messages',
-                ],
-            },
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
         },
-    ]
-else:
-    TEMPLATES = [
-        {
-            'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': [],
-            'APP_DIRS': False,
-            'OPTIONS': {
-                'context_processors': [
-                    'django.template.context_processors.debug',
-                    'django.template.context_processors.request',
-                    'django.contrib.auth.context_processors.auth',
-                    'django.contrib.messages.context_processors.messages',
-                ],
-                'loaders': [
-                    ('django.template.loaders.cached.Loader', [
-                        'django.template.loaders.filesystem.Loader',
-                        'django.template.loaders.app_directories.Loader',
-                    ]),
-                ],
-            },
-        },
-    ]
+    },
+]
 
 WSGI_APPLICATION = 'mywebsite.wsgi.application'
 
@@ -107,7 +80,6 @@ if DATABASE_URL and DATABASE_URL.startswith('postgresql://'):
             'OPTIONS': {
                 'sslmode': 'require',
             },
-            'CONN_MAX_AGE': 600,  # Keep connections alive for 10 minutes
         }
     }
 else:
@@ -115,11 +87,6 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
-            'OPTIONS': {
-                'timeout': 20,
-                'check_same_thread': False,
-                'init_command': 'PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA cache_size=10000; PRAGMA temp_store=MEMORY;',
-            },
         }
     }
 
@@ -151,15 +118,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, os.getenv('STATIC_ROOT', 'staticfiles'))
 
 # STATICFILES_DIRS not needed - Django automatically finds static files in each app's static/ folder
 
-# Static file optimizations
-STATICFILES_FINDERS = [
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-]
-
-# Static file storage with versioning for cache busting
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-
 MEDIA_URL = os.getenv('MEDIA_URL', '/media/')
 MEDIA_ROOT = os.path.join(BASE_DIR, os.getenv('MEDIA_ROOT', 'media'))
 
@@ -170,32 +128,7 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', 86400))
-SESSION_SAVE_EVERY_REQUEST = os.getenv('SESSION_SAVE_EVERY_REQUEST', 'False').lower() == 'true'  # Only save when modified
-
-# Cache configuration for better performance
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,  # 5 minutes default
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
-            'CULL_FREQUENCY': 3,
-        }
-    }
-}
-
-# Additional performance settings
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
-
-# Optimize database connections
-CONN_MAX_AGE = 60  # Keep database connections alive for 60 seconds
-
-# Session optimization
-SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_SAVE_EVERY_REQUEST = False
+SESSION_SAVE_EVERY_REQUEST = os.getenv('SESSION_SAVE_EVERY_REQUEST', 'True').lower() == 'true'
 
 # Email Configuration for Zoho Mail with Custom Domain (SSL)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
