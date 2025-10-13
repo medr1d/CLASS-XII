@@ -295,6 +295,10 @@ def update_theme(request):
 
         profile.theme = theme
         profile.save(update_fields=['theme'])
+        
+        # Invalidate account cache when theme changes
+        from django.core.cache import cache
+        cache.delete(f"account_data_{request.user.id}")
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/x-www-form-urlencoded':
             return JsonResponse({'success': True, 'theme': theme})

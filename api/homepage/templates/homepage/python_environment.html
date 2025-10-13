@@ -10,24 +10,33 @@
     <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
     <link rel="shortcut icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
     
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4GQ8NQ38P5"></script>
+    <!-- Google Analytics - Deferred loading for better performance -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-4GQ8NQ38P5');
+      
+      // Load GA script after page load
+      window.addEventListener('load', function() {
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=G-4GQ8NQ38P5';
+        document.head.appendChild(script);
+      });
     </script>
     
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/mode-python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-monokai.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-katzenmilch.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-chaos.min.js"></script>
+    <!-- Ace Editor - Optimized loading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.min.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/mode-python.min.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-monokai.min.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-katzenmilch.min.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-chaos.min.js" async></script>
     
     
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <!-- Pyodide - Optimized loading -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js" async defer></script>
     <style>
         :root {
             --primary-color: #00aa00;
@@ -2902,32 +2911,41 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
                 enableLiveAutocompletion: true,
                 enableSnippets: true
             });
-            const defaultContent = `import numpy as np
+            const defaultContent = `# Welcome to Python Assembly!
+print("🐍 Python Environment Ready!")
+print("📊 NumPy, Pandas, and Matplotlib are available")
+print("📁 Files: text.txt, tester.csv, binary.dat")
+print()
+
+# Quick demo of scientific computing
+import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-print('Python Environment Ready!')
-print('Try the NOTEBOOK mode for Jupyter-style cells')
+# Create sample data
+x = np.linspace(0, 2*np.pi, 50)
+y = np.sin(x)
 
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-x/5)
-
-plt.figure(figsize=(10, 6))
-plt.plot(x, y, 'b-', linewidth=2, label='Damped Sine Wave')
-plt.fill_between(x, y, alpha=0.3)
-plt.title('Scientific Computing in Browser')
-plt.xlabel('X values')
-plt.ylabel('Y values')
+# Create a simple plot
+plt.figure(figsize=(8, 5))
+plt.plot(x, y, 'b-', linewidth=2, label='sin(x)')
+plt.title('Python in Your Browser!')
+plt.xlabel('x')
+plt.ylabel('sin(x)')
 plt.legend()
 plt.grid(True, alpha=0.3)
 plt.show()
 
-data = pd.DataFrame({
-    'x': np.random.randn(100),
-    'y': np.random.randn(100),
-    'category': np.random.choice(['A', 'B', 'C'], 100)
-})
-print(data.groupby('category').describe())`;
+# Read and display CSV data
+try:
+    df = pd.read_csv('tester.csv')
+    print("📈 CSV Data Preview:")
+    print(df.head())
+    print(f"\\nDataset shape: {df.shape}")
+except Exception as e:
+    print(f"CSV read error: {e}")
+
+print("\\n✨ Ready for your code!")`;
 
             aceEditor.setValue(defaultContent, -1);
             
@@ -3094,19 +3112,18 @@ print(data.groupby('category').describe())`;
             
             try {
                 updateLoadingProgress("Loading Pyodide WebAssembly...");
-                pyodide = await loadPyodide();
+                pyodide = await loadPyodide({
+                    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
+                });
                 
-                updateLoadingProgress("Installing core packages...");
-                await pyodide.loadPackage(["numpy", "matplotlib", "micropip"]);
+                updateLoadingProgress("Installing essential packages...");
+                await pyodide.loadPackage(["numpy", "matplotlib", "pandas"]);
                 
-                updateLoadingProgress("Installing packages via micropip...");
+                updateLoadingProgress("Setting up additional packages...");
                 await pyodide.runPythonAsync(`
 import micropip
-await micropip.install([
-    'pandas', 'scipy', 'scikit-learn', 'seaborn', 'sympy', 'networkx',
-    'plotly', 'bokeh', 'altair', 'wordcloud', 'beautifulsoup4', 'requests',
-    'pillow', 'openpyxl', 'faker', 'tqdm', 'rich', 'pydantic'
-])
+# Only install commonly used packages for faster loading
+await micropip.install(['scipy', 'pillow'])
                 `);
                 
                 updateLoadingProgress("Setting up matplotlib backend...");
@@ -3119,54 +3136,70 @@ import io
 import base64
 import warnings
 
-# Suppress font warnings
+# Suppress warnings for cleaner output
 warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
 
-# Set up matplotlib for web display with fallback font configuration
-matplotlib.use('Agg')  # Use Anti-Grain Geometry backend for web
+# Configure matplotlib for web display
+matplotlib.use('Agg')
 
-# Configure font fallbacks to avoid font file access issues
+# Safe font configuration
 try:
-    # Set font properties to use built-in fonts
     plt.rcParams['font.family'] = ['sans-serif']
-    plt.rcParams['font.sans-serif'] = ['Arial', 'Helvetica', 'DejaVu Sans', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif']
-    plt.rcParams['axes.unicode_minus'] = False  # Use ASCII minus
-    
-    # Clear font cache to avoid cached font path issues
+    plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Helvetica', 'sans-serif']
+    plt.rcParams['axes.unicode_minus'] = False
     fm.fontManager.__init__()
-    
 except Exception as e:
-    print(f"Font configuration warning: {e}")
-    # Continue with default matplotlib settings
+    print(f"Font config warning: {e}")
 
-# Function to display plots in the terminal
+# Optimized plot display function
 def show_plot():
     try:
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', bbox_inches='tight', dpi=100, facecolor='white')
+        plt.savefig(buf, format='png', bbox_inches='tight', dpi=96, facecolor='white')
         buf.seek(0)
-        img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+        img_b64 = base64.b64encode(buf.read()).decode('utf-8')
         buf.close()
-        
-        # Display image in terminal
-        print(f'<img src="data:image/png;base64,{img_base64}" style="max-width: 100%; height: auto; background: white; border-radius: 5px;" />')
-        plt.close()  # Close the figure to free memory
-        
+        print(f'<img src="data:image/png;base64,{img_b64}" style="max-width:100%;height:auto;background:white;border-radius:4px;"/>')
+        plt.close()
     except Exception as e:
-        print(f"Plot display error: {e}")
-        plt.close()  # Still close the figure
+        print(f"Plot error: {e}")
+        plt.close()
 
-# Override plt.show() to use our custom display function
+# Override matplotlib show
 plt.show = show_plot
-
-# Test plotting functionality
-print("📊 Matplotlib configured successfully!")
+print("📊 Matplotlib ready!")
                 `);
                 
                 updateLoadingProgress("Setting up virtual file system...");
                 await setupVirtualFiles();
                 
-                updateLoadingProgress("Configuring file restrictions...");
+                updateLoadingProgress("Configuring environment...");
+                
+                // Add package installer function
+                await pyodide.runPython(`
+# Package installer for on-demand loading
+async def install_package(package_name):
+    try:
+        import micropip
+        print(f"Installing {package_name}...")
+        await micropip.install(package_name)
+        print(f"✅ {package_name} installed successfully!")
+        return True
+    except Exception as e:
+        print(f"❌ Failed to install {package_name}: {e}")
+        return False
+
+# Quick install function for common packages
+def quick_install():
+    """Install commonly requested packages"""
+    import asyncio
+    packages = ['scikit-learn', 'seaborn', 'requests', 'beautifulsoup4']
+    for pkg in packages:
+        try:
+            asyncio.create_task(install_package(pkg))
+        except:
+            pass
+`);
                 
                 await pyodide.runPython(`
 import builtins
@@ -3264,31 +3297,60 @@ builtins.open = restricted_open
 
         
         async function setupVirtualFiles() {
-            
             try {
-                const response = await fetch('/python/get-files/');
-                const filesData = await response.json();
-                
-                
-                pyodide.FS.writeFile('text.txt', filesData.text_content || 'Hello from text.txt!\nThis is a sample text file.');
-                pyodide.FS.writeFile('tester.csv', filesData.csv_content || 'name,age,city\nJohn,25,NYC\nJane,30,LA');
-                pyodide.FS.writeFile('binary.dat', filesData.binary_content || 'Binary data example');
-                
-                
-                globalThis.binaryContent = filesData.binary_content || 'Binary data example';
-                globalThis.binaryHexData = filesData.binary_hex || 'No hex data available';
-                
+                // Default file contents
+                const defaultFiles = {
+                    'text.txt': `Hello from Python Environment!
+This is your personal text file.
+You can read and modify this file in your Python code.
+Example: open('text.txt', 'r').read()`,
+                    'tester.csv': `name,age,city,score
+Alice,25,NYC,85
+Bob,30,LA,92
+Carol,28,Chicago,78
+David,35,Houston,95`,
+                    'binary.dat': 'Sample binary data for Python processing'
+                };
+
+                // Try to fetch user files, fallback to defaults
+                let filesData = {};
+                try {
+                    const response = await fetch('/python/get-files/');
+                    if (response.ok) {
+                        filesData = await response.json();
+                    }
+                } catch (e) {
+                    console.log('Using default files (server unavailable)');
+                }
+
+                // Write files to Pyodide filesystem
+                for (const [filename, defaultContent] of Object.entries(defaultFiles)) {
+                    const content = filename === 'text.txt' ? (filesData.text_content || defaultContent) :
+                                   filename === 'tester.csv' ? (filesData.csv_content || defaultContent) :
+                                   (filesData.binary_content || defaultContent);
+                    
+                    try {
+                        pyodide.FS.writeFile(filename, content);
+                    } catch (fsError) {
+                        console.warn(`Failed to write ${filename}:`, fsError);
+                    }
+                }
+
+                // Set global variables for file viewers
+                globalThis.binaryContent = filesData.binary_content || defaultFiles['binary.dat'];
+                globalThis.binaryHexData = filesData.binary_hex || 'Binary data (hex view not available)';
                 
                 updateFileViewers();
                 
             } catch (error) {
-                
-                pyodide.FS.writeFile('text.txt', 'Hello from text.txt!\nThis is a sample text file.');
-                pyodide.FS.writeFile('tester.csv', 'name,age,city\nJohn,25,NYC\nJane,30,LA');
-                pyodide.FS.writeFile('binary.dat', 'Binary data example');
-                globalThis.binaryContent = 'Binary data example';
-                globalThis.binaryHexData = 'No hex data available (server error)';
-                updateFileViewers();
+                console.error('Virtual file setup error:', error);
+                // Minimal file setup on error
+                try {
+                    pyodide.FS.writeFile('text.txt', 'Hello World!');
+                    pyodide.FS.writeFile('tester.csv', 'name,value\ntest,1');
+                } catch (e) {
+                    console.warn('Basic file setup failed:', e);
+                }
             }
             
             

@@ -11,17 +11,64 @@ import json
 from django.conf import settings
 
 def home(request):
-    return render(request, 'homepage/index.html', {
-        'user': request.user
-    })
+    from django.core.cache import cache
+    from django.contrib.auth.models import AnonymousUser
+    
+    # Cache user-specific data for authenticated users
+    if request.user.is_authenticated:
+        cache_key = f"home_user_{request.user.id}"
+        user_data = cache.get(cache_key)
+        
+        if not user_data:
+            # Get user profile info efficiently
+            try:
+                profile = request.user.profile
+                user_data = {
+                    'theme': profile.theme,
+                    'paid_user': profile.paidUser,
+                }
+            except:
+                user_data = {
+                    'theme': 'default',
+                    'paid_user': False,
+                }
+            # Cache for 10 minutes
+            cache.set(cache_key, user_data, 600)
+        
+        context = {
+            'user': request.user,
+            'user_theme': user_data.get('theme', 'default'),
+            'is_paid_user': user_data.get('paid_user', False),
+        }
+    else:
+        context = {
+            'user': request.user,
+            'user_theme': 'default',
+            'is_paid_user': False,
+        }
+    
+    return render(request, 'homepage/index.html', context)
 
-@login_required
+@login_required  
 def python_environment(request):
+    from django.core.cache import cache
+    
     user = request.user
     output = ""
     error = ""
     terminal_output = ""
     execution_success = False
+    
+    # Cache user theme for better performance
+    cache_key = f"python_env_theme_{user.id}"
+    user_theme = cache.get(cache_key)
+    
+    if not user_theme:
+        try:
+            user_theme = user.profile.theme
+        except:
+            user_theme = 'default'
+        cache.set(cache_key, user_theme, 300)  # 5 minutes
     
     try:
         if request.method == "POST":
@@ -412,11 +459,6 @@ print(f"Hello, {{name}}!")
         if not terminal_output:
             terminal_output = f"Database setup required. Please visit /migrate/ to initialize your account data."
     
-    # Get user's theme preference
-    user_theme = 'default'
-    if hasattr(user, 'profile'):
-        user_theme = user.profile.theme
-    
     response = render(request, 'homepage/python_environment.html', {
         'terminal_output': terminal_output,
         'binary_content': binary_content,
@@ -428,7 +470,7 @@ print(f"Hello, {{name}}!")
         'execution_success': execution_success,
         'current_filename': current_filename,
         'migration_needed': migration_needed,
-        'user_theme': user_theme,
+        'user_theme': user_theme,  # Using cached theme from above
     })
     
     response['Cross-Origin-Opener-Policy'] = 'same-origin'
