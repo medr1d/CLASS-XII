@@ -148,7 +148,7 @@ def login_view(request):
             })
         
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.select_related().get(email=email)
             authenticated_user = authenticate(request, username=user.username, password=password)
             
             if authenticated_user:
@@ -229,16 +229,47 @@ def login_view(request):
 @login_required
 def account_view(request):
     from .models import TwoFactorAuth
+    from homepage.models import PythonCodeSession, UserProfile
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.core.cache import cache
     
-    # Get or create 2FA object for template context
-    try:
-        two_factor = TwoFactorAuth.objects.get(user=request.user)
-    except TwoFactorAuth.DoesNotExist:
-        two_factor = TwoFactorAuth(user=request.user, is_enabled=False)
+    # Use cache for expensive calculations
+    cache_key = f"account_data_{request.user.id}"
+    account_data = cache.get(cache_key)
+    
+    if not account_data:
+        # Get or create 2FA object for template context
+        try:
+            two_factor = TwoFactorAuth.objects.select_related('user').get(user=request.user)
+        except TwoFactorAuth.DoesNotExist:
+            two_factor = TwoFactorAuth(user=request.user, is_enabled=False)
+        
+        # Get user profile with optimized query
+        try:
+            user_profile = UserProfile.objects.select_related('user').get(user=request.user)
+        except UserProfile.DoesNotExist:
+            user_profile = UserProfile(user=request.user)
+        
+        # Calculate stats efficiently
+        user_files_count = PythonCodeSession.objects.filter(user=request.user).count()
+        days_since_joined = (timezone.now() - request.user.date_joined).days
+        
+        account_data = {
+            'two_factor': two_factor,
+            'user_profile': user_profile,
+            'user_files_count': user_files_count,
+            'days_since_joined': days_since_joined,
+        }
+        
+        # Cache for 5 minutes
+        cache.set(cache_key, account_data, 300)
     
     return render(request, 'auth_app/account_pixel.html', {
         'user': request.user,
-        'two_factor': two_factor
+        'two_factor': account_data['two_factor'],
+        'user_files_count': account_data['user_files_count'],
+        'days_since_joined': account_data['days_since_joined'],
     })
 
 @login_required
@@ -255,7 +286,7 @@ def update_theme(request):
             messages.error(request, 'Invalid theme selected.')
             return redirect('auth_app:account')
 
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        profile, _ = UserProfile.objects.select_related('user').get_or_create(user=request.user)
         if theme == 'lebron' and not profile.paidUser:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/x-www-form-urlencoded':
                 return JsonResponse({'success': False, 'error': 'LeBron theme is available only for premium users.'}, status=403)
@@ -437,7 +468,7 @@ def update_paid_status(request):
         
         # Get user
         try:
-            user = User.objects.get(id=user_id)
+            user = User.objects.select_related('profile').get(id=user_id)
         except User.DoesNotExist:
             return JsonResponse({
                 'success': False,
@@ -445,7 +476,7 @@ def update_paid_status(request):
             }, status=404)
         
         # Get or create user profile
-        profile, created = UserProfile.objects.get_or_create(user=user)
+        profile, created = UserProfile.objects.select_related('user').get_or_create(user=user)
         
         # Log the change
         old_status = profile.paidUser

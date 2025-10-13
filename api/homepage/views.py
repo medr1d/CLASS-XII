@@ -100,7 +100,7 @@ def python_environment(request):
         
         current_filename = request.POST.get('filename', 'main.py')
         try:
-            current_session = PythonCodeSession.objects.get(user=user, filename=current_filename)
+            current_session = PythonCodeSession.objects.select_related('user').get(user=user, filename=current_filename)
             code_content = current_session.code_content
         except PythonCodeSession.DoesNotExist:
             code_content = f'''print("Hello, Python Terminal!")
@@ -359,7 +359,7 @@ print("NumPy demonstrations complete!")
             except:
                 pass
         
-        saved_files = PythonCodeSession.objects.filter(user=user).values_list('filename', flat=True)
+        saved_files = PythonCodeSession.objects.filter(user=user).only('filename').values_list('filename', flat=True)
         
         system_files = ['text.txt', 'tester.csv', 'binary.dat']
         for system_file in system_files:

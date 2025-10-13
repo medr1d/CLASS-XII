@@ -9,8 +9,14 @@
     <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
     <meta name="csrf-token" content="{{ csrf_token }}">
     
+    <!-- Press Start 2P Font for Pixel Aesthetic - Optimized loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"></noscript>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        /* Font loaded via preconnect in head for better performance */
         
         * {
             margin: 0;
@@ -715,12 +721,14 @@
             </ul>
         </div>
 
-        <!-- Content Area -->
+        <!-- Content Are
         <div class="content-area">
             <!-- Overview Section -->
             <div class="content-section active" id="overview">
                 <h1 class="section-title">Account Dashboard</h1>
                 
+                {% load cache %}
+                {% cache 300 user_stats user.id user.profile.paidUser %}
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-value">{{ user_files_count|default:0 }}</div>
@@ -751,6 +759,7 @@
                         <div class="stat-label">2FA Status</div>
                     </div>
                 </div>
+                {% endcache %}
 
                 <div class="setting-card">
                     <div class="setting-header">
@@ -813,6 +822,7 @@
                         Choose your preferred theme for the Python IDE environment.
                     </div>
                     
+                    {% cache 600 theme_grid user.profile.theme user.profile.paidUser %}
                     <div class="theme-grid">
                         <div class="theme-card {% if user.profile.theme == 'default' %}active{% endif %}" data-theme="default">
                             <div class="theme-preview" style="background: linear-gradient(45deg, #000 50%, #0a0 50%);"></div>
@@ -837,6 +847,7 @@
                         </div>
                         {% endif %}
                     </div>
+                    {% endcache %}
                 </div>
             </div>
 
