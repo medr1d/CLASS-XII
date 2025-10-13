@@ -3536,7 +3536,20 @@ import matplotlib
 matplotlib.use('Agg')
 
 def show_plot():
-    print("📊 Plot ready! (matplotlib working in minimal mode)")
+    try:
+        import io
+        import base64
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', bbox_inches='tight', dpi=96)
+        buf.seek(0)
+        img_data = base64.b64encode(buf.read()).decode()
+        buf.close()
+        print(f'<img src="data:image/png;base64,{img_data}" style="max-width:100%;height:auto;"/>')
+        plt.close()
+        print("📊 Plot ready! (matplotlib working in minimal mode)")
+    except Exception as e:
+        print(f"Plot error: {e}")
+        plt.close()
 
 plt.show = show_plot
 `);
