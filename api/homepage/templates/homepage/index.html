@@ -28,13 +28,13 @@
             --secondary-bg: #1a1a1a;
             --tertiary-bg: #2a2a2a;
             --accent-color: #ffffff;
-            --success-color: #00ff00;
-            --warning-color: #ffff00;
-            --error-color: #ff0000;
+            --success-color: #ffffff;
+            --warning-color: #cccccc;
+            --error-color: #888888;
             --text-primary: #ffffff;
             --text-secondary: #cccccc;
             --text-muted: #888888;
-            --border-color: #333333;
+            --border-color: #444444;
             --sidebar-width: 320px;
             --pixel-border: 2px;
             --pixel-radius: 0px;
@@ -132,7 +132,7 @@
             pointer-events: none;
             background: linear-gradient(
                 transparent 50%,
-                rgba(0, 255, 0, 0.03) 50%
+                rgba(255, 255, 255, 0.02) 50%
             );
             background-size: 100% 4px;
             animation: scanlineMove 0.1s linear infinite;
@@ -164,9 +164,9 @@
             opacity: 0.3;
         }
 
-        .pixel-block.green { background: var(--success-color); }
-        .pixel-block.yellow { background: var(--warning-color); }
-        .pixel-block.red { background: var(--error-color); }
+        .pixel-block.light { background: var(--success-color); }
+        .pixel-block.medium { background: var(--warning-color); }
+        .pixel-block.dark { background: var(--error-color); }
 
         @keyframes pixelFloat {
             0% {
@@ -199,8 +199,8 @@
             z-index: -1;
             pointer-events: none;
             background-image: 
-                linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
             background-size: 32px 32px;
             animation: gridGlow 3s ease-in-out infinite;
         }
@@ -211,8 +211,8 @@
                 filter: brightness(1);
             }
             50% {
-                opacity: 0.6;
-                filter: brightness(1.5);
+                opacity: 0.4;
+                filter: brightness(1.2);
             }
         }
 
@@ -350,7 +350,7 @@
             color: var(--accent-color);
             font-size: 10px;
             letter-spacing: 2px;
-            text-shadow: 0 0 8px currentColor;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
         }
 
         .sidebar-overlay {
@@ -420,7 +420,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.1), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -431,11 +431,11 @@
 
         .menu-link:hover {
             color: var(--accent-color);
-            border-color: var(--success-color);
+            border-color: var(--accent-color);
             box-shadow: 
-                inset 2px 2px 0 rgba(0, 255, 0, 0.2),
-                inset -2px -2px 0 rgba(0, 0, 0, 0.5),
-                0 0 8px rgba(0, 255, 0, 0.3);
+                inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.7),
+                0 0 8px rgba(255, 255, 255, 0.4);
             text-shadow: 0 0 4px currentColor;
             transform: translateX(2px);
         }
@@ -452,8 +452,8 @@
             font-size: 10px;
             width: 20px;
             text-align: center;
-            color: var(--success-color);
-            text-shadow: 0 0 4px currentColor;
+            color: var(--accent-color);
+            text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
         }
 
         /* Pixel Main Content */
@@ -515,18 +515,18 @@
             display: inline-block;
             width: 4px;
             height: 0.9em;
-            background: var(--success-color);
+            background: var(--accent-color);
             margin-left: 8px;
             animation: pixelBlink 0.8s infinite;
             vertical-align: text-bottom;
-            box-shadow: 0 0 8px currentColor;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
         }
 
         @keyframes pixelBlink {
             0%, 50% { 
                 opacity: 1; 
-                background: var(--success-color);
-                box-shadow: 0 0 8px currentColor;
+                background: var(--accent-color);
+                box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
             }
             51%, 100% { 
                 opacity: 0; 
@@ -538,16 +538,16 @@
         @keyframes pixelGlow {
             0%, 100% {
                 text-shadow: 
-                    2px 2px 0 var(--success-color),
+                    2px 2px 0 var(--text-secondary),
                     4px 4px 0 var(--secondary-bg),
-                    0 0 20px var(--success-color);
+                    0 0 20px rgba(255, 255, 255, 0.6);
                 filter: brightness(1);
             }
             50% {
                 text-shadow: 
-                    2px 2px 0 var(--warning-color),
+                    2px 2px 0 var(--accent-color),
                     4px 4px 0 var(--secondary-bg),
-                    0 0 30px var(--warning-color);
+                    0 0 30px rgba(255, 255, 255, 0.8);
                 filter: brightness(1.2);
             }
         }
@@ -589,12 +589,12 @@
 
         .shape {
             position: absolute;
-            border: var(--pixel-border) solid var(--success-color);
+            border: var(--pixel-border) solid var(--accent-color);
             background: var(--primary-bg);
             box-shadow: 
-                inset 2px 2px 0 rgba(0, 255, 0, 0.2),
+                inset 2px 2px 0 rgba(255, 255, 255, 0.2),
                 inset -2px -2px 0 rgba(0, 0, 0, 0.5),
-                0 0 16px rgba(0, 255, 0, 0.3);
+                0 0 16px rgba(255, 255, 255, 0.3);
         }
 
         .shape-1 {
@@ -611,11 +611,11 @@
             bottom: 25%;
             left: 12%;
             animation: pixelRotate 10s infinite linear reverse;
-            border-color: var(--warning-color);
+            border-color: var(--text-secondary);
             box-shadow: 
-                inset 2px 2px 0 rgba(255, 255, 0, 0.2),
+                inset 2px 2px 0 rgba(204, 204, 204, 0.2),
                 inset -2px -2px 0 rgba(0, 0, 0, 0.5),
-                0 0 16px rgba(255, 255, 0, 0.3);
+                0 0 16px rgba(204, 204, 204, 0.3);
         }
 
         .shape-3 {
@@ -624,11 +624,11 @@
             top: 60%;
             right: 20%;
             animation: pixelRotate 6s infinite linear;
-            border-color: var(--error-color);
+            border-color: var(--text-muted);
             box-shadow: 
-                inset 2px 2px 0 rgba(255, 0, 0, 0.2),
+                inset 2px 2px 0 rgba(136, 136, 136, 0.2),
                 inset -2px -2px 0 rgba(0, 0, 0, 0.5),
-                0 0 16px rgba(255, 0, 0, 0.3);
+                0 0 16px rgba(136, 136, 136, 0.3);
         }
 
         @keyframes pixelRotate {
@@ -727,8 +727,8 @@
         .fab {
             width: 64px;
             height: 64px;
-            background: var(--success-color);
-            border: var(--pixel-border) solid var(--accent-color);
+            background: var(--accent-color);
+            border: var(--pixel-border) solid var(--border-color);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -737,8 +737,8 @@
             color: var(--primary-bg);
             text-decoration: none;
             box-shadow: 
-                inset 3px 3px 0 rgba(255, 255, 255, 0.3),
-                inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+                inset 3px 3px 0 rgba(255, 255, 255, 0.4),
+                inset -3px -3px 0 rgba(0, 0, 0, 0.4),
                 6px 6px 0 var(--secondary-bg),
                 8px 8px 20px rgba(0, 0, 0, 0.4);
             transition: all 0.2s ease;
@@ -766,19 +766,19 @@
         @keyframes fabPulse {
             0%, 100% {
                 box-shadow: 
-                    inset 3px 3px 0 rgba(255, 255, 255, 0.3),
-                    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+                    inset 3px 3px 0 rgba(255, 255, 255, 0.4),
+                    inset -3px -3px 0 rgba(0, 0, 0, 0.4),
                     6px 6px 0 var(--secondary-bg),
                     8px 8px 20px rgba(0, 0, 0, 0.4),
-                    0 0 0 rgba(0, 255, 0, 0.4);
+                    0 0 0 rgba(255, 255, 255, 0.2);
             }
             50% {
                 box-shadow: 
-                    inset 3px 3px 0 rgba(255, 255, 255, 0.3),
-                    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+                    inset 3px 3px 0 rgba(255, 255, 255, 0.5),
+                    inset -3px -3px 0 rgba(0, 0, 0, 0.4),
                     6px 6px 0 var(--secondary-bg),
                     8px 8px 20px rgba(0, 0, 0, 0.4),
-                    0 0 20px rgba(0, 255, 0, 0.6);
+                    0 0 16px rgba(255, 255, 255, 0.4);
             }
         }
 
@@ -801,8 +801,8 @@
 
         .status-item {
             margin-right: 20px;
-            color: var(--success-color);
-            text-shadow: 0 0 4px currentColor;
+            color: var(--accent-color);
+            text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
         }
 
         .status-separator {
@@ -976,9 +976,9 @@
             position: relative;
             animation: pixelSpin 1.5s linear infinite;
             box-shadow: 
-                inset 4px 4px 0 rgba(0, 255, 0, 0.2),
+                inset 4px 4px 0 rgba(255, 255, 255, 0.2),
                 inset -4px -4px 0 rgba(0, 0, 0, 0.5),
-                0 0 16px rgba(0, 255, 0, 0.3);
+                0 0 16px rgba(255, 255, 255, 0.3);
         }
 
         .loader::before {
@@ -988,7 +988,7 @@
             left: 8px;
             right: 8px;
             bottom: 8px;
-            border: var(--pixel-border) solid var(--success-color);
+            border: var(--pixel-border) solid var(--accent-color);
             animation: pixelSpin 1s linear infinite reverse;
         }
 
@@ -999,7 +999,7 @@
             left: 50%;
             width: 8px;
             height: 8px;
-            background: var(--warning-color);
+            background: var(--text-secondary);
             transform: translate(-50%, -50%);
             box-shadow: 0 0 8px currentColor;
             animation: pixelPulse 0.8s ease-in-out infinite;
@@ -1024,9 +1024,9 @@
         .loading-text {
             margin-top: 20px;
             font-size: 10px;
-            color: var(--success-color);
+            color: var(--accent-color);
             letter-spacing: 2px;
-            text-shadow: 0 0 8px currentColor;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
             animation: loadingTextPulse 1.5s ease-in-out infinite;
         }
 
@@ -1222,8 +1222,8 @@
                 drop.style.animationDelay = Math.random() * 8 + 's';
                 drop.style.animationDuration = (6 + Math.random() * 4) + 's';
                 
-                // Random colors for variety
-                const colors = ['#ffffff', '#00ff00', '#ffff00', '#ff0000'];
+                // Black and white colors for variety
+                const colors = ['#ffffff', '#cccccc', '#888888', '#666666'];
                 drop.style.background = colors[Math.floor(Math.random() * colors.length)];
                 
                 rainContainer.appendChild(drop);
@@ -1239,8 +1239,8 @@
                 const pixel = document.createElement('div');
                 pixel.className = 'pixel-block';
                 
-                // Add random color classes
-                const colorClasses = ['', 'green', 'yellow', 'red'];
+                // Add random grayscale classes
+                const colorClasses = ['', 'light', 'medium', 'dark'];
                 if (Math.random() > 0.4) {
                     pixel.classList.add(colorClasses[Math.floor(Math.random() * colorClasses.length)]);
                 }
