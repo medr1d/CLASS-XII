@@ -16,6 +16,13 @@ class UserProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    class Meta:
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['paidUser']),
+            models.Index(fields=['-created_at']),
+        ]
+    
     def __str__(self):
         return f"{self.user.username}'s Profile"
 
@@ -30,6 +37,11 @@ class PythonCodeSession(models.Model):
     class Meta:
         unique_together = ['user', 'filename']
         ordering = ['-updated_at']
+        indexes = [
+            models.Index(fields=['user', '-updated_at']),
+            models.Index(fields=['user', 'filename']),
+            models.Index(fields=['-created_at']),
+        ]
     
     def __str__(self):
         return f"{self.user.username} - {self.filename}"
@@ -52,6 +64,11 @@ class UserFiles(models.Model):
     class Meta:
         unique_together = ['user', 'filename']
         ordering = ['filename']
+        indexes = [
+            models.Index(fields=['user', 'filename']),
+            models.Index(fields=['user', 'is_system_file']),
+            models.Index(fields=['-created_at']),
+        ]
     
     def __str__(self):
         return f"{self.user.username} - {self.filename}"

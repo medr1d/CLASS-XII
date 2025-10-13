@@ -3,16 +3,19 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
+from django.db.models import Q, Count
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from datetime import timedelta
 from homepage.models import UserProfile
 from .models import LoginAttempt, EmailVerification, PasswordChangeRequest
 from .email_utils import send_verification_email, send_verification_code_resend, send_password_change_code
+from .rate_limiting import rate_limit, rate_limit_per_ip, rate_limit_per_user
 import json
 import re
 
@@ -26,6 +29,7 @@ def get_client_ip(request):
         ip = request.META.get('REMOTE_ADDR')
     return ip
 
+@rate_limit_per_ip(max_requests=10, window=3600)  # 10 signups per hour per IP
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect('auth_app:account')
@@ -58,26 +62,28 @@ def signup_view(request):
             return render(request, 'auth_app/signup.html')
         
         try:
-            # Check if user already exists
-            if User.objects.filter(username=username).exists():
-                messages.error(request, 'Username already exists.')
-                return render(request, 'auth_app/signup.html')
+            # Use transaction to prevent race conditions
+            with transaction.atomic():
+                # Check if user already exists
+                if User.objects.filter(username=username).exists():
+                    messages.error(request, 'Username already exists.')
+                    return render(request, 'auth_app/signup.html')
+                
+                if User.objects.filter(email=email).exists():
+                    messages.error(request, 'Email already registered.')
+                    return render(request, 'auth_app/signup.html')
+                
+                # Delete any existing unverified verification for this email
+                EmailVerification.objects.filter(email=email, verified=False).delete()
+                
+                # Create email verification record
+                verification = EmailVerification.objects.create(
+                    email=email,
+                    username=username,
+                    password=make_password(password)  # Store hashed password
+                )
             
-            if User.objects.filter(email=email).exists():
-                messages.error(request, 'Email already registered.')
-                return render(request, 'auth_app/signup.html')
-            
-            # Delete any existing unverified verification for this email
-            EmailVerification.objects.filter(email=email, verified=False).delete()
-            
-            # Create email verification record
-            verification = EmailVerification.objects.create(
-                email=email,
-                username=username,
-                password=make_password(password)  # Store hashed password
-            )
-            
-            # Send verification email
+            # Send verification email (outside transaction to avoid locking)
             if send_verification_email(email, username, verification.verification_code):
                 # Store email in session for verification page
                 request.session['verification_email'] = email
@@ -100,6 +106,7 @@ def signup_view(request):
     return render(request, 'auth_app/signup.html')
 
 
+@rate_limit_per_ip(max_requests=20, window=300)  # 20 login attempts per 5 minutes
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('auth_app:account')
@@ -256,6 +263,7 @@ def logout_view(request):
     return redirect('auth_app:login')
 
 @require_http_methods(["GET"])
+@rate_limit(max_requests=30, window=60, key_prefix='check_email')  # 30 checks per minute
 def check_email_availability(request):
     email = request.GET.get('email', '').strip().lower()
     
@@ -272,6 +280,7 @@ def check_email_availability(request):
         return JsonResponse({'available': False, 'message': 'Error checking email availability'})
 
 @require_http_methods(["GET"])
+@rate_limit(max_requests=30, window=60, key_prefix='check_username')  # 30 checks per minute
 def check_username_availability(request):
     username = request.GET.get('username', '').strip()
     
@@ -297,22 +306,61 @@ def admin_panel_view(request):
         messages.error(request, 'Access denied. Admin privileges required.')
         return redirect('auth_app:account')
     
-    users = User.objects.all().select_related('profile').order_by('date_joined')
+    # Get filter parameters
+    filter_type = request.GET.get('filter', 'all')  # all, paid, free, admin
+    search_query = request.GET.get('search', '').strip()
     
-    paid_count = 0
-    super_count = 0
+    # Optimize query with select_related to avoid N+1 queries
+    users_query = User.objects.all().select_related('profile').order_by('-date_joined')
     
-    for user in users:
-        if hasattr(user, 'profile') and user.profile.paidUser:
-            paid_count += 1
-        if user.is_superuser:
-            super_count += 1
+    # Apply filters
+    if filter_type == 'paid':
+        users_query = users_query.filter(profile__paidUser=True)
+    elif filter_type == 'free':
+        users_query = users_query.filter(profile__paidUser=False)
+    elif filter_type == 'admin':
+        users_query = users_query.filter(is_superuser=True)
     
-    return render(request, 'auth_app/admin_panel.html', {
+    # Apply search
+    if search_query:
+        users_query = users_query.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+    
+    # Get all users for statistics (before pagination)
+    all_users = User.objects.all().select_related('profile')
+    total_users = all_users.count()
+    paid_count = all_users.filter(profile__paidUser=True).count()
+    free_count = total_users - paid_count
+    super_count = all_users.filter(is_superuser=True).count()
+    
+    # Recent activity - last 7 days
+    from datetime import timedelta
+    week_ago = timezone.now() - timedelta(days=7)
+    new_users_week = User.objects.filter(date_joined__gte=week_ago).count()
+    
+    # Pagination
+    page = request.GET.get('page', 1)
+    paginator = Paginator(users_query, 20)  # 20 users per page
+    
+    try:
+        users = paginator.page(page)
+    except PageNotAnInteger:
+        users = paginator.page(1)
+    except EmptyPage:
+        users = paginator.page(paginator.num_pages)
+    
+    return render(request, 'auth_app/admin_panel_enhanced.html', {
         'users': users,
+        'total_users': total_users,
         'paid_users_count': paid_count,
-        'free_users_count': len(users) - paid_count,
+        'free_users_count': free_count,
         'superusers_count': super_count,
+        'new_users_week': new_users_week,
+        'filter_type': filter_type,
+        'search_query': search_query,
+        'paginator': paginator,
     })
 
 @login_required
@@ -345,6 +393,15 @@ def update_paid_status(request):
             return JsonResponse({
                 'success': False,
                 'error': 'Missing user_id parameter'
+            }, status=400)
+        
+        # Validate user_id is an integer
+        try:
+            user_id = int(user_id)
+        except (TypeError, ValueError):
+            return JsonResponse({
+                'success': False,
+                'error': 'user_id must be a valid integer'
             }, status=400)
         
         if paid_status is None:
@@ -423,21 +480,27 @@ def verify_email_view(request):
         verification = EmailVerification.objects.get(email=email, verified=False)
     except EmailVerification.DoesNotExist:
         messages.error(request, 'Verification expired or not found. Please sign up again.')
-        del request.session['verification_email']
+        # Clean up session
+        if 'verification_email' in request.session:
+            del request.session['verification_email']
         return redirect('auth_app:signup')
     
     # Check if expired
     if verification.is_expired():
         messages.error(request, 'Verification code expired. Please sign up again.')
         verification.delete()
-        del request.session['verification_email']
+        # Clean up session
+        if 'verification_email' in request.session:
+            del request.session['verification_email']
         return redirect('auth_app:signup')
     
     # Check if too many attempts
     if verification.attempts >= 5:
         messages.error(request, 'Too many failed attempts. Please sign up again.')
         verification.delete()
-        del request.session['verification_email']
+        # Clean up session
+        if 'verification_email' in request.session:
+            del request.session['verification_email']
         return redirect('auth_app:signup')
     
     if request.method == 'POST':
@@ -467,7 +530,8 @@ def verify_email_view(request):
                 verification.mark_verified()
                 
                 # Clean up session
-                del request.session['verification_email']
+                if 'verification_email' in request.session:
+                    del request.session['verification_email']
                 
                 # Auto-login the user
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
@@ -478,6 +542,9 @@ def verify_email_view(request):
             except Exception as e:
                 print(f"User creation error: {str(e)}")
                 messages.error(request, 'Account creation failed. Please try again.')
+                # Clean up on error
+                if 'verification_email' in request.session:
+                    del request.session['verification_email']
                 return render(request, 'auth_app/verify_email.html', {'email': email})
         else:
             # Incorrect code
@@ -489,7 +556,9 @@ def verify_email_view(request):
             else:
                 messages.error(request, 'Too many failed attempts. Please sign up again.')
                 verification.delete()
-                del request.session['verification_email']
+                # Clean up session
+                if 'verification_email' in request.session:
+                    del request.session['verification_email']
                 return redirect('auth_app:signup')
             
             return render(request, 'auth_app/verify_email.html', {'email': email})
@@ -522,6 +591,9 @@ def resend_code_view(request):
             
     except EmailVerification.DoesNotExist:
         messages.error(request, 'Verification not found. Please sign up again.')
+        # Clean up session
+        if 'verification_email' in request.session:
+            del request.session['verification_email']
         return redirect('auth_app:signup')
     
     return redirect('auth_app:verify_email')

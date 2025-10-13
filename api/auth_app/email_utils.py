@@ -167,24 +167,28 @@ CLASS XII PYTHON Team
         
         logger.info("Attempting manual SMTP connection...")
         
-        # Use SSL connection if EMAIL_USE_SSL is True, otherwise use regular SMTP
-        if getattr(settings, 'EMAIL_USE_SSL', False):
-            logger.info("Using SSL connection...")
-            server = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT)
-        else:
-            server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        server = None
+        try:
+            # Use SSL connection if EMAIL_USE_SSL is True, otherwise use regular SMTP
+            if getattr(settings, 'EMAIL_USE_SSL', False):
+                logger.info("Using SSL connection...")
+                server = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT)
+            else:
+                server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+                
+            server.set_debuglevel(1)  # Enable SMTP debugging
             
-        server.set_debuglevel(1)  # Enable SMTP debugging
-        
-        if settings.EMAIL_USE_TLS and not getattr(settings, 'EMAIL_USE_SSL', False):
-            logger.info("Starting TLS...")
-            server.starttls()
+            if settings.EMAIL_USE_TLS and not getattr(settings, 'EMAIL_USE_SSL', False):
+                logger.info("Starting TLS...")
+                server.starttls()
+                
+            logger.info(f"Attempting login with user: {settings.EMAIL_HOST_USER}")
+            server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
             
-        logger.info(f"Attempting login with user: {settings.EMAIL_HOST_USER}")
-        server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-        
-        logger.info("SMTP login successful! Sending email via Django send_mail...")
-        server.quit()
+            logger.info("SMTP login successful! Sending email via Django send_mail...")
+        finally:
+            if server:
+                server.quit()
         
         # If manual connection works, try Django send_mail
         send_mail(
@@ -505,19 +509,23 @@ CLASS XII PYTHON Team
         logger.info(f"Sending password change code to {email}")
         logger.info(f"Email configuration - Host: {settings.EMAIL_HOST}, Port: {settings.EMAIL_PORT}")
         
-        # Manual SMTP connection for debugging
-        if settings.EMAIL_USE_SSL:
-            server = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT)
-        else:
-            server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
-            if settings.EMAIL_USE_TLS:
-                server.starttls()
+        server = None
+        try:
+            # Manual SMTP connection for debugging
+            if settings.EMAIL_USE_SSL:
+                server = smtplib.SMTP_SSL(settings.EMAIL_HOST, settings.EMAIL_PORT)
+            else:
+                server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+                if settings.EMAIL_USE_TLS:
+                    server.starttls()
+                
+            logger.info(f"Attempting login with user: {settings.EMAIL_HOST_USER}")
+            server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
             
-        logger.info(f"Attempting login with user: {settings.EMAIL_HOST_USER}")
-        server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-        
-        logger.info("SMTP login successful! Sending password change email...")
-        server.quit()
+            logger.info("SMTP login successful! Sending password change email...")
+        finally:
+            if server:
+                server.quit()
         
         # If manual connection works, try Django send_mail
         send_mail(

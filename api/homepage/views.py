@@ -1,18 +1,12 @@
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.db import transaction, IntegrityError
 from .models import PythonCodeSession, UserFiles
-import io
-import json
-import sys
-import traceback
-import os
-import subprocess
-import pickle
+from auth_app.rate_limiting import rate_limit_per_user
 import json
 from django.conf import settings
 
@@ -54,17 +48,36 @@ def python_environment(request):
                     if not filename.endswith('.py'):
                         filename += '.py'
                     
-                    python_session, created = PythonCodeSession.objects.get_or_create(
-                        user=user,
-                        filename=filename,
-                        defaults={'code_content': code_content}
-                    )
-                    if not created:
+                    # Check file limit (max 10 files per user)
+                    existing_count = PythonCodeSession.objects.filter(user=user).count()
+                    
+                    try:
+                        # Try to get existing file
+                        python_session = PythonCodeSession.objects.get(user=user, filename=filename)
+                        # File exists, update it
                         python_session.code_content = code_content
                         python_session.save()
-                    
-                    terminal_output = f"File '{filename}' saved to your account"
-                    execution_success = True
+                        terminal_output = f"File '{filename}' updated successfully"
+                        execution_success = True
+                    except PythonCodeSession.DoesNotExist:
+                        # New file - check limit
+                        if existing_count >= 10:
+                            terminal_output = f"Error: Maximum 10 files allowed. Delete a file first."
+                            execution_success = False
+                        else:
+                            # Create new file
+                            try:
+                                python_session = PythonCodeSession.objects.create(
+                                    user=user,
+                                    filename=filename,
+                                    code_content=code_content
+                                )
+                                terminal_output = f"File '{filename}' saved to your account"
+                                execution_success = True
+                            except IntegrityError:
+                                # Race condition - file was created by another request
+                                terminal_output = f"Error: File '{filename}' already exists"
+                                execution_success = False
             
             elif action == 'load_file':
                 try:
@@ -455,62 +468,100 @@ def get_files(request):
         })
 
 @login_required
-@csrf_exempt
+@ensure_csrf_cookie
+@rate_limit_per_user(max_requests=100, window=3600)  # 100 saves per hour
 def save_user_data(request):
+    """Save user data with CSRF protection and file limit enforcement."""
     if request.method == 'POST':
         try:
             user_data = json.loads(request.body)
             user = request.user
             
+            # Check total file limit before saving
+            existing_files = PythonCodeSession.objects.filter(user=user).count()
+            
             # Save current code
             if user_data.get('currentCode'):
-                session, created = PythonCodeSession.objects.get_or_create(
-                    user=user,
-                    filename='main.py',
-                    defaults={'code_content': user_data['currentCode']}
-                )
-                if not created:
+                try:
+                    session = PythonCodeSession.objects.get(user=user, filename='main.py')
                     session.code_content = user_data['currentCode']
                     session.save()
+                except PythonCodeSession.DoesNotExist:
+                    if existing_files >= 10:
+                        return JsonResponse({
+                            'status': 'error', 
+                            'message': 'Maximum 10 files allowed. Delete some files first.'
+                        }, status=400)
+                    try:
+                        PythonCodeSession.objects.create(
+                            user=user,
+                            filename='main.py',
+                            code_content=user_data['currentCode']
+                        )
+                    except IntegrityError:
+                        # File was created by another request
+                        pass
             
-            # Save scripts
+            # Save scripts with file limit check
             if user_data.get('scripts'):
                 for key, content in user_data['scripts'].items():
                     if key.startswith('python_script_'):
                         filename = key.replace('python_script_', '')
-                        session, created = PythonCodeSession.objects.get_or_create(
-                            user=user,
-                            filename=filename,
-                            defaults={'code_content': content}
-                        )
-                        if not created:
+                        try:
+                            session = PythonCodeSession.objects.get(user=user, filename=filename)
                             session.code_content = content
                             session.save()
+                        except PythonCodeSession.DoesNotExist:
+                            # Check limit before creating
+                            current_count = PythonCodeSession.objects.filter(user=user).count()
+                            if current_count >= 10:
+                                continue  # Skip this file
+                            try:
+                                PythonCodeSession.objects.create(
+                                    user=user,
+                                    filename=filename,
+                                    code_content=content
+                                )
+                            except IntegrityError:
+                                pass  # File exists, skip
+                                
                     elif key.startswith('data_file_'):
                         filename = key.replace('data_file_', '')
-                        file_obj, created = UserFiles.objects.get_or_create(
-                            user=user,
-                            filename=filename,
-                            defaults={'content': content, 'is_system_file': False}
-                        )
-                        if not created:
+                        try:
+                            file_obj = UserFiles.objects.get(user=user, filename=filename)
                             file_obj.content = content
                             file_obj.save()
+                        except UserFiles.DoesNotExist:
+                            try:
+                                UserFiles.objects.create(
+                                    user=user,
+                                    filename=filename,
+                                    content=content,
+                                    is_system_file=False
+                                )
+                            except IntegrityError:
+                                pass  # File exists, skip
             
-            # Save notebook data to user profile or create a new model for it
+            # Save notebook data
             if user_data.get('notebooks'):
-                # For now, save as a special PythonCodeSession
-                session, created = PythonCodeSession.objects.get_or_create(
-                    user=user,
-                    filename='_notebook_data.json',
-                    defaults={'code_content': json.dumps(user_data['notebooks'])}
-                )
-                if not created:
+                try:
+                    session = PythonCodeSession.objects.get(user=user, filename='_notebook_data.json')
                     session.code_content = json.dumps(user_data['notebooks'])
                     session.save()
+                except PythonCodeSession.DoesNotExist:
+                    try:
+                        PythonCodeSession.objects.create(
+                            user=user,
+                            filename='_notebook_data.json',
+                            code_content=json.dumps(user_data['notebooks'])
+                        )
+                    except IntegrityError:
+                        pass
             
             return JsonResponse({'status': 'success', 'message': 'Data saved successfully'})
             
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     
