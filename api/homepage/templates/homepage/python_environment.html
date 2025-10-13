@@ -3392,23 +3392,23 @@ print("📊 Matplotlib ready!")
                     console.warn("Matplotlib setup failed, creating stub:", matplotlibError);
                     // Create matplotlib stub to prevent import errors
                     await pyodide.runPython(`
-# Matplotlib stub to prevent import errors
+import sys
+
 class MatplotlibStub:
     def __getattr__(self, name):
         def stub_func(*args, **kwargs):
-            print(f"📊 matplotlib.{name}() called (matplotlib not available)")
+            print(f"matplotlib.{name}() called (matplotlib not available)")
             return self
         return stub_func
+    
     def __call__(self, *args, **kwargs):
-        print("📊 matplotlib called (not available)")
+        print("matplotlib called (not available)")
         return self
 
-import sys
 sys.modules['matplotlib'] = MatplotlibStub()
 sys.modules['matplotlib.pyplot'] = MatplotlibStub()
-
-print("⚠️  Matplotlib stub created (plotting not available)")
-                    `);
+print("Matplotlib stub created (plotting not available)")
+`);
                 }
                 
                 updateLoadingProgress("Setting up virtual file system...");
