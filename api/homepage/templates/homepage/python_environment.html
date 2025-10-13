@@ -1935,6 +1935,313 @@
             color: #888;
             font-size: 11px;
         }
+
+        /* Package Manager 8-bit Pixel Style */
+        .package-manager {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 320px;
+            background: var(--bg-primary);
+            border: 3px solid var(--border-color);
+            box-shadow: 
+                0 0 20px var(--shadow-color),
+                inset 0 0 10px var(--glow-color),
+                4px 4px 0 rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            font-family: 'Courier New', monospace;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        .package-manager.collapsed {
+            width: 160px;
+            height: auto;
+        }
+
+        .package-manager.collapsed .pm-body {
+            display: none;
+        }
+
+        .pm-header {
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border-bottom: 2px solid var(--border-color);
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+        }
+
+        .pm-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-bright);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px var(--text-bright);
+        }
+
+        .pm-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .pm-control-btn {
+            width: 20px;
+            height: 20px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: var(--text-color);
+            transition: all 0.2s;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .pm-control-btn:hover {
+            background: var(--border-color);
+            color: var(--bg-primary);
+            box-shadow: 0 0 10px var(--shadow-color);
+            transform: scale(1.1);
+        }
+
+        .pm-control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .pm-body {
+            padding: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: var(--bg-secondary);
+        }
+
+        .pm-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .pm-body::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .pm-body::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .pm-body::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        .pm-section {
+            margin-bottom: 12px;
+        }
+
+        .pm-section-title {
+            font-size: 10px;
+            color: var(--text-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            padding-bottom: 3px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .pm-input-group {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .pm-input {
+            flex: 1;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 8px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .pm-input:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 8px var(--shadow-color);
+        }
+
+        .pm-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        .pm-btn {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 12px;
+            font-size: 10px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .pm-btn:hover {
+            background: var(--border-color);
+            color: var(--bg-primary);
+            box-shadow: 
+                0 0 10px var(--shadow-color),
+                inset 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .pm-btn:active {
+            transform: translateY(1px);
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .pm-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pm-package-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .pm-package-item {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            font-size: 10px;
+            color: var(--text-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .pm-package-item:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 8px var(--shadow-color);
+        }
+
+        .pm-package-name {
+            font-weight: bold;
+            color: var(--text-bright);
+        }
+
+        .pm-package-status {
+            font-size: 9px;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+        }
+
+        .pm-package-status.installed {
+            color: var(--secondary-color);
+        }
+
+        .pm-package-status.installing {
+            color: var(--text-color);
+            animation: pixelBlink 1s infinite;
+        }
+
+        .pm-package-status.error {
+            color: var(--error-color, #ff4444);
+        }
+
+        .pm-status {
+            font-size: 9px;
+            color: var(--text-muted);
+            padding: 6px 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            margin-top: 8px;
+            font-family: 'Courier New', monospace;
+            min-height: 40px;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .pm-status::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .pm-status::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        .pm-status::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+        }
+
+        /* Pixel animation for installing */
+        @keyframes pixelPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Theme-specific colors */
+        body.theme-greydom .pm-package-status.installed {
+            color: #ff6666;
+        }
+
+        body.theme-cloud .pm-package-status.installed {
+            color: #000000;
+        }
+
+        body.theme-chaos .pm-package-status.installed {
+            color: #b0b0b0;
+        }
+
+        body.theme-lebron .pm-package-status.installed {
+            color: #000000;
+        }
+
+        body.theme-lebron .package-manager {
+            background: rgba(255, 179, 217, 0.95);
+            border-color: #000000;
+        }
+
+        body.theme-lebron .pm-header,
+        body.theme-lebron .pm-body {
+            background: rgba(255, 179, 217, 0.95);
+        }
+
+        body.theme-lebron .pm-input,
+        body.theme-lebron .pm-btn,
+        body.theme-lebron .pm-package-item,
+        body.theme-lebron .pm-status {
+            background: rgba(255, 255, 255, 0.5);
+            border-color: #000000;
+            color: #000000;
+        }
+
+        body.theme-lebron .pm-title,
+        body.theme-lebron .pm-package-name {
+            color: #000000;
+            text-shadow: none;
+        }
+
+        /* Make package manager draggable */
+        .package-manager.dragging {
+            opacity: 0.8;
+            cursor: move;
+        }
     </style>
 </head>
 <body class="{% if user_theme == 'greydom' %}theme-greydom{% elif user_theme == 'cloud' %}theme-cloud{% elif user_theme == 'chaos' %}theme-chaos{% elif user_theme == 'lebron' %}theme-lebron{% endif %}">
@@ -2726,15 +3033,15 @@ print(f"  Standard deviation: {np.std(word_lengths):.2f}")</textarea>
                             </div>
                         </div>
                         <div class="cell-input">
-                            <textarea class="cell-textarea"># 🎮 Interactive Input Demo
+                            <textarea class="cell-textarea"># [DEMO] Interactive Input Demo
 # This demonstrates the new input() pausing functionality!
 
-print("🚀 Interactive Input Demo")
+print("[DEMO] Interactive Input Demo")
 print("=" * 40)
 
 # Basic input example
 name = input("What's your name? ")
-print(f"Hello, {name}! Nice to meet you! 👋")
+print(f"Hello, {name}! Nice to meet you!")
 
 # Numeric input with validation
 while True:
@@ -2751,7 +3058,7 @@ while True:
 print(f"Wow, you're {age} years old!")
 
 # Interactive calculation
-print("\n🧮 Let's do some math!")
+print("\n[CALC] Let's do some math!")
 try:
     num1 = float(input("Enter first number: "))
     operator = input("Enter operator (+, -, *, /): ").strip()
@@ -2771,13 +3078,13 @@ try:
     else:
         result = "Error: Invalid operator!"
     
-    print(f"\n📊 Result: {num1} {operator} {num2} = {result}")
+    print(f"\n[RESULT] {num1} {operator} {num2} = {result}")
     
 except ValueError:
     print("Error: Invalid number input!")
 
 # Fun personality test
-print(f"\n🎯 Quick personality test, {name}!")
+print(f"\n[TEST] Quick personality test, {name}!")
 color = input("What's your favorite color? ").lower().strip()
 
 color_meanings = {
@@ -2792,10 +3099,10 @@ color_meanings = {
 }
 
 meaning = color_meanings.get(color, 'unique and special')
-print(f"🎨 {color.title()} lovers are typically {meaning}!")
+print(f"[COLOR] {color.title()} lovers are typically {meaning}!")
 
-print(f"\n✨ Thanks for trying the interactive demo, {name}!")
-print("🔄 The input() function now properly pauses execution!")
+print(f"\n[THANKS] Thanks for trying the interactive demo, {name}!")
+print("[INFO] The input() function now properly pauses execution!")
 print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
                         </div>
                         <div class="cell-output" id="output-9"></div>
@@ -3160,7 +3467,7 @@ def show_plot():
 plt.show = show_plot
 
 # Test plotting functionality
-print("📊 Matplotlib configured successfully!")
+print("[PLOT] Matplotlib configured successfully!")
                 `);
                 
                 updateLoadingProgress("Setting up virtual file system...");
@@ -4011,11 +4318,6 @@ sys.stdout = StringIO()
 sys.stderr = StringIO()
                 `);
 
-                // Check if code contains input() calls and show a helpful message
-                if (code.includes('input(')) {
-                    updateTerminal("📝 Code contains input() calls - interactive dialogs will appear\n");
-                }
-
                 try {
                     // Execute the code asynchronously to handle input() properly
                     const result = await pyodide.runPythonAsync(code);
@@ -4045,11 +4347,11 @@ sys.stderr = sys.__stderr__
                     updateTerminal("Error: " + stderr + "\n", true);
                 }
                 if (!stdout && !stderr) {
-                    updateTerminal("✅ Code executed successfully (no output)\n");
+                    updateTerminal("[OK] Code executed successfully (no output)\n");
                 }
 
             } catch (error) {
-                updateTerminal("❌ Execution Error: " + error.message + "\n", true);
+                updateTerminal("[ERROR] Execution Error: " + error.message + "\n", true);
                 console.error("Execution error details:", error);
             }
             
@@ -4665,7 +4967,7 @@ sys.stderr = sys.__stderr__
     </div>
     
     <div style="color: #888; font-size: 11px; margin-top: 15px;">
-        💡 Tip: Your notebook auto-saves every 30 seconds!
+        [TIP] Your notebook auto-saves every 30 seconds!
     </div>
 </div>
             `;
@@ -4757,7 +5059,7 @@ sys.stderr = sys.__stderr__
                 z-index: 10000;
                 transition: opacity 0.3s;
             `;
-            indicator.textContent = '💾 Saved';
+            indicator.textContent = '[SAVED]';
             document.body.appendChild(indicator);
             
             setTimeout(() => {
@@ -4844,7 +5146,7 @@ sys.stderr = _old_stderr
                     if (!output) output = '(no output)';
                 }
                 
-                output += `\n<span style="color: #666; font-size: 11px;">⏱️ Executed in ${executionTime}ms</span>`;
+                output += `\n<span style="color: #666; font-size: 11px;">[TIME] Executed in ${executionTime}ms</span>`;
                 
                 outputElement.innerHTML = output;
                 outputElement.style.color = stderr ? '#ff4444' : '#fff';
@@ -5472,6 +5774,235 @@ print(f"Hello {name}! You are {age} years old.")
                 updateTerminal("   • ESC: Close dialogs\n");
                 updateTerminal("   • input() function works with popup dialogs\n\n");
             }, 1000);
+        });
+    </script>
+
+    <!-- Package Manager UI -->
+    <div class="package-manager" id="package-manager">
+        <div class="pm-header" id="pm-header">
+            <div class="pm-title">PACKAGE MANAGER</div>
+            <div class="pm-controls">
+                <button class="pm-control-btn" onclick="togglePackageManager()" title="Collapse">_</button>
+                <button class="pm-control-btn" onclick="closePackageManager()" title="Close">X</button>
+            </div>
+        </div>
+        <div class="pm-body" id="pm-body">
+            <div class="pm-section">
+                <div class="pm-section-title">INSTALL PACKAGE</div>
+                <div class="pm-input-group">
+                    <input type="text" class="pm-input" id="package-name-input" placeholder="package-name" />
+                    <button class="pm-btn" onclick="installPackageUI()">INSTALL</button>
+                </div>
+            </div>
+            
+            <div class="pm-section">
+                <div class="pm-section-title">QUICK INSTALL</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                    <button class="pm-btn" onclick="installQuickPackage('requests')">requests</button>
+                    <button class="pm-btn" onclick="installQuickPackage('pillow')">pillow</button>
+                    <button class="pm-btn" onclick="installQuickPackage('faker')">faker</button>
+                    <button class="pm-btn" onclick="installQuickPackage('tqdm')">tqdm</button>
+                </div>
+            </div>
+            
+            <div class="pm-section">
+                <div class="pm-section-title">INSTALLED PACKAGES</div>
+                <ul class="pm-package-list" id="installed-packages">
+                    <li class="pm-package-item">
+                        <span class="pm-package-name">numpy</span>
+                        <span class="pm-package-status installed">INSTALLED</span>
+                    </li>
+                    <li class="pm-package-item">
+                        <span class="pm-package-name">pandas</span>
+                        <span class="pm-package-status installed">INSTALLED</span>
+                    </li>
+                    <li class="pm-package-item">
+                        <span class="pm-package-name">matplotlib</span>
+                        <span class="pm-package-status installed">INSTALLED</span>
+                    </li>
+                    <li class="pm-package-item">
+                        <span class="pm-package-name">scipy</span>
+                        <span class="pm-package-status installed">INSTALLED</span>
+                    </li>
+                    <li class="pm-package-item">
+                        <span class="pm-package-name">scikit-learn</span>
+                        <span class="pm-package-status installed">INSTALLED</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="pm-status" id="pm-status">
+                > Package manager ready
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Package Manager Functionality
+        let installedPackages = new Set(['numpy', 'pandas', 'matplotlib', 'scipy', 'scikit-learn', 'seaborn', 'sympy', 'networkx', 'plotly', 'bokeh', 'altair', 'wordcloud', 'beautifulsoup4', 'requests', 'pillow', 'openpyxl', 'faker', 'tqdm', 'rich', 'pydantic']);
+        
+        function updatePMStatus(message) {
+            const statusEl = document.getElementById('pm-status');
+            if (statusEl) {
+                const timestamp = new Date().toLocaleTimeString();
+                statusEl.innerHTML = `[${timestamp}] ${message}`;
+                statusEl.scrollTop = statusEl.scrollHeight;
+            }
+        }
+        
+        async function installPackageUI() {
+            const input = document.getElementById('package-name-input');
+            const packageName = input.value.trim();
+            
+            if (!packageName) {
+                updatePMStatus('> Error: Package name required');
+                return;
+            }
+            
+            await installPackage(packageName);
+            input.value = '';
+        }
+        
+        async function installQuickPackage(packageName) {
+            await installPackage(packageName);
+        }
+        
+        async function installPackage(packageName) {
+            if (!isInitialized || !pyodide) {
+                updatePMStatus('> Error: Python environment not ready');
+                updateTerminal('[PKG] Python environment not initialized yet\n', true);
+                return;
+            }
+            
+            if (installedPackages.has(packageName)) {
+                updatePMStatus(`> ${packageName} already installed`);
+                updateTerminal(`[PKG] ${packageName} is already installed\n`);
+                return;
+            }
+            
+            updatePMStatus(`> Installing ${packageName}...`);
+            updateTerminal(`[PKG] Installing ${packageName}...\n`);
+            
+            // Add to UI as installing
+            addPackageToList(packageName, 'installing');
+            
+            try {
+                await pyodide.runPythonAsync(`
+import micropip
+await micropip.install('${packageName}')
+print('Package ${packageName} installed successfully!')
+                `);
+                
+                installedPackages.add(packageName);
+                updatePackageStatus(packageName, 'installed');
+                updatePMStatus(`> ${packageName} installed successfully`);
+                updateTerminal(`[PKG] ${packageName} installed successfully!\n`);
+                
+            } catch (error) {
+                updatePackageStatus(packageName, 'error');
+                updatePMStatus(`> Failed to install ${packageName}`);
+                updateTerminal(`[PKG] Failed to install ${packageName}: ${error.message}\n`, true);
+                
+                // Remove from list after error
+                setTimeout(() => {
+                    const item = document.querySelector(`[data-package="${packageName}"]`);
+                    if (item) item.remove();
+                }, 2000);
+            }
+        }
+        
+        function addPackageToList(packageName, status) {
+            const list = document.getElementById('installed-packages');
+            
+            // Check if already exists
+            if (document.querySelector(`[data-package="${packageName}"]`)) {
+                return;
+            }
+            
+            const item = document.createElement('li');
+            item.className = 'pm-package-item';
+            item.setAttribute('data-package', packageName);
+            item.innerHTML = `
+                <span class="pm-package-name">${packageName}</span>
+                <span class="pm-package-status ${status}">${status.toUpperCase()}</span>
+            `;
+            list.appendChild(item);
+        }
+        
+        function updatePackageStatus(packageName, status) {
+            const item = document.querySelector(`[data-package="${packageName}"]`);
+            if (item) {
+                const statusEl = item.querySelector('.pm-package-status');
+                statusEl.className = `pm-package-status ${status}`;
+                statusEl.textContent = status.toUpperCase();
+            }
+        }
+        
+        function togglePackageManager() {
+            const pm = document.getElementById('package-manager');
+            pm.classList.toggle('collapsed');
+        }
+        
+        function closePackageManager() {
+            const pm = document.getElementById('package-manager');
+            pm.style.display = 'none';
+        }
+        
+        // Make package manager draggable
+        (function() {
+            const pm = document.getElementById('package-manager');
+            const header = document.getElementById('pm-header');
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+            
+            header.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+            
+            function dragStart(e) {
+                if (e.target.classList.contains('pm-control-btn')) return;
+                
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                
+                if (e.target === header || header.contains(e.target)) {
+                    isDragging = true;
+                    pm.classList.add('dragging');
+                }
+            }
+            
+            function drag(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    xOffset = currentX;
+                    yOffset = currentY;
+                    
+                    setTranslate(currentX, currentY, pm);
+                }
+            }
+            
+            function dragEnd(e) {
+                initialX = currentX;
+                initialY = currentY;
+                isDragging = false;
+                pm.classList.remove('dragging');
+            }
+            
+            function setTranslate(xPos, yPos, el) {
+                el.style.transform = `translate(${xPos}px, ${yPos}px)`;
+            }
+        })();
+        
+        // Initialize package manager status
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePMStatus('> Package manager initialized');
         });
     </script>
 
