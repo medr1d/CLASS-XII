@@ -3426,28 +3426,34 @@ plt.show = show_plot`);
                 
                 // Step 4: Setup I/O
                 updateLoadingProgress("Configuring input/output...");
-                await pyodide.runPythonAsync(`import builtins
+                await pyodide.runPythonAsync(`
+import builtins
 import os
 
 original_open = builtins.open
+original_input = builtins.input
 
 def sync_web_input(prompt=""):
-    import js
+    """Synchronous wrapper for web input"""
     try:
-        result = js.showInputDialog(prompt)
-        return result if result else ""
-    except:
+        import js
+        return js.showInputDialog(prompt) or ""
+    except Exception as e:
         return ""
 
 def safe_open(filename, mode='r', *args, **kwargs):
+    """Restricted open() that only allows specific files"""
     allowed_files = ['text.txt', 'tester.csv', 'binary.dat']
     allowed_paths = ['/lib/python3.11/', '/lib/python311.zip/', '/usr/', '<']
+    
     basename = os.path.basename(filename)
     if basename in allowed_files:
         return original_open(filename, mode, *args, **kwargs)
+    
     for path in allowed_paths:
         if filename.startswith(path) or path in filename:
             return original_open(filename, mode, *args, **kwargs)
+    
     raise PermissionError(f'Cannot open: {filename}')
 
 builtins.input = sync_web_input
