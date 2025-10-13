@@ -3319,220 +3319,138 @@ print("✨ Environment ready - happy coding!")`;
             if (isInitialized) return;
             
             try {
-                updateLoadingProgress("Loading Pyodide WebAssembly...");
+                updateLoadingProgress("Loading Pyodide...");
                 pyodide = await loadPyodide({
                     indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
                 });
                 
-                updateLoadingProgress("Installing essential packages...");
-                // Load packages individually for better error handling
-                const essentialPackages = ["numpy", "matplotlib", "pandas", "micropip"];
-                for (const pkg of essentialPackages) {
-                    try {
-                        updateLoadingProgress(`Loading ${pkg}...`);
-                        await pyodide.loadPackage([pkg]);
-                    } catch (pkgError) {
-                        console.warn(`Failed to load ${pkg}:`, pkgError);
-                    }
-                }
+                updateLoadingProgress("Loading Python packages...");
+                await pyodide.loadPackage(["numpy", "matplotlib", "pandas", "micropip"]);
                 
-                updateLoadingProgress("Setting up additional packages...");
+                updateLoadingProgress("Configuring matplotlib...");
                 try {
                     await pyodide.runPythonAsync(`
-import micropip
-# Only install commonly used packages for faster loading
-try:
-    await micropip.install(['scipy'])
-    print("✅ scipy installed")
-except Exception as e:
-    print(f"⚠️  scipy installation failed: {e}")
-
-try:
-    await micropip.install(['pillow'])
-    print("✅ pillow installed")
-except Exception as e:
-    print(f"⚠️  pillow installation failed: {e}")
-                    `);
-                } catch (error) {
-                    console.warn("Additional package installation failed:", error);
-                }
-                
-                updateLoadingProgress("Setting up matplotlib backend...");
-                
-                // Set up matplotlib with error handling
-                try {
-                    await pyodide.runPython(`
 import matplotlib
 import matplotlib.pyplot as plt
-import io
-import base64
-import warnings
-
+import io, base64, warnings
 warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
 matplotlib.use('Agg')
 
-# Simple plot function
 def show_plot():
     try:
         buf = io.BytesIO()
         plt.savefig(buf, format='png', bbox_inches='tight', dpi=96)
         buf.seek(0)
-        img_data = base64.b64encode(buf.read()).decode()
+        img_str = base64.b64encode(buf.read()).decode()
         buf.close()
-        print(f'<img src="data:image/png;base64,{img_data}" style="max-width:100%;height:auto;"/>')
+        print(f'<img src="data:image/png;base64,{img_str}" style="max-width:100%;height:auto;"/>')
         plt.close()
-    except Exception as e:
-        print(f"Plot error: {e}")
+    except Exception as err:
+        print(f"Plot error: {err}")
         plt.close()
 
 plt.show = show_plot
-print("📊 Matplotlib ready!")
-                    `);
-                } catch (matplotlibError) {
-                    console.warn("Matplotlib setup failed, creating stub:", matplotlibError);
-                    // Create matplotlib stub to prevent import errors
-                    await pyodide.runPython(`
+print("Matplotlib ready")
+`);
+                } catch (matplotError) {
+                    console.warn("Matplotlib setup failed:", matplotError);
+                    await pyodide.runPythonAsync(`
 import sys
 
-class MatplotlibStub:
-    def __getattr__(self, name):
-        def stub_func(*args, **kwargs):
-            print(f"matplotlib.{name}() called (matplotlib not available)")
-            return self
-        return stub_func
-    
-    def __call__(self, *args, **kwargs):
-        print("matplotlib called (not available)")
-        return self
+class MPLStub:
+    def __getattr__(s, n):
+        return lambda *a, **k: s
+    def __call__(s, *a, **k):
+        return s
 
-sys.modules['matplotlib'] = MatplotlibStub()
-sys.modules['matplotlib.pyplot'] = MatplotlibStub()
-print("Matplotlib stub created (plotting not available)")
+sys.modules['matplotlib'] = MPLStub()
+sys.modules['matplotlib.pyplot'] = MPLStub()
+print("Matplotlib stub loaded")
 `);
                 }
                 
-                updateLoadingProgress("Setting up virtual file system...");
+                updateLoadingProgress("Setting up file system...");
                 await setupVirtualFiles();
                 
-                updateLoadingProgress("Configuring environment...");
-                
-                // Add simple package installer
-                try {
-                    await pyodide.runPython(`
-# Simple package installer
-import micropip
+                updateLoadingProgress("Configuring input/output...");
+                await pyodide.runPythonAsync(`
+import builtins, asyncio
+_orig_open = builtins.open
+_orig_input = builtins.input
 
-async def install_package(package_name):
-    try:
-        print(f"📦 Installing {package_name}...")
-        await micropip.install(package_name)
-        print(f"✅ {package_name} installed!")
-        return True
-    except Exception as e:
-        print(f"❌ Failed to install {package_name}: {e}")
-        return False
-
-print("📦 Package installer ready!")
-print("💡 Use: await install_package('package_name')")
-                    `);
-                } catch (error) {
-                    console.warn("Package installer setup failed:", error);
-                }
-                
-                await pyodide.runPython(`
-import builtins
-import os
-import asyncio
-original_open = builtins.open
-original_input = builtins.input
-
-# Custom async input function that works with the web interface
-async def web_input_async(prompt=""):
-    # Import js module for JavaScript integration
+async def async_input(prompt=""):
     import js
     from pyodide.ffi import create_proxy
-    
-    # Create a promise that resolves when user provides input
-    def create_input_promise():
-        return js.Promise.new(create_proxy(lambda resolve, reject: js.showInputDialogAsync(prompt, resolve)))
-    
-    # Wait for the promise to resolve
-    result = await create_input_promise()
-    return result if result is not None else ""
+    def make_promise():
+        return js.Promise.new(create_proxy(lambda res, rej: js.showInputDialogAsync(prompt, res)))
+    result = await make_promise()
+    return result if result else ""
 
-# Synchronous wrapper for backward compatibility
-def web_input(prompt=""):
+def sync_input(prompt=""):
     try:
-        # Try to get the current event loop
         loop = asyncio.get_event_loop()
         if loop.is_running():
-            # If we're in an async context, we need to handle this differently
             import js
             return js.showInputDialog(prompt) or ""
-        else:
-            # Run the async function in the event loop
-            return loop.run_until_complete(web_input_async(prompt))
-    except Exception as e:
-        # Fallback to JavaScript sync version
+        return loop.run_until_complete(async_input(prompt))
+    except:
         import js
         return js.showInputDialog(prompt) or ""
 
-# Replace the built-in input function
-builtins.input = web_input
+builtins.input = sync_input
 
-def restricted_open(filename, mode='r', *args, **kwargs):
-    # Allow user files
-    allowed_files = ['text.txt', 'tester.csv', 'binary.dat']
+def safe_open(fname, mode='r', *args, **kwargs):
+    import os
+    allowed = ['text.txt', 'tester.csv', 'binary.dat']
+    allowed_paths = ['/lib/python3.11/', '/lib/python311.zip/', '/usr/', '<']
     
-    # Allow matplotlib, numpy, pandas, sklearn, and other library internal files
-    allowed_paths = [
-        '/lib/python3.11/site-packages/',
-        '/lib/python311.zip/',
-        '/lib/python3.11/',
-        '/usr/lib/',
-        '/usr/share/',
-        '<frozen',  # Built-in modules
-        '<string>',  # String execution
-        '<stdin>',   # Interactive input
-    ]
+    if os.path.basename(fname) in allowed:
+        return _orig_open(fname, mode, *args, **kwargs)
     
-    # Check if it's an allowed user file
-    if os.path.basename(filename) in allowed_files:
-        return original_open(filename, mode, *args, **kwargs)
+    for path in allowed_paths:
+        if fname.startswith(path) or path in fname:
+            return _orig_open(fname, mode, *args, **kwargs)
     
-    # Check if it's a library internal file
-    for allowed_path in allowed_paths:
-        if filename.startswith(allowed_path) or allowed_path in filename:
-            return original_open(filename, mode, *args, **kwargs)
-    
-    # Block everything else
-    raise PermissionError(f"Access denied: Cannot open '{filename}'. Only {allowed_files} are allowed for user access.")
+    raise PermissionError(f"Cannot open '{fname}'. Only {allowed} allowed.")
 
-builtins.open = restricted_open
-                `);
+builtins.open = safe_open
+print("Environment configured")
+`);
                 
-                updateLoadingProgress("Environment ready!");
-                updateTerminal("🎉 Python Environment Loaded Successfully!\n");
-                updateTerminal("📦 Available packages: numpy, pandas, matplotlib, scipy, pillow\n");
-                updateTerminal("💡 Use plt.show() to display plots\n");
-                updateTerminal("📖 Try the notebook mode for advanced features\n");
-                updateTerminal("🔧 Use await install_package('package_name') to install more packages\n\n");
+                updateLoadingProgress("Installing micropip packages...");
+                try {
+                    await pyodide.runPythonAsync(`
+import micropip
+
+async def install_package(pkg):
+    try:
+        print(f"Installing {pkg}...")
+        await micropip.install(pkg)
+        print(f"✓ {pkg} installed")
+        return True
+    except Exception as err:
+        print(f"✗ {pkg} failed: {err}")
+        return False
+
+print("Package installer ready")
+print("Use: await install_package('package_name')")
+`);
+                } catch (micropipError) {
+                    console.warn("Micropip setup failed:", micropipError);
+                }
                 
                 isInitialized = true;
+                updateTerminal("✓ Python environment loaded\n");
+                updateTerminal("Packages: numpy, pandas, matplotlib\n");
+                updateTerminal("Use plt.show() to display plots\n\n");
                 
-                
-                setTimeout(() => {
-                    showMainInterface();
-                }, 500);
+                setTimeout(() => showMainInterface(), 500);
                 
             } catch (error) {
-                console.error("Main initialization failed:", error);
-                updateTerminal("❌ Failed to initialize Python environment: " + error.toString() + "\n");
-                updateTerminal("Please refresh the page to try again.\n");
-                
-                setTimeout(() => {
-                    showMainInterface();
-                }, 2000);
+                console.error("Initialization failed:", error);
+                updateTerminal("✗ Failed to initialize: " + error.toString() + "\n");
+                updateTerminal("Please refresh the page\n");
+                setTimeout(() => showMainInterface(), 2000);
             }
         }
 
