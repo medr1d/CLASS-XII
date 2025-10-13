@@ -188,10 +188,10 @@ try:
     print("\\nData Info:")
     print(df.describe())
 except Exception as e:
-    print(f"CSV error: {{e}}")
+    print(f"CSV error: {e}")
 
 name = input("\\nWhat is your name? ")
-print(f"Hello, {{name}}! Enjoy exploring Python with scientific libraries!")
+print(f"Hello, {name}! Enjoy exploring Python with scientific libraries!")
 
 print("\\nAvailable libraries: numpy, pandas, matplotlib, scipy, scikit-learn, seaborn")
 print("Your Python files are saved to your account!")
@@ -445,7 +445,7 @@ print("Database setup required for full functionality")
 print("Visit /migrate/ to initialize your personal data storage")
 
 name = input("What is your name? ")
-print(f"Hello, {{name}}!")
+print(f"Hello, {name}!")
 '''
         
         text_content = f"Database setup needed. Visit /migrate/ to initialize.\nWelcome {user.username}!"
