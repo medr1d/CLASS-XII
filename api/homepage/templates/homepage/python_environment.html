@@ -3293,33 +3293,36 @@ builtins.open = restricted_open
                 console.error("Main initialization failed:", error);
                 updateLoadingProgress("Trying minimal setup...");
                 
-                // Fallback: minimal setup without additional packages
+                // Fallback: ultra-minimal setup
                 try {
                     updateTerminal("⚠️  Main setup failed, trying minimal configuration...\n");
                     pyodide = await loadPyodide({
                         indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
                     });
                     
-                    // Only load absolutely essential packages
-                    await pyodide.loadPackage(["numpy"]);
-                    
-                    // Ultra-minimal setup
+                    // Ultra-minimal setup with no additional packages
                     await pyodide.runPython(`
-import numpy as np
-print("🔧 Minimal Python environment ready!")
-print("Available packages: numpy")
-print("Note: matplotlib not available in minimal mode")
+import sys
+print("🔧 Ultra-minimal Python environment ready!")
+print("Python", sys.version)
+print("Basic Python functionality available")
                     `);
                     
-                    await setupVirtualFiles();
+                    // Simple file setup without complex wrappers
+                    try {
+                        pyodide.FS.writeFile('text.txt', 'Hello from minimal setup!');
+                        pyodide.FS.writeFile('tester.csv', 'name,value\ntest,1');
+                    } catch (fsError) {
+                        console.warn('File setup failed:', fsError);
+                    }
+                    
                     isInitialized = true;
                     updateTerminal("✅ Minimal Python environment loaded successfully!\n");
-                    updateTerminal("Available packages: numpy, matplotlib\n");
-                    updateTerminal("Use plt.show() to display plots\n\n");
+                    updateTerminal("Available: Basic Python + file system\n\n");
                     
                 } catch (fallbackError) {
                     console.error("Even fallback failed:", fallbackError);
-                    updateTerminal("❌ Failed to initialize Python environment: " + fallbackError.message + "\n");
+                    updateTerminal("❌ Failed to initialize Python environment: " + fallbackError.toString() + "\n");
                     updateTerminal("Please refresh the page to try again.\n");
                 }
                 
@@ -3430,7 +3433,10 @@ David,35,Houston,95`,
             };
             pyodide.globals.set("refreshFileList", globalThis.refreshFileList);
             
-            await pyodide.runPython(`
+            // Only set up file wrapper if main initialization succeeded
+            if (isInitialized) {
+                try {
+                    await pyodide.runPython(`
 import builtins
 import js
 
@@ -3583,6 +3589,13 @@ try:
 except Exception as e:
     print(f"Error setting up files: {e}")
             `);
+                } catch (fileWrapperError) {
+                    console.warn("File wrapper setup failed:", fileWrapperError);
+                    // Continue without file wrapper functionality
+                }
+            } else {
+                console.log("Skipping file wrapper setup - main initialization failed");
+            }
         }
 
         
