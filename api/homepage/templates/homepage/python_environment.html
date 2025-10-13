@@ -3171,7 +3171,43 @@ print("📊 Matplotlib configured successfully!")
                 await pyodide.runPython(`
 import builtins
 import os
+import asyncio
 original_open = builtins.open
+original_input = builtins.input
+
+# Custom async input function that works with the web interface
+async def web_input_async(prompt=""):
+    # Import js module for JavaScript integration
+    import js
+    from pyodide.ffi import create_proxy
+    
+    # Create a promise that resolves when user provides input
+    def create_input_promise():
+        return js.Promise.new(create_proxy(lambda resolve, reject: js.showInputDialogAsync(prompt, resolve)))
+    
+    # Wait for the promise to resolve
+    result = await create_input_promise()
+    return result if result is not None else ""
+
+# Synchronous wrapper for backward compatibility
+def web_input(prompt=""):
+    try:
+        # Try to get the current event loop
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # If we're in an async context, we need to handle this differently
+            import js
+            return js.showInputDialog(prompt) or ""
+        else:
+            # Run the async function in the event loop
+            return loop.run_until_complete(web_input_async(prompt))
+    except Exception as e:
+        # Fallback to JavaScript sync version
+        import js
+        return js.showInputDialog(prompt) or ""
+
+# Replace the built-in input function
+builtins.input = web_input
 
 def restricted_open(filename, mode='r', *args, **kwargs):
     # Allow user files
@@ -3967,6 +4003,7 @@ except Exception as e:
             document.getElementById('run-btn').disabled = true;
             
             try {
+                // Set up output capture
                 await pyodide.runPython(`
 import sys
 from io import StringIO
@@ -3974,7 +4011,13 @@ sys.stdout = StringIO()
 sys.stderr = StringIO()
                 `);
 
+                // Check if code contains input() calls and show a helpful message
+                if (code.includes('input(')) {
+                    updateTerminal("📝 Code contains input() calls - interactive dialogs will appear\n");
+                }
+
                 try {
+                    // Execute the code asynchronously to handle input() properly
                     const result = await pyodide.runPythonAsync(code);
                 } catch (error) {
                     if (error.name === 'PythonError') {
@@ -3984,14 +4027,17 @@ sys.stderr = StringIO()
                     }
                 }
 
+                // Get the output
                 const stdout = await pyodide.runPython("sys.stdout.getvalue()");
                 const stderr = await pyodide.runPython("sys.stderr.getvalue()");
 
+                // Restore output streams
                 await pyodide.runPython(`
 sys.stdout = sys.__stdout__
 sys.stderr = sys.__stderr__
                 `);
 
+                // Display results
                 if (stdout) {
                     updateTerminal(stdout);
                 }
@@ -3999,16 +4045,17 @@ sys.stderr = sys.__stderr__
                     updateTerminal("Error: " + stderr + "\n", true);
                 }
                 if (!stdout && !stderr) {
-                    updateTerminal("Code executed successfully (no output)\n");
+                    updateTerminal("✅ Code executed successfully (no output)\n");
                 }
 
             } catch (error) {
-                updateTerminal("Error: " + error.message + "\n", true);
+                updateTerminal("❌ Execution Error: " + error.message + "\n", true);
+                console.error("Execution error details:", error);
             }
             
             document.getElementById('run-btn').disabled = false;
             
-            
+            // Auto-save user data
             if (isLoggedIn) {
                 saveUserData();
             }
@@ -4051,6 +4098,202 @@ sys.stderr = sys.__stderr__
                 }, 3000);
             }
         }
+
+        // Async version of input dialog for better Python integration
+        function showInputDialogAsync(prompt, resolve) {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                z-index: 10000;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                animation: fadeIn 0.3s ease-out;
+            `;
+
+            // Create modal dialog with pixel aesthetic
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: #000000;
+                border: 4px solid #ffffff;
+                padding: 30px;
+                max-width: 500px;
+                width: 90%;
+                font-family: 'Press Start 2P', monospace;
+                box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+                animation: slideIn 0.3s ease-out;
+                position: relative;
+            `;
+
+            // Add pixel-perfect styling and content
+            modal.innerHTML = `
+                <style>
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    @keyframes slideIn {
+                        from { transform: translateY(-50px) scale(0.9); opacity: 0; }
+                        to { transform: translateY(0) scale(1); opacity: 1; }
+                    }
+                    @keyframes pixelPulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.7; }
+                    }
+                    .input-modal-title {
+                        color: #ffffff;
+                        margin-bottom: 20px;
+                        font-size: 0.7rem;
+                        line-height: 1.5;
+                        text-shadow: 2px 2px 0 #000000;
+                        text-align: center;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        border-bottom: 3px solid #ffffff;
+                        padding-bottom: 15px;
+                        animation: pixelPulse 2s infinite;
+                    }
+                    .input-modal-prompt {
+                        color: #cccccc;
+                        margin-bottom: 20px;
+                        font-size: 0.6rem;
+                        line-height: 1.8;
+                        word-wrap: break-word;
+                        background: #111111;
+                        padding: 15px;
+                        border: 2px solid #333333;
+                    }
+                    .input-modal-field {
+                        width: calc(100% - 24px);
+                        padding: 12px;
+                        background: #000000;
+                        border: 3px solid #ffffff;
+                        color: #ffffff;
+                        font-family: 'Press Start 2P', monospace;
+                        font-size: 0.6rem;
+                        margin-bottom: 25px;
+                        outline: none;
+                        box-shadow: 3px 3px 0 #ffffff;
+                        transition: all 0.2s;
+                    }
+                    .input-modal-field:focus {
+                        transform: translate(-2px, -2px);
+                        box-shadow: 5px 5px 0 #ffffff;
+                        border-color: #ffffff;
+                    }
+                    .input-modal-buttons {
+                        display: flex;
+                        gap: 15px;
+                        justify-content: center;
+                    }
+                    .input-modal-btn {
+                        padding: 12px 24px;
+                        background: #000000;
+                        border: 3px solid #ffffff;
+                        color: #ffffff;
+                        cursor: pointer;
+                        font-family: 'Press Start 2P', monospace;
+                        font-size: 0.5rem;
+                        transition: all 0.2s;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        box-shadow: 3px 3px 0 #ffffff;
+                        position: relative;
+                    }
+                    .input-modal-btn:hover {
+                        background: #ffffff;
+                        color: #000000;
+                        transform: translate(2px, 2px);
+                        box-shadow: 1px 1px 0 #ffffff;
+                    }
+                    .input-modal-btn:active {
+                        transform: translate(3px, 3px);
+                        box-shadow: none;
+                    }
+                    .input-modal-btn::before {
+                        content: '';
+                        position: absolute;
+                        top: -3px;
+                        left: -3px;
+                        right: -3px;
+                        bottom: -3px;
+                        background: linear-gradient(45deg, transparent 48%, #ffffff 48%, #ffffff 52%, transparent 52%);
+                        background-size: 6px 6px;
+                        z-index: -1;
+                        opacity: 0.2;
+                    }
+                </style>
+                <div class="input-modal-title">🔍 Python Input Required</div>
+                <div class="input-modal-prompt">${prompt || 'Enter your input:'}</div>
+                <input type="text" class="input-modal-field" id="python-input-field" placeholder="Type here..." autocomplete="off">
+                <div class="input-modal-buttons">
+                    <button class="input-modal-btn" id="input-ok-btn">✓ Submit</button>
+                    <button class="input-modal-btn" id="input-cancel-btn">✗ Cancel</button>
+                </div>
+            `;
+
+            const inputField = modal.querySelector('#python-input-field');
+            const okButton = modal.querySelector('#input-ok-btn');
+            const cancelButton = modal.querySelector('#input-cancel-btn');
+
+            // Handle submission
+            function submitInput() {
+                const value = inputField.value;
+                document.body.removeChild(overlay);
+                resolve(value);
+            }
+
+            // Handle cancellation
+            function cancelInput() {
+                document.body.removeChild(overlay);
+                resolve('');
+            }
+
+            // Event listeners
+            okButton.addEventListener('click', submitInput);
+            cancelButton.addEventListener('click', cancelInput);
+
+            // Keyboard handling
+            inputField.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitInput();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelInput();
+                }
+            });
+
+            // Add to page and focus
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            // Focus with slight delay for better UX
+            setTimeout(() => {
+                inputField.focus();
+                inputField.select();
+            }, 150);
+        }
+
+        // Synchronous version using prompt as fallback
+        function showInputDialog(prompt) {
+            // Try to use a custom styled prompt-like dialog
+            try {
+                return window.prompt(prompt || 'Enter input:') || '';
+            } catch (e) {
+                return '';
+            }
+        }
+
+        // Make both functions available globally for Pyodide
+        window.showInputDialog = showInputDialog;
+        window.showInputDialogAsync = showInputDialogAsync;
 
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'Enter') {
@@ -5174,6 +5417,62 @@ sys.stderr = _old_stderr
                 e.preventDefault();
             });
         })();
+
+        // Add keyboard shortcuts for better UX
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+Enter or F5 to run code
+                if ((e.ctrlKey && e.key === 'Enter') || e.key === 'F5') {
+                    e.preventDefault();
+                    executeCode();
+                }
+                
+                // Ctrl+S to save (if logged in)
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    if (isLoggedIn) {
+                        saveUserData();
+                        updateTerminal("💾 Code auto-saved!\n");
+                    }
+                }
+                
+                // Escape to close modal (if any)
+                if (e.key === 'Escape') {
+                    const modal = document.getElementById('inputModal');
+                    if (modal && modal.style.display === 'block') {
+                        modal.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // Helper function to test input functionality
+        function testInputFunction() {
+            const testCode = `
+name = input("What's your name? ")
+age = input("How old are you? ")
+print(f"Hello {name}! You are {age} years old.")
+            `;
+            if (aceEditor) {
+                aceEditor.setValue(testCode);
+                updateTerminal("🧪 Test code loaded! Click 'Run Python Code' to test the input() function.\n");
+            }
+        }
+
+        // Initialize keyboard shortcuts when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            setupKeyboardShortcuts();
+            
+            // Show helpful tips on load
+            setTimeout(() => {
+                updateTerminal("🚀 PYTHON ASSEMBLY - Online Python IDE Ready!\n");
+                updateTerminal("💡 Keyboard Shortcuts:\n");
+                updateTerminal("   • Ctrl+Enter or F5: Run code\n");
+                updateTerminal("   • Ctrl+S: Save your work\n");
+                updateTerminal("   • ESC: Close dialogs\n");
+                updateTerminal("   • input() function works with popup dialogs\n\n");
+            }, 1000);
+        });
     </script>
 
 </body>
