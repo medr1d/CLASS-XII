@@ -37,6 +37,12 @@
     
     <!-- Pyodide - Optimized loading -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js" async defer></script>
+    
+    <!-- Pyodide modules -->
+    <script src="{% static 'homepage/js/pyodide-init.js' %}" defer></script>
+    <script src="{% static 'homepage/js/filesystem.js' %}" defer></script>
+    <script src="{% static 'homepage/js/code-executor.js' %}" defer></script>
+    
     <style>
         :root {
             --primary-color: #00aa00;
@@ -3319,200 +3325,31 @@ print("✨ Environment ready - happy coding!")`;
             if (isInitialized) return;
             
             try {
-                updateLoadingProgress("Loading Pyodide...");
-                pyodide = await loadPyodide({
-                    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
-                });
+                // Use the modular initialization
+                pyodide = await initializePyodide(updateLoadingProgress, updateTerminal);
                 
-                updateLoadingProgress("Loading Python packages...");
-                await pyodide.loadPackage(["numpy", "matplotlib", "pandas", "micropip"]);
+                // Setup file system
+                await setupVirtualFileSystem(pyodide, updateLoadingProgress);
                 
-                updateLoadingProgress("Configuring matplotlib...");
-                try {
-                    await pyodide.runPythonAsync(`
-import matplotlib
-import matplotlib.pyplot as plt
-import io, base64, warnings
-warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
-matplotlib.use('Agg')
-
-def show_plot():
-    try:
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png', bbox_inches='tight', dpi=96)
-        buf.seek(0)
-        img_str = base64.b64encode(buf.read()).decode()
-        buf.close()
-        print(f'<img src="data:image/png;base64,{img_str}" style="max-width:100%;height:auto;"/>')
-        plt.close()
-    except Exception as err:
-        print(f"Plot error: {err}")
-        plt.close()
-
-plt.show = show_plot
-print("Matplotlib ready")
-`);
-                } catch (matplotError) {
-                    console.warn("Matplotlib setup failed:", matplotError);
-                    await pyodide.runPythonAsync(`
-import sys
-
-class MPLStub:
-    def __getattr__(s, n):
-        return lambda *a, **k: s
-    def __call__(s, *a, **k):
-        return s
-
-sys.modules['matplotlib'] = MPLStub()
-sys.modules['matplotlib.pyplot'] = MPLStub()
-print("Matplotlib stub loaded")
-`);
-                }
-                
-                updateLoadingProgress("Setting up file system...");
-                await setupVirtualFiles();
-                
-                updateLoadingProgress("Configuring input/output...");
-                await pyodide.runPythonAsync(`
-import builtins, asyncio
-_orig_open = builtins.open
-_orig_input = builtins.input
-
-async def async_input(prompt=""):
-    import js
-    from pyodide.ffi import create_proxy
-    def make_promise():
-        return js.Promise.new(create_proxy(lambda res, rej: js.showInputDialogAsync(prompt, res)))
-    result = await make_promise()
-    return result if result else ""
-
-def sync_input(prompt=""):
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            import js
-            return js.showInputDialog(prompt) or ""
-        return loop.run_until_complete(async_input(prompt))
-    except:
-        import js
-        return js.showInputDialog(prompt) or ""
-
-builtins.input = sync_input
-
-def safe_open(fname, mode='r', *args, **kwargs):
-    import os
-    allowed = ['text.txt', 'tester.csv', 'binary.dat']
-    allowed_paths = ['/lib/python3.11/', '/lib/python311.zip/', '/usr/', '<']
-    
-    if os.path.basename(fname) in allowed:
-        return _orig_open(fname, mode, *args, **kwargs)
-    
-    for path in allowed_paths:
-        if fname.startswith(path) or path in fname:
-            return _orig_open(fname, mode, *args, **kwargs)
-    
-    raise PermissionError(f"Cannot open '{fname}'. Only {allowed} allowed.")
-
-builtins.open = safe_open
-print("Environment configured")
-`);
-                
-                updateLoadingProgress("Installing micropip packages...");
-                try {
-                    await pyodide.runPythonAsync(`
-import micropip
-
-async def install_package(pkg):
-    try:
-        print(f"Installing {pkg}...")
-        await micropip.install(pkg)
-        print(f"✓ {pkg} installed")
-        return True
-    except Exception as err:
-        print(f"✗ {pkg} failed: {err}")
-        return False
-
-print("Package installer ready")
-print("Use: await install_package('package_name')")
-`);
-                } catch (micropipError) {
-                    console.warn("Micropip setup failed:", micropipError);
-                }
+                // Setup input/output handlers
+                await setupInputOutputHandlers();
                 
                 isInitialized = true;
-                updateTerminal("✓ Python environment loaded\n");
-                updateTerminal("Packages: numpy, pandas, matplotlib\n");
-                updateTerminal("Use plt.show() to display plots\n\n");
-                
                 setTimeout(() => showMainInterface(), 500);
                 
             } catch (error) {
-                console.error("Initialization failed:", error);
-                updateTerminal("✗ Failed to initialize: " + error.toString() + "\n");
-                updateTerminal("Please refresh the page\n");
+                console.error("Init failed:", error);
+                updateTerminal("Failed to initialize: " + error.message + "\n");
                 setTimeout(() => showMainInterface(), 2000);
             }
         }
 
         
-        async function setupVirtualFiles() {
-            try {
-                // Default file contents
-                const defaultFiles = {
-                    'text.txt': `Hello from Python Environment!
-This is your personal text file.
-You can read and modify this file in your Python code.
-Example: open('text.txt', 'r').read()`,
-                    'tester.csv': `name,age,city,score
-Alice,25,NYC,85
-Bob,30,LA,92
-Carol,28,Chicago,78
-David,35,Houston,95`,
-                    'binary.dat': 'Sample binary data for Python processing'
-                };
-
-                // Try to fetch user files, fallback to defaults
-                let filesData = {};
-                try {
-                    const response = await fetch('/python/get-files/');
-                    if (response.ok) {
-                        filesData = await response.json();
-                    }
-                } catch (e) {
-                    console.log('Using default files (server unavailable)');
-                }
-
-                // Write files to Pyodide filesystem
-                for (const [filename, defaultContent] of Object.entries(defaultFiles)) {
-                    const content = filename === 'text.txt' ? (filesData.text_content || defaultContent) :
-                                   filename === 'tester.csv' ? (filesData.csv_content || defaultContent) :
-                                   (filesData.binary_content || defaultContent);
-                    
-                    try {
-                        pyodide.FS.writeFile(filename, content);
-                    } catch (fsError) {
-                        console.warn(`Failed to write ${filename}:`, fsError);
-                    }
-                }
-
-                // Set global variables for file viewers
-                globalThis.binaryContent = filesData.binary_content || defaultFiles['binary.dat'];
-                globalThis.binaryHexData = filesData.binary_hex || 'Binary data (hex view not available)';
-                
-                updateFileViewers();
-                
-            } catch (error) {
-                console.error('Virtual file setup error:', error);
-                // Minimal file setup on error
-                try {
-                    pyodide.FS.writeFile('text.txt', 'Hello World!');
-                    pyodide.FS.writeFile('tester.csv', 'name,value\ntest,1');
-                } catch (e) {
-                    console.warn('Basic file setup failed:', e);
-                }
-            }
+        // Helper function to setup input/output handlers
+        async function setupInputOutputHandlers() {
+            if (!pyodide || !isInitialized) return;
             
-            
+            // Setup input state
             globalThis.inputState = {
                 waiting: false,
                 result: null,
@@ -3537,186 +3374,26 @@ David,35,Houston,95`,
             
             globalThis.getInputResult = function() {
                 const result = globalThis.inputState.result;
-                
                 globalThis.inputState.waiting = false;
                 globalThis.inputState.result = null;
                 globalThis.inputState.ready = false;
                 return result || "";
             };
             
-            
-            pyodide.globals.set("startInput", globalThis.startInput);
-            pyodide.globals.set("checkInput", globalThis.checkInput);
-            pyodide.globals.set("getInputResult", globalThis.getInputResult);
-            
-            
             globalThis.refreshFileList = function() {
-                loadScriptList();
-            };
-            pyodide.globals.set("refreshFileList", globalThis.refreshFileList);
-            
-            // Only set up file wrapper if main initialization succeeded
-            if (isInitialized) {
-                try {
-                    await pyodide.runPython(`
-import builtins
-import js
-
-# Store original open function
-_original_open = builtins.open
-
-# Create a wrapper that automatically refreshes file list after writes
-class AutoRefreshFileWrapper:
-    def __init__(self, file_obj, mode, filename):
-        self.file_obj = file_obj
-        self.mode = mode
-        self.filename = filename
-        self.is_write_mode = 'w' in mode or 'a' in mode
-        
-    def __enter__(self):
-        return self
-        
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        result = self.file_obj.__exit__(exc_type, exc_val, exc_tb)
-        # Auto-refresh if this was a write operation
-        if self.is_write_mode:
-            try:
-                js.refreshFileList()
-                print(f"File list auto-refreshed after modifying {self.filename}")
-            except:
-                pass
-        return result
-        
-    def write(self, data):
-        result = self.file_obj.write(data)
-        return result
-        
-    def close(self):
-        result = self.file_obj.close()
-        # Auto-refresh on close if it was a write mode
-        if self.is_write_mode:
-            try:
-                js.refreshFileList()
-                print(f"File list auto-refreshed after closing {self.filename}")
-            except:
-                pass
-        return result
-        
-    # Delegate all other attributes to the wrapped file object
-    def __getattr__(self, name):
-        return getattr(self.file_obj, name)
-
-def enhanced_open(filename, mode='r', *args, **kwargs):
-    file_obj = _original_open(filename, mode, *args, **kwargs)
-    # Only wrap write operations for auto-refresh
-    if 'w' in mode or 'a' in mode:
-        return AutoRefreshFileWrapper(file_obj, mode, filename)
-    else:
-        return file_obj
-
-# Replace built-in open with auto-refresh version
-builtins.open = enhanced_open
-
-def refresh_files():
-    """Manually refresh the file list"""
-    js.refreshFileList()
-    print("File list refreshed!")
-
-def write_file(filename, content, mode='w'):
-    """Helper function to write files and auto-refresh"""
-    with _original_open(filename, mode) as f:
-        f.write(content)
-    refresh_files()
-    return f"Wrote to {filename} and refreshed file list"
-
-def simple_input(prompt=''):
-    """Blocking input function that waits for user input"""
-    import time
-    try:
-        # Print the prompt
-        print(prompt, end='', flush=True)
-        
-        # Start the input process
-        js.startInput(str(prompt))
-        
-        # Wait for input with timeout (20 seconds)
-        timeout_seconds = 20
-        start_time = time.time()
-        
-        while not js.checkInput():
-            # Check timeout
-            if time.time() - start_time > timeout_seconds:
-                print(f"\\n[Input timeout after {timeout_seconds} seconds - using empty string]")
-                js.getInputResult()  # Clear the state
-                return ""
-            
-            # Small delay to prevent busy waiting
-            time.sleep(0.1)
-        
-        # Get the result
-        result = js.getInputResult()
-        print(f"\\n[Input received: '{result}']")
-        return result
-        
-    except Exception as e:
-        print(f"Input error: {e}")
-        return ""
-
-def check_input():
-    """Check if input is ready"""
-    return js.checkInput()
-
-def get_input():
-    """Get the input result"""
-    if js.checkInput():
-        return js.getInputResult()
-    else:
-        return None
-
-def refresh_files():
-    """Manually refresh the file list"""
-    js.refreshFileList()
-    print("File list refreshed!")
-
-# Replace built-in input
-builtins.input = simple_input
-builtins.check_input = check_input
-builtins.get_input = get_input
-builtins.refresh_files = refresh_files
-builtins.write_file = write_file
-
-print("Enhanced input and file system ready!")
-print("Usage:")
-print("1. Call input('prompt') - execution pauses until you provide input")
-print("2. Type your answer in the input field that appears and press Enter")
-print("3. Code execution resumes automatically with your input")
-print("4. Use write_file(filename, content) for auto-refresh")
-print("5. Use refresh_files() to manually refresh the file list")
-print("Example:")
-print("  name = input('What is your name? ')  # Pauses here for input")
-print("  print(f'Hello, {name}!')  # Continues after you type and press Enter")
-print("  write_file('text.txt', 'Hello World!')  # Auto-refreshes")
-
-# Verify files exist
-try:
-    with open('text.txt', 'r') as f:
-        content = f.read()
-        print(f"text.txt loaded ({len(content)} characters)")
-    with open('tester.csv', 'r') as f:
-        content = f.read()
-        print(f"tester.csv loaded ({len(content)} characters)")
-    with open('binary.dat', 'r') as f:
-        content = f.read()
-        print(f"binary.dat loaded ({len(content)} characters)")
-except Exception as e:
-    print(f"Error setting up files: {e}")
-            `);
-                } catch (fileWrapperError) {
-                    console.warn("File wrapper setup failed:", fileWrapperError);
-                    // Continue without file wrapper functionality
+                if (typeof loadScriptList === 'function') {
+                    loadScriptList();
                 }
-            } else {
-                console.log("Skipping file wrapper setup - main initialization failed");
+            };
+            
+            // Expose to Python
+            try {
+                pyodide.globals.set("startInput", globalThis.startInput);
+                pyodide.globals.set("checkInput", globalThis.checkInput);
+                pyodide.globals.set("getInputResult", globalThis.getInputResult);
+                pyodide.globals.set("refreshFileList", globalThis.refreshFileList);
+            } catch (error) {
+                console.warn("Failed to expose functions to Python:", error);
             }
         }
 
@@ -4225,66 +3902,17 @@ except Exception as e:
             }
 
             const code = getEditorValue();
-            if (!code.trim()) {
-                updateTerminal("No code to execute.\n");
-                return;
-            }
-
-            updateTerminal(`\n>>> Executing code...\n`);
             document.getElementById('run-btn').disabled = true;
             
             try {
-                // Set up output capture
-                await pyodide.runPython(`
-import sys
-from io import StringIO
-sys.stdout = StringIO()
-sys.stderr = StringIO()
-                `);
-
-                // Check if code contains input() calls and show a helpful message
-                if (code.includes('input(')) {
-                    updateTerminal("📝 Code contains input() calls - interactive dialogs will appear\n");
-                }
-
-                try {
-                    // Execute the code asynchronously to handle input() properly
-                    const result = await pyodide.runPythonAsync(code);
-                } catch (error) {
-                    if (error.name === 'PythonError') {
-                        updateTerminal("Error: " + error.message + "\n", true);
-                    } else {
-                        updateTerminal("Error: " + error.toString() + "\n", true);
-                    }
-                }
-
-                // Get the output
-                const stdout = await pyodide.runPython("sys.stdout.getvalue()");
-                const stderr = await pyodide.runPython("sys.stderr.getvalue()");
-
-                // Restore output streams
-                await pyodide.runPython(`
-sys.stdout = sys.__stdout__
-sys.stderr = sys.__stderr__
-                `);
-
-                // Display results
-                if (stdout) {
-                    updateTerminal(stdout);
-                }
-                if (stderr) {
-                    updateTerminal("Error: " + stderr + "\n", true);
-                }
-                if (!stdout && !stderr) {
-                    updateTerminal("✅ Code executed successfully (no output)\n");
-                }
-
+                await executeUserCode(code, pyodide, updateTerminal);
             } catch (error) {
-                updateTerminal("❌ Execution Error: " + error.message + "\n", true);
-                console.error("Execution error details:", error);
+                updateTerminal("Execution error: " + error.message + "\n", true);
+                console.error("Execution error:", error);
             }
             
             document.getElementById('run-btn').disabled = false;
+        }
             
             // Auto-save user data
             if (isLoggedIn) {
