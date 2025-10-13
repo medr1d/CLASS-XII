@@ -1956,7 +1956,7 @@
         }
 
         .package-manager.collapsed {
-            width: 160px;
+            width: 200px;
             height: auto;
         }
 
@@ -5153,7 +5153,7 @@ sys.stderr = _old_stderr
                 
             } catch (error) {
                 const executionTime = (performance.now() - startTime).toFixed(2);
-                outputElement.innerHTML = `<span style="color: #ff4444;">JavaScript Error: ${error.message}</span>\n<span style="color: #666; font-size: 11px;">⏱️ Failed after ${executionTime}ms</span>`;
+                outputElement.innerHTML = `<span style="color: #ff4444;">JavaScript Error: ${error.message}</span>\n<span style="color: #666; font-size: 11px;">[TIME] Failed after ${executionTime}ms</span>`;
                 outputElement.style.color = '#ff4444';
                 outputElement.classList.add('has-output');
             }
@@ -5734,7 +5734,7 @@ sys.stderr = _old_stderr
                     e.preventDefault();
                     if (isLoggedIn) {
                         saveUserData();
-                        updateTerminal("💾 Code auto-saved!\n");
+                        updateTerminal("[SAVE] Code auto-saved!\n");
                     }
                 }
                 
@@ -5757,7 +5757,7 @@ print(f"Hello {name}! You are {age} years old.")
             `;
             if (aceEditor) {
                 aceEditor.setValue(testCode);
-                updateTerminal("🧪 Test code loaded! Click 'Run Python Code' to test the input() function.\n");
+                updateTerminal("[TEST] Test code loaded! Click 'Run Python Code' to test the input() function.\n");
             }
         }
 
@@ -5767,8 +5767,8 @@ print(f"Hello {name}! You are {age} years old.")
             
             // Show helpful tips on load
             setTimeout(() => {
-                updateTerminal("🚀 PYTHON ASSEMBLY - Online Python IDE Ready!\n");
-                updateTerminal("💡 Keyboard Shortcuts:\n");
+                updateTerminal("[READY] PYTHON ASSEMBLY - Online Python IDE Ready!\n");
+                updateTerminal("[INFO] Keyboard Shortcuts:\n");
                 updateTerminal("   • Ctrl+Enter or F5: Run code\n");
                 updateTerminal("   • Ctrl+S: Save your work\n");
                 updateTerminal("   • ESC: Close dialogs\n");
@@ -5778,12 +5778,11 @@ print(f"Hello {name}! You are {age} years old.")
     </script>
 
     <!-- Package Manager UI -->
-    <div class="package-manager" id="package-manager">
+    <div class="package-manager collapsed" id="package-manager">
         <div class="pm-header" id="pm-header">
             <div class="pm-title">PACKAGE MANAGER</div>
             <div class="pm-controls">
-                <button class="pm-control-btn" onclick="togglePackageManager()" title="Collapse">_</button>
-                <button class="pm-control-btn" onclick="closePackageManager()" title="Close">X</button>
+                <button class="pm-control-btn" onclick="togglePackageManager()" title="Toggle">▼</button>
             </div>
         </div>
         <div class="pm-body" id="pm-body">
@@ -5940,12 +5939,17 @@ print('Package ${packageName} installed successfully!')
         
         function togglePackageManager() {
             const pm = document.getElementById('package-manager');
+            const btn = event.target;
             pm.classList.toggle('collapsed');
-        }
-        
-        function closePackageManager() {
-            const pm = document.getElementById('package-manager');
-            pm.style.display = 'none';
+            
+            // Change button icon
+            if (pm.classList.contains('collapsed')) {
+                btn.textContent = '▼';
+                btn.title = 'Expand';
+            } else {
+                btn.textContent = '▲';
+                btn.title = 'Collapse';
+            }
         }
         
         // Make package manager draggable

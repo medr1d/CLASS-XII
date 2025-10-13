@@ -244,20 +244,29 @@ def account_view(request):
 @login_required
 def update_theme(request):
     if request.method == 'POST':
-        theme = request.POST.get('theme', 'default')
+        # Handle both JSON and form data
+        if request.content_type == 'application/json':
+            try:
+                import json
+                data = json.loads(request.body)
+                theme = data.get('theme', 'default')
+            except (json.JSONDecodeError, ValueError):
+                return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+        else:
+            theme = request.POST.get('theme', 'default')
+        
         from homepage.models import UserProfile
-        from django.http import JsonResponse
 
         allowed = ['default', 'greydom', 'cloud', 'chaos', 'lebron']
         if theme not in allowed:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/x-www-form-urlencoded':
-                return JsonResponse({'success': False, 'error': 'Invalid theme'})
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+                return JsonResponse({'success': False, 'error': 'Invalid theme'}, status=400)
             messages.error(request, 'Invalid theme selected.')
             return redirect('auth_app:account')
 
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         if theme == 'lebron' and not profile.paidUser:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/x-www-form-urlencoded':
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
                 return JsonResponse({'success': False, 'error': 'LeBron theme is available only for premium users.'}, status=403)
             messages.error(request, 'LeBron theme requires a premium account.')
             return redirect('auth_app:account')
@@ -265,7 +274,7 @@ def update_theme(request):
         profile.theme = theme
         profile.save(update_fields=['theme'])
 
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/x-www-form-urlencoded':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
             return JsonResponse({'success': True, 'theme': theme})
 
         messages.success(request, f'Theme updated to {theme.title()}!')

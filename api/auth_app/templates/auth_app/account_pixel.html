@@ -967,21 +967,47 @@
 
         // Functions
         function updateTheme(theme) {
+            // Get CSRF token from cookie
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            
+            const csrftoken = getCookie('csrftoken');
+            
             fetch('{% url "auth_app:update_theme" %}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
-                                   document.querySelector('meta[name=csrf-token]')?.content
+                    'X-CSRFToken': csrftoken
                 },
                 body: JSON.stringify({theme: theme})
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     showNotification('Theme updated successfully!', 'success');
+                    // Reload page to apply new theme
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
                 } else {
-                    showNotification('Failed to update theme', 'error');
+                    showNotification(data.error || 'Failed to update theme', 'error');
                 }
             })
             .catch(error => {
