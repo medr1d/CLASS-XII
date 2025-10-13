@@ -10,6 +10,9 @@
     <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
     <link rel="shortcut icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
     
+    <!-- Press Start 2P Font for Pixel Aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-4GQ8NQ38P5"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -25,14 +28,17 @@
             --secondary-bg: #1a1a1a;
             --tertiary-bg: #2a2a2a;
             --accent-color: #ffffff;
-            --success-color: #ffffff;
-            --warning-color: #f7b731;
-            --error-color: #e55039;
+            --success-color: #00ff00;
+            --warning-color: #ffff00;
+            --error-color: #ff0000;
             --text-primary: #ffffff;
             --text-secondary: #cccccc;
             --text-muted: #888888;
             --border-color: #333333;
-            --sidebar-width: 280px;
+            --sidebar-width: 320px;
+            --pixel-border: 2px;
+            --pixel-radius: 0px;
+            --shadow-color: rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -42,102 +48,148 @@
         }
 
         body {
-            font-family: 'Courier New', monospace;
+            font-family: 'Press Start 2P', 'Courier New', monospace;
             background: var(--primary-bg);
             color: var(--text-primary);
             overflow-x: hidden;
             position: relative;
             height: 100vh;
+            font-size: 12px;
+            line-height: 1.6;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
         }
 
-        /* Simple Black Background */
+        /* Pixel Matrix Background */
         .background-animation {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -2;
+            z-index: -3;
             background: #000000;
+            background-image: 
+                radial-gradient(circle at 25px 25px, #ffffff 1px, transparent 0),
+                radial-gradient(circle at 75px 75px, #333333 1px, transparent 0);
+            background-size: 100px 100px;
+            animation: matrixScroll 20s linear infinite;
         }
 
-        /* Floating Particles */
-        .particles {
+        @keyframes matrixScroll {
+            0% { background-position: 0 0, 50px 50px; }
+            100% { background-position: 0 100px, 50px 150px; }
+        }
+
+        /* Pixel Rain Effect */
+        .pixel-rain {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
+            z-index: -2;
             pointer-events: none;
+            overflow: hidden;
         }
 
-        .particle {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: var(--accent-color);
-            border-radius: 50%;
-            opacity: 0.3;            
-            animation: float 10s infinite linear;
-        }
-
-        @keyframes float {
-            0% {
-                transform: translateY(100vh) rotate(0deg);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.3;
-            }
-            90% {
-                opacity: 0.3;
-            }
-            100% {
-                transform: translateY(-50px) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
-        /* Additional Animated Elements */
-        .floating-dots {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        .floating-dot {
+        .pixel-drop {
             position: absolute;
             width: 4px;
             height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: floatDot 10s infinite linear;
+            background: var(--accent-color);
+            border: 1px solid transparent;
+            animation: pixelFall 8s infinite linear;
+            opacity: 0.6;
         }
 
-        @keyframes floatDot {
+        @keyframes pixelFall {
             0% {
-                transform: translateY(100vh) translateX(0px) scale(0);
+                transform: translateY(-10px);
                 opacity: 0;
             }
             10% {
-                opacity: 0.5;
-                transform: scale(1);
+                opacity: 0.8;
             }
             90% {
-                opacity: 0.5;
+                opacity: 0.4;
             }
             100% {
-                transform: translateY(-50px) translateX(50px) scale(0);
+                transform: translateY(calc(100vh + 10px));
                 opacity: 0;
             }
         }
 
-        /* Pulsing Grid Lines */
+        /* Glitch Scanlines */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background: linear-gradient(
+                transparent 50%,
+                rgba(0, 255, 0, 0.03) 50%
+            );
+            background-size: 100% 4px;
+            animation: scanlineMove 0.1s linear infinite;
+        }
+
+        @keyframes scanlineMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 4px; }
+        }
+
+        /* Floating Pixel Blocks */
+        .floating-pixels {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .pixel-block {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-color);
+            border: 1px solid var(--text-secondary);
+            animation: pixelFloat 12s infinite linear;
+            opacity: 0.3;
+        }
+
+        .pixel-block.green { background: var(--success-color); }
+        .pixel-block.yellow { background: var(--warning-color); }
+        .pixel-block.red { background: var(--error-color); }
+
+        @keyframes pixelFloat {
+            0% {
+                transform: translateY(100vh) translateX(0px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 0.8;
+                transform: translateY(50vh) translateX(20px) rotate(180deg);
+            }
+            90% {
+                opacity: 0.4;
+            }
+            100% {
+                transform: translateY(-50px) translateX(40px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Pixel Grid Lines */
         .grid-lines {
             position: fixed;
             top: 0;
@@ -147,108 +199,158 @@
             z-index: -1;
             pointer-events: none;
             background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: gridPulse 5s ease-in-out infinite;
+                linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+            background-size: 32px 32px;
+            animation: gridGlow 3s ease-in-out infinite;
         }
 
-        @keyframes gridPulse {
+        @keyframes gridGlow {
             0%, 100% {
-                opacity: 0.1;
+                opacity: 0.2;
+                filter: brightness(1);
             }
             50% {
-                opacity: 0.3;
+                opacity: 0.6;
+                filter: brightness(1.5);
             }
         }
 
-        /* Hamburger Menu Button */
+        /* Pixel Menu Button */
         .menu-toggle {
             position: fixed;
-            top: 30px;
-            left: 30px;
+            top: 20px;
+            left: 20px;
             z-index: 1001;
-            background: transparent;
-            border: none;
+            background: var(--primary-bg);
+            border: var(--pixel-border) solid var(--accent-color);
             cursor: pointer;
-            padding: 15px;
-            border-radius: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            width: 56px;
+            height: 56px;
+            transition: all 0.2s ease;
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 255, 255, 0.2),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+                4px 4px 0 rgba(255, 255, 255, 0.1);
         }
 
         .menu-toggle:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--accent-color);
-            transform: scale(1.05);
+            background: var(--secondary-bg);
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.7),
+                6px 6px 0 rgba(255, 255, 255, 0.15);
+            transform: translate(-1px, -1px);
+        }
+
+        .menu-toggle:active {
+            box-shadow: 
+                inset -2px -2px 0 rgba(255, 255, 255, 0.2),
+                inset 2px 2px 0 rgba(0, 0, 0, 0.5),
+                2px 2px 0 rgba(255, 255, 255, 0.1);
+            transform: translate(1px, 1px);
         }
 
         .hamburger {
-            width: 24px;
-            height: 18px;
+            width: 20px;
+            height: 16px;
             position: relative;
             transform: rotate(0deg);
-            transition: 0.5s ease-in-out;
+            transition: 0.3s ease;
         }
 
         .hamburger span {
             display: block;
             position: absolute;
-            height: 2px;
+            height: 3px;
             width: 100%;
             background: var(--text-primary);
-            border-radius: 1px;
             opacity: 1;
             left: 0;
             transform: rotate(0deg);
-            transition: 0.25s ease-in-out;
+            transition: 0.2s ease;
+            box-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
         }
 
         .hamburger span:nth-child(1) { top: 0px; }
-        .hamburger span:nth-child(2), .hamburger span:nth-child(3) { top: 8px; }
-        .hamburger span:nth-child(4) { top: 16px; }
+        .hamburger span:nth-child(2), .hamburger span:nth-child(3) { top: 6px; }
+        .hamburger span:nth-child(4) { top: 12px; }
 
         .menu-toggle.active .hamburger span:nth-child(1) {
-            top: 8px;
+            top: 6px;
             width: 0%;
             left: 50%;
         }
 
         .menu-toggle.active .hamburger span:nth-child(2) {
             transform: rotate(45deg);
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
         }
 
         .menu-toggle.active .hamburger span:nth-child(3) {
             transform: rotate(-45deg);
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
         }
 
         .menu-toggle.active .hamburger span:nth-child(4) {
-            top: 8px;
+            top: 6px;
             width: 0%;
             left: 50%;
         }
 
-        /* Side Menu */
+        /* Pixel Side Menu */
         .sidebar {
             position: fixed;
             top: 0;
             left: 0;
             width: var(--sidebar-width);
             height: 100vh;
-            background: rgba(26, 26, 26, 0.95);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--primary-bg);
+            border-right: var(--pixel-border) solid var(--accent-color);
             transform: translateX(-100%);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s ease;
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            padding: 100px 0 30px 0;
+            padding: 80px 0 20px 0;
+            box-shadow: 
+                inset -4px 0 0 rgba(255, 255, 255, 0.1),
+                8px 0 16px rgba(0, 0, 0, 0.5);
         }
 
         .sidebar.active {
             transform: translateX(0);
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--secondary-bg);
+            border-bottom: var(--pixel-border) solid var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar::after {
+            content: 'MENU';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-color);
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px currentColor;
         }
 
         .sidebar-overlay {
@@ -257,8 +359,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.8);
             z-index: 999;
             opacity: 0;
             visibility: hidden;
@@ -272,15 +373,15 @@
 
         .menu-items {
             list-style: none;
-            padding: 0 20px;
+            padding: 0 16px;
             flex: 1;
         }
 
         .menu-item {
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             opacity: 0;
             transform: translateX(-20px);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .sidebar.active .menu-item {
@@ -288,57 +389,74 @@
             transform: translateX(0);
         }
 
-        .sidebar.active .menu-item:nth-child(1) { transition-delay: 0.1s; }
-        .sidebar.active .menu-item:nth-child(2) { transition-delay: 0.15s; }
-        .sidebar.active .menu-item:nth-child(3) { transition-delay: 0.2s; }
-        .sidebar.active .menu-item:nth-child(4) { transition-delay: 0.25s; }
-        .sidebar.active .menu-item:nth-child(5) { transition-delay: 0.3s; }
-        .sidebar.active .menu-item:nth-child(6) { transition-delay: 0.35s; }
+        .sidebar.active .menu-item:nth-child(1) { transition-delay: 0.05s; }
+        .sidebar.active .menu-item:nth-child(2) { transition-delay: 0.1s; }
+        .sidebar.active .menu-item:nth-child(3) { transition-delay: 0.15s; }
+        .sidebar.active .menu-item:nth-child(4) { transition-delay: 0.2s; }
+        .sidebar.active .menu-item:nth-child(5) { transition-delay: 0.25s; }
+        .sidebar.active .menu-item:nth-child(6) { transition-delay: 0.3s; }
 
         .menu-link {
             display: flex;
             align-items: center;
-            padding: 18px 20px;
+            padding: 16px;
             color: var(--text-secondary);
             text-decoration: none;
-            border-radius: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 16px;
-            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            font-size: 8px;
+            letter-spacing: 1px;
             position: relative;
-            overflow: hidden;
+            border: var(--pixel-border) solid transparent;
+            background: var(--primary-bg);
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 255, 255, 0.1),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.3);
         }
 
         .menu-link::before {
             content: '';
             position: absolute;
             top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.5s ease;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .menu-link:hover::before {
-            left: 100%;
+            opacity: 1;
         }
 
         .menu-link:hover {
-            color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.1);
-            border-left: 3px solid var(--accent-color);
-            transform: translateX(5px);
+            color: var(--accent-color);
+            border-color: var(--success-color);
+            box-shadow: 
+                inset 2px 2px 0 rgba(0, 255, 0, 0.2),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+                0 0 8px rgba(0, 255, 0, 0.3);
+            text-shadow: 0 0 4px currentColor;
+            transform: translateX(2px);
+        }
+
+        .menu-link:active {
+            box-shadow: 
+                inset -2px -2px 0 rgba(255, 255, 255, 0.1),
+                inset 2px 2px 0 rgba(0, 0, 0, 0.3);
+            transform: translateX(0);
         }
 
         .menu-icon {
-            margin-right: 15px;
-            font-size: 18px;
-            width: 24px;
+            margin-right: 12px;
+            font-size: 10px;
+            width: 20px;
             text-align: center;
+            color: var(--success-color);
+            text-shadow: 0 0 4px currentColor;
         }
 
-        /* Main Content */
+        /* Pixel Main Content */
         .main-content {
             height: 100vh;
             display: flex;
@@ -348,24 +466,46 @@
             text-align: center;
             position: relative;
             z-index: 1;
+            padding: 20px;
         }
 
         .title-container {
             position: relative;
-            margin-bottom: 50px;
+            margin-bottom: 60px;
+            padding: 40px;
+            background: var(--primary-bg);
+            border: var(--pixel-border) solid var(--accent-color);
+            box-shadow: 
+                inset 4px 4px 0 rgba(255, 255, 255, 0.1),
+                inset -4px -4px 0 rgba(0, 0, 0, 0.5),
+                8px 8px 0 var(--secondary-bg),
+                12px 12px 20px rgba(0, 0, 0, 0.3);
+            animation: containerFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes containerFloat {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            33% {
+                transform: translateY(-4px) rotate(0.5deg);
+            }
+            66% {
+                transform: translateY(2px) rotate(-0.3deg);
+            }
         }
 
         .main-title {
-            font-size: clamp(48px, 8vw, 120px);
-            font-weight: 300;
-            letter-spacing: 8px;
+            font-size: clamp(20px, 4vw, 40px);
+            font-weight: normal;
+            letter-spacing: 4px;
             text-transform: uppercase;
-            background: linear-gradient(135deg, var(--text-primary), var(--accent-color), var(--text-primary));
-            background-size: 300% 300%;
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: titleGlow 4s ease-in-out infinite;
+            color: var(--accent-color);
+            text-shadow: 
+                2px 2px 0 var(--success-color),
+                4px 4px 0 var(--secondary-bg),
+                0 0 20px var(--success-color);
+            animation: pixelGlow 3s ease-in-out infinite;
             position: relative;
             min-height: 1.2em;
             display: inline-block;
@@ -373,48 +513,70 @@
 
         .typing-cursor {
             display: inline-block;
-            width: 3px;
+            width: 4px;
             height: 0.9em;
-            background: var(--accent-color);
+            background: var(--success-color);
             margin-left: 8px;
-            animation: blink 0.7s infinite;
+            animation: pixelBlink 0.8s infinite;
             vertical-align: text-bottom;
+            box-shadow: 0 0 8px currentColor;
         }
 
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
+        @keyframes pixelBlink {
+            0%, 50% { 
+                opacity: 1; 
+                background: var(--success-color);
+                box-shadow: 0 0 8px currentColor;
+            }
+            51%, 100% { 
+                opacity: 0; 
+                background: transparent;
+                box-shadow: none;
+            }
         }
 
-        @keyframes titleGlow {
+        @keyframes pixelGlow {
             0%, 100% {
-                background-position: 0% 50%;
-                text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+                text-shadow: 
+                    2px 2px 0 var(--success-color),
+                    4px 4px 0 var(--secondary-bg),
+                    0 0 20px var(--success-color);
+                filter: brightness(1);
             }
             50% {
-                background-position: 100% 50%;
-                text-shadow: 0 0 50px rgba(255, 255, 255, 0.5);
+                text-shadow: 
+                    2px 2px 0 var(--warning-color),
+                    4px 4px 0 var(--secondary-bg),
+                    0 0 30px var(--warning-color);
+                filter: brightness(1.2);
             }
         }
 
         .subtitle {
-            font-size: 18px;
+            font-size: 10px;
             color: var(--text-secondary);
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             text-transform: uppercase;
             opacity: 0;
             transform: translateY(20px);
-            animation: fadeInUp 1.5s ease 0.5s forwards;
+            animation: pixelFadeInUp 2s ease 1s forwards;
+            margin-top: 20px;
+            padding: 12px 20px;
+            border: 1px solid var(--border-color);
+            background: var(--secondary-bg);
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 255, 255, 0.1),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.3);
         }
 
-        @keyframes fadeInUp {
+        @keyframes pixelFadeInUp {
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
 
-        /* Geometric Shapes */
+        /* Pixel Geometric Elements */
         .geometric-shapes {
             position: fixed;
             top: 0;
@@ -427,76 +589,364 @@
 
         .shape {
             position: absolute;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            border: var(--pixel-border) solid var(--success-color);
+            background: var(--primary-bg);
+            box-shadow: 
+                inset 2px 2px 0 rgba(0, 255, 0, 0.2),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+                0 0 16px rgba(0, 255, 0, 0.3);
         }
 
         .shape-1 {
-            width: 200px;
-            height: 200px;
-            top: 20%;
+            width: 80px;
+            height: 80px;
+            top: 15%;
             right: 10%;
-            animation: floatRotate 10s infinite linear;
+            animation: pixelRotate 8s infinite linear;
         }
 
         .shape-2 {
-            width: 150px;
-            height: 150px;
-            bottom: 20%;
-            left: 15%;
-            animation: floatRotate 12s infinite linear reverse;
+            width: 60px;
+            height: 60px;
+            bottom: 25%;
+            left: 12%;
+            animation: pixelRotate 10s infinite linear reverse;
+            border-color: var(--warning-color);
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 255, 0, 0.2),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+                0 0 16px rgba(255, 255, 0, 0.3);
         }
 
         .shape-3 {
-            width: 100px;
-            height: 100px;
+            width: 40px;
+            height: 40px;
             top: 60%;
-            right: 25%;
-            animation: floatRotate 8s infinite linear;
+            right: 20%;
+            animation: pixelRotate 6s infinite linear;
+            border-color: var(--error-color);
+            box-shadow: 
+                inset 2px 2px 0 rgba(255, 0, 0, 0.2),
+                inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+                0 0 16px rgba(255, 0, 0, 0.3);
         }
 
-        @keyframes floatRotate {
+        @keyframes pixelRotate {
             0% {
-                transform: rotate(0deg) translateY(0px);
-                opacity: 0.1;
+                transform: rotate(0deg) translateY(0px) scale(1);
+                opacity: 0.6;
+            }
+            25% {
+                transform: rotate(90deg) translateY(-10px) scale(1.1);
+                opacity: 0.8;
             }
             50% {
-                transform: rotate(180deg) translateY(-20px);
-                opacity: 0.3;
+                transform: rotate(180deg) translateY(-5px) scale(1);
+                opacity: 0.9;
+            }
+            75% {
+                transform: rotate(270deg) translateY(-15px) scale(0.9);
+                opacity: 0.7;
             }
             100% {
-                transform: rotate(360deg) translateY(0px);
-                opacity: 0.1;
+                transform: rotate(360deg) translateY(0px) scale(1);
+                opacity: 0.6;
             }
+        }
+
+        /* Pixel Decorative Elements */
+        .pixel-decorations {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .pixel-corner {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border: var(--pixel-border) solid var(--accent-color);
+            background: var(--secondary-bg);
+        }
+
+        .pixel-corner.top-left {
+            top: 40px;
+            left: 40px;
+            border-right: none;
+            border-bottom: none;
+            animation: cornerGlow 4s ease-in-out infinite;
+        }
+
+        .pixel-corner.top-right {
+            top: 40px;
+            right: 40px;
+            border-left: none;
+            border-bottom: none;
+            animation: cornerGlow 4s ease-in-out infinite 1s;
+        }
+
+        .pixel-corner.bottom-left {
+            bottom: 40px;
+            left: 40px;
+            border-right: none;
+            border-top: none;
+            animation: cornerGlow 4s ease-in-out infinite 2s;
+        }
+
+        .pixel-corner.bottom-right {
+            bottom: 40px;
+            right: 40px;
+            border-left: none;
+            border-top: none;
+            animation: cornerGlow 4s ease-in-out infinite 3s;
+        }
+
+        @keyframes cornerGlow {
+            0%, 100% {
+                box-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
+                opacity: 0.6;
+            }
+            50% {
+                box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+                opacity: 1;
+            }
+        }
+
+        /* Floating Action Button */
+        .fab-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+        }
+
+        .fab {
+            width: 64px;
+            height: 64px;
+            background: var(--success-color);
+            border: var(--pixel-border) solid var(--accent-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--primary-bg);
+            text-decoration: none;
+            box-shadow: 
+                inset 3px 3px 0 rgba(255, 255, 255, 0.3),
+                inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+                6px 6px 0 var(--secondary-bg),
+                8px 8px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s ease;
+            animation: fabPulse 2s ease-in-out infinite;
+        }
+
+        .fab:hover {
+            transform: translate(-2px, -2px) scale(1.05);
+            box-shadow: 
+                inset 3px 3px 0 rgba(255, 255, 255, 0.4),
+                inset -3px -3px 0 rgba(0, 0, 0, 0.4),
+                8px 8px 0 var(--secondary-bg),
+                12px 12px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .fab:active {
+            transform: translate(1px, 1px) scale(0.95);
+            box-shadow: 
+                inset -2px -2px 0 rgba(255, 255, 255, 0.2),
+                inset 2px 2px 0 rgba(0, 0, 0, 0.4),
+                3px 3px 0 var(--secondary-bg),
+                4px 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes fabPulse {
+            0%, 100% {
+                box-shadow: 
+                    inset 3px 3px 0 rgba(255, 255, 255, 0.3),
+                    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+                    6px 6px 0 var(--secondary-bg),
+                    8px 8px 20px rgba(0, 0, 0, 0.4),
+                    0 0 0 rgba(0, 255, 0, 0.4);
+            }
+            50% {
+                box-shadow: 
+                    inset 3px 3px 0 rgba(255, 255, 255, 0.3),
+                    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+                    6px 6px 0 var(--secondary-bg),
+                    8px 8px 20px rgba(0, 0, 0, 0.4),
+                    0 0 20px rgba(0, 255, 0, 0.6);
+            }
+        }
+
+        /* Status Bar */
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 32px;
+            background: var(--secondary-bg);
+            border-top: var(--pixel-border) solid var(--accent-color);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 8px;
+            z-index: 50;
+            box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-item {
+            margin-right: 20px;
+            color: var(--success-color);
+            text-shadow: 0 0 4px currentColor;
+        }
+
+        .status-separator {
+            width: 2px;
+            height: 16px;
+            background: var(--border-color);
+            margin-right: 20px;
+        }
+
+        /* Glitch Effects */
+        .glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0;
+            animation: glitchFlicker 15s ease-in-out infinite;
+        }
+
+        .glitch-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 0, 0, 0.1) 25%, 
+                transparent 25%, 
+                transparent 75%, 
+                rgba(0, 255, 0, 0.1) 75%, 
+                transparent 100%);
+            animation: glitchShift 0.1s linear infinite;
+        }
+
+        @keyframes glitchFlicker {
+            0%, 95% { opacity: 0; }
+            96%, 97% { opacity: 0.8; }
+            98%, 99% { opacity: 0; }
+            99.5%, 100% { opacity: 0.9; }
+        }
+
+        @keyframes glitchShift {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-2px); }
+            40% { transform: translateX(2px); }
+            60% { transform: translateX(-1px); }
+            80% { transform: translateX(1px); }
+            100% { transform: translateX(0); }
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
             :root {
-                --sidebar-width: 250px;
+                --sidebar-width: 280px;
             }
 
             .menu-toggle {
-                top: 20px;
-                left: 20px;
+                top: 16px;
+                left: 16px;
+                width: 48px;
+                height: 48px;
                 padding: 12px;
             }
 
             .main-title {
-                letter-spacing: 4px;
-            }
-
-            .subtitle {
-                font-size: 14px;
+                font-size: clamp(16px, 6vw, 24px);
                 letter-spacing: 2px;
             }
 
+            .subtitle {
+                font-size: 8px;
+                letter-spacing: 1px;
+                padding: 8px 12px;
+            }
+
+            .title-container {
+                padding: 24px;
+                margin-bottom: 40px;
+            }
+
+            .fab {
+                width: 56px;
+                height: 56px;
+                bottom: 20px;
+                right: 20px;
+                font-size: 14px;
+            }
+
+            .fab-container {
+                bottom: 20px;
+                right: 20px;
+            }
+
+            .pixel-corner {
+                width: 24px;
+                height: 24px;
+            }
+
+            .pixel-corner.top-left,
+            .pixel-corner.top-right {
+                top: 24px;
+            }
+
+            .pixel-corner.top-left,
+            .pixel-corner.bottom-left {
+                left: 24px;
+            }
+
+            .pixel-corner.top-right,
+            .pixel-corner.bottom-right {
+                right: 24px;
+            }
+
+            .pixel-corner.bottom-left,
+            .pixel-corner.bottom-right {
+                bottom: 56px;
+            }
+
             .shape-1, .shape-2, .shape-3 {
-                display: none;
+                opacity: 0.3;
+            }
+
+            .shape-1 {
+                width: 48px;
+                height: 48px;
+            }
+
+            .shape-2 {
+                width: 36px;
+                height: 36px;
+            }
+
+            .shape-3 {
+                width: 24px;
+                height: 24px;
             }
         }
 
-        /* Loading Animation */
+        /* Pixel Loading Animation */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -508,6 +958,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-direction: column;
             opacity: 1;
             transition: opacity 0.5s ease;
         }
@@ -518,179 +969,112 @@
         }
 
         .loader {
-            width: 60px;
-            height: 60px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top: 3px solid var(--accent-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            width: 64px;
+            height: 64px;
+            border: var(--pixel-border) solid var(--border-color);
+            background: var(--primary-bg);
+            position: relative;
+            animation: pixelSpin 1.5s linear infinite;
+            box-shadow: 
+                inset 4px 4px 0 rgba(0, 255, 0, 0.2),
+                inset -4px -4px 0 rgba(0, 0, 0, 0.5),
+                0 0 16px rgba(0, 255, 0, 0.3);
         }
 
-        @keyframes spin {
+        .loader::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: var(--pixel-border) solid var(--success-color);
+            animation: pixelSpin 1s linear infinite reverse;
+        }
+
+        .loader::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: var(--warning-color);
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 8px currentColor;
+            animation: pixelPulse 0.8s ease-in-out infinite;
+        }
+
+        @keyframes pixelSpin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
-        /* Additional Complex Animations */
-        .wave-animation {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100px;
-            z-index: -1;
-            background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.02));
-            animation: wave 4s ease-in-out infinite;
-        }
-
-        @keyframes wave {
-            0%, 100% {
-                transform: scaleY(1);
+        @keyframes pixelPulse {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1); 
+                opacity: 1; 
             }
-            50% {
-                transform: scaleY(1.5);
+            50% { 
+                transform: translate(-50%, -50%) scale(1.5); 
+                opacity: 0.7; 
             }
         }
 
-        /* Rotating Rings */
-        .rotating-rings {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 400px;
-            height: 400px;
-            transform: translate(-50%, -50%);
-            z-index: -1;
-            pointer-events: none;
+        .loading-text {
+            margin-top: 20px;
+            font-size: 10px;
+            color: var(--success-color);
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px currentColor;
+            animation: loadingTextPulse 1.5s ease-in-out infinite;
         }
 
-        .ring {
-            position: absolute;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .ring-1 {
-            width: 200px;
-            height: 200px;
-            animation: rotateClockwise 15s linear infinite;
-        }
-
-        .ring-2 {
-            width: 300px;
-            height: 300px;
-            animation: rotateCounterClockwise 20s linear infinite;
-        }
-
-        .ring-3 {
-            width: 400px;
-            height: 400px;
-            animation: rotateClockwise 25s linear infinite;
-        }
-
-        @keyframes rotateClockwise {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        @keyframes rotateCounterClockwise {
-            from { transform: translate(-50%, -50%) rotate(360deg); }
-            to { transform: translate(-50%, -50%) rotate(0deg); }
-        }
-
-        /* Breathing Effect for Title */
-        .title-container {
-            position: relative;
-            margin-bottom: 50px;
-            animation: breathe 6s ease-in-out infinite;
-        }
-
-        @keyframes breathe {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.02);
-            }
-        }
-
-        /* Glitch Effect */
-        .main-title::after {
-            content: 'PYTHON ASSEMBLY';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, var(--text-primary), var(--accent-color), var(--text-primary));
-            background-size: 300% 300%;
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: glitch 10s infinite;
-            opacity: 0;
-        }
-
-        @keyframes glitch {
-            0%, 95%, 100% {
-                opacity: 0;
-                transform: translateX(0);
-            }
-            96% {
-                opacity: 1;
-                transform: translateX(-2px);
-            }
-            97% {
-                opacity: 1;
-                transform: translateX(2px);
-            }
-            98% {
-                opacity: 1;
-                transform: translateX(-1px);
-            }
-            99% {
-                opacity: 1;
-                transform: translateX(1px);
-            }
+        @keyframes loadingTextPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
         }
     </style>
 </head>
 <body>
     
+    <!-- Pixel Loading Animation -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loader"></div>
+        <div class="loading-text">LOADING...</div>
     </div>
 
-    
+    <!-- Pixel Matrix Background -->
     <div class="background-animation"></div>
 
-    
-    <div class="particles" id="particles"></div>
+    <!-- Pixel Rain Effect -->
+    <div class="pixel-rain" id="pixelRain"></div>
 
-    
-    <div class="floating-dots" id="floatingDots"></div>
+    <!-- Floating Pixel Blocks -->
+    <div class="floating-pixels" id="floatingPixels"></div>
 
-    
+    <!-- Pixel Grid Lines -->
     <div class="grid-lines"></div>
 
-    
-    <div class="wave-animation"></div>
+    <!-- Scanlines Effect -->
+    <div class="scanlines"></div>
 
-    
-    <div class="rotating-rings">
-        <div class="ring ring-1"></div>
-        <div class="ring ring-2"></div>
-        <div class="ring ring-3"></div>
-    </div>
+    <!-- Glitch Overlay -->
+    <div class="glitch-overlay"></div>
 
-    
+    <!-- Pixel Geometric Shapes -->
     <div class="geometric-shapes">
         <div class="shape shape-1"></div>
         <div class="shape shape-2"></div>
         <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Pixel Corner Decorations -->
+    <div class="pixel-decorations">
+        <div class="pixel-corner top-left"></div>
+        <div class="pixel-corner top-right"></div>
+        <div class="pixel-corner bottom-left"></div>
+        <div class="pixel-corner bottom-right"></div>
     </div>
 
     
@@ -747,7 +1131,7 @@
         </ul>
     </nav>
 
-    
+    <!-- Pixel Main Content -->
     <main class="main-content">
         <div class="title-container">
             <h1 class="main-title">
@@ -756,6 +1140,24 @@
             <p class="subtitle">by Logesh M.s, XII - A2 2025</p>
         </div>
     </main>
+
+    <!-- Floating Action Button -->
+    <div class="fab-container">
+        <a href="/python/" class="fab" title="Open Python Environment">
+            PY
+        </a>
+    </div>
+
+    <!-- Pixel Status Bar -->
+    <div class="status-bar">
+        <div class="status-item">ONLINE</div>
+        <div class="status-separator"></div>
+        <div class="status-item">{% if user.is_authenticated %}USER: {{ user.username|upper }}{% else %}GUEST MODE{% endif %}</div>
+        <div class="status-separator"></div>
+        <div class="status-item">PYTHON ASSEMBLY v2.0</div>
+        <div class="status-separator"></div>
+        <div class="status-item" id="systemTime">00:00:00</div>
+    </div>
 
     <script>
         const texts = ['PYTHON ASSEMBLY', 'CODE EDITOR', 'PYTHON TERMINAL'];
@@ -807,45 +1209,73 @@
             }, 300);
         });
 
-        // Particle System
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            const particleCount = 30;
+        // Pixel Rain System
+        function createPixelRain() {
+            const rainContainer = document.getElementById('pixelRain');
+            const dropCount = 25;
 
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
+            for (let i = 0; i < dropCount; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'pixel-drop';
                 
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 6 + 's';
-                particle.style.animationDuration = (5 + Math.random() * 1) + 's';
+                drop.style.left = Math.random() * 100 + '%';
+                drop.style.animationDelay = Math.random() * 8 + 's';
+                drop.style.animationDuration = (6 + Math.random() * 4) + 's';
                 
-                const size = 1 + Math.random() * 3;
-                particle.style.width = size + 'px';
-                particle.style.height = size + 'px';
+                // Random colors for variety
+                const colors = ['#ffffff', '#00ff00', '#ffff00', '#ff0000'];
+                drop.style.background = colors[Math.floor(Math.random() * colors.length)];
                 
-                particlesContainer.appendChild(particle);
+                rainContainer.appendChild(drop);
             }
         }
 
-        // Floating Dots System
-        function createFloatingDots() {
-            const dotsContainer = document.getElementById('floatingDots');
-            const dotCount = 20;
+        // Floating Pixel Blocks System
+        function createFloatingPixels() {
+            const pixelsContainer = document.getElementById('floatingPixels');
+            const pixelCount = 18;
 
-            for (let i = 0; i < dotCount; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'floating-dot';
+            for (let i = 0; i < pixelCount; i++) {
+                const pixel = document.createElement('div');
+                pixel.className = 'pixel-block';
                 
-                dot.style.left = Math.random() * 100 + '%';
-                dot.style.animationDelay = Math.random() * 6 + 's';
-                dot.style.animationDuration = (5 + Math.random() * 1) + 's';
+                // Add random color classes
+                const colorClasses = ['', 'green', 'yellow', 'red'];
+                if (Math.random() > 0.4) {
+                    pixel.classList.add(colorClasses[Math.floor(Math.random() * colorClasses.length)]);
+                }
                 
-                const size = 2 + Math.random() * 4;
-                dot.style.width = size + 'px';
-                dot.style.height = size + 'px';
+                pixel.style.left = Math.random() * 100 + '%';
+                pixel.style.animationDelay = Math.random() * 12 + 's';
+                pixel.style.animationDuration = (8 + Math.random() * 6) + 's';
                 
-                dotsContainer.appendChild(dot);
+                pixelsContainer.appendChild(pixel);
+            }
+        }
+
+        // System Time Update
+        function updateSystemTime() {
+            const timeElement = document.getElementById('systemTime');
+            if (timeElement) {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { 
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                timeElement.textContent = timeString;
+            }
+        }
+
+        // Pixel Glitch Effect
+        function triggerRandomGlitch() {
+            const glitchOverlay = document.querySelector('.glitch-overlay');
+            if (Math.random() < 0.05) { // 5% chance every interval
+                glitchOverlay.style.animation = 'glitchFlicker 0.5s ease-in-out';
+                setTimeout(() => {
+                    glitchOverlay.style.animation = 'glitchFlicker 15s ease-in-out infinite';
+                }, 500);
             }
         }
 
@@ -897,26 +1327,56 @@
             });
         });
 
-        // Initialize particles and dots after page fully loads
+        // Initialize pixel effects after page fully loads
         window.addEventListener('load', function() {
-            createParticles();
-            createFloatingDots();
+            createPixelRain();
+            createFloatingPixels();
+            updateSystemTime();
+            
+            // Update time every second
+            setInterval(updateSystemTime, 1000);
+            
+            // Random glitch effects
+            setInterval(triggerRandomGlitch, 2000);
         });
 
-        // Add subtle mouse movement effect
+        // Enhanced pixel mouse effects with performance optimization
+        let mouseX = 0, mouseY = 0;
+        let isMouseMoving = false;
+        
         document.addEventListener('mousemove', function(e) {
-            const shapes = document.querySelectorAll('.shape');
-            const x = e.clientX / window.innerWidth;
-            const y = e.clientY / window.innerHeight;
-            
-            shapes.forEach((shape, index) => {
-                const speed = (index + 1) * 0.5;
-                const xOffset = (x - 0.5) * speed;
-                const yOffset = (y - 0.5) * speed;
-                
-                shape.style.transform = `translate(${xOffset}px, ${yOffset}px) rotate(${index * 120}deg)`;
-            });
+            mouseX = e.clientX / window.innerWidth;
+            mouseY = e.clientY / window.innerHeight;
+            isMouseMoving = true;
         });
+
+        function updateMouseEffects() {
+            if (isMouseMoving) {
+                const shapes = document.querySelectorAll('.shape');
+                const corners = document.querySelectorAll('.pixel-corner');
+                
+                shapes.forEach((shape, index) => {
+                    const speed = (index + 1) * 2;
+                    const xOffset = (mouseX - 0.5) * speed;
+                    const yOffset = (mouseY - 0.5) * speed;
+                    
+                    shape.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+                });
+                
+                corners.forEach((corner, index) => {
+                    const speed = (index + 1) * 1;
+                    const xOffset = (mouseX - 0.5) * speed;
+                    const yOffset = (mouseY - 0.5) * speed;
+                    
+                    corner.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+                });
+                
+                isMouseMoving = false;
+            }
+            requestAnimationFrame(updateMouseEffects);
+        }
+        
+        updateMouseEffects();
 
         // Add scroll indicator for mobile
         let ticking = false;
@@ -933,23 +1393,54 @@
             }
         });
 
-        // Performance optimization: Reduce particles on mobile
-        if (window.innerWidth <= 768) {
-            const particles = document.querySelectorAll('.particle');
-            const dots = document.querySelectorAll('.floating-dot');
+        // Performance optimization: Reduce effects on mobile and low-end devices
+        function optimizeForDevice() {
+            const isMobile = window.innerWidth <= 768;
+            const isLowEnd = navigator.hardwareConcurrency <= 4;
             
-            particles.forEach((particle, index) => {
-                if (index > 20) {
-                    particle.remove();
+            if (isMobile || isLowEnd) {
+                // Reduce pixel rain
+                const rainDrops = document.querySelectorAll('.pixel-drop');
+                rainDrops.forEach((drop, index) => {
+                    if (index > 15) {
+                        drop.remove();
+                    }
+                });
+                
+                // Reduce floating pixels
+                const floatingPixels = document.querySelectorAll('.pixel-block');
+                floatingPixels.forEach((pixel, index) => {
+                    if (index > 12) {
+                        pixel.remove();
+                    }
+                });
+                
+                // Disable some effects on very low-end devices
+                if (isLowEnd) {
+                    const scanlines = document.querySelector('.scanlines');
+                    const glitchOverlay = document.querySelector('.glitch-overlay');
+                    if (scanlines) scanlines.style.display = 'none';
+                    if (glitchOverlay) glitchOverlay.style.display = 'none';
                 }
-            });
-            
-            dots.forEach((dot, index) => {
-                if (index > 15) {
-                    dot.remove();
-                }
-            });
+            }
         }
+
+        // Keyboard shortcuts for advanced users
+        document.addEventListener('keydown', function(e) {
+            // Konami code easter egg: ↑↑↓↓←→←→BA
+            if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+                window.location.href = '/python/';
+            }
+            
+            // Toggle glitch effects with G key
+            if (e.key.toLowerCase() === 'g' && e.ctrlKey) {
+                e.preventDefault();
+                triggerRandomGlitch();
+            }
+        });
+
+        // Initialize optimizations
+        window.addEventListener('load', optimizeForDevice);
     </script>
 </body>
 </html>
