@@ -1,0 +1,313 @@
+{% extends "auth_app/base.html" %}
+
+{% block title %}2FA Verification - CLASS XII PYTHON{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Press Start 2P', cursive;
+        background: #000;
+        color: #0f0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .pixel-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+        background-image:
+            repeating-linear-gradient(0deg, transparent, transparent 19px, #0a0a0a 19px, #0a0a0a 20px),
+            repeating-linear-gradient(90deg, transparent, transparent 19px, #0a0a0a 19px, #0a0a0a 20px);
+        background-size: 20px 20px;
+        z-index: 0;
+    }
+    
+    .scanlines {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 999;
+        background: repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 255, 0, 0.03) 2px,
+            rgba(0, 255, 0, 0.03) 4px
+        );
+    }
+    
+    .container {
+        position: relative;
+        z-index: 1;
+        width: 90%;
+        max-width: 500px;
+    }
+    
+    .pixel-box {
+        background: #000;
+        border: 4px solid #0f0;
+        box-shadow: 
+            0 0 0 4px #000,
+            0 0 0 8px #0f0,
+            0 0 30px #0f0;
+        padding: 40px;
+    }
+    
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .header h1 {
+        font-size: 1.5rem;
+        color: #0f0;
+        text-shadow: 3px 3px 0 #000;
+        margin-bottom: 15px;
+    }
+    
+    .header p {
+        font-size: 0.6rem;
+        color: #0a0;
+        line-height: 1.8;
+    }
+    
+    .username-display {
+        background: #000;
+        border: 2px solid #0a0;
+        padding: 15px;
+        text-align: center;
+        margin-bottom: 30px;
+        color: #0f0;
+        font-size: 0.8rem;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.7rem;
+        color: #0f0;
+        margin-bottom: 10px;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 15px;
+        background: #000;
+        border: 3px solid #0a0;
+        color: #0f0;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 1.2rem;
+        text-align: center;
+        letter-spacing: 15px;
+        transition: all 0.3s;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: #0f0;
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+    }
+    
+    .pixel-btn {
+        width: 100%;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 0.8rem;
+        padding: 15px;
+        background: #000;
+        color: #0f0;
+        border: 3px solid #0f0;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 15px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .pixel-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: #0f0;
+        transition: left 0.3s;
+        z-index: -1;
+    }
+    
+    .pixel-btn:hover::before {
+        left: 0;
+    }
+    
+    .pixel-btn:hover {
+        color: #000;
+        box-shadow: 0 0 20px #0f0;
+    }
+    
+    .help-text {
+        font-size: 0.6rem;
+        color: #0a0;
+        text-align: center;
+        line-height: 1.8;
+        margin-top: 20px;
+    }
+    
+    .error-msg {
+        background: #000;
+        border: 2px solid #f00;
+        color: #f00;
+        padding: 15px;
+        font-size: 0.6rem;
+        margin-bottom: 20px;
+        box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        animation: shake 0.5s;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+    
+    .success-msg {
+        background: #000;
+        border: 2px solid #0f0;
+        color: #0f0;
+        padding: 15px;
+        font-size: 0.6rem;
+        margin-bottom: 20px;
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    }
+    
+    @media (max-width: 768px) {
+        .pixel-box {
+            padding: 25px;
+        }
+        
+        .header h1 {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<div class="pixel-bg"></div>
+<div class="scanlines"></div>
+
+<div class="container">
+    <div class="pixel-box">
+        <div class="header">
+            <h1>🔐 2FA VERIFICATION</h1>
+            <p>Enter your authentication code to complete login</p>
+        </div>
+        
+        <div class="username-display">
+            USER: {{ username|upper }}
+        </div>
+        
+        <div id="messageContainer"></div>
+        
+        <form id="twoFAForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>ENTER CODE</label>
+                <input type="text" id="codeInput" maxlength="6" placeholder="000000" autocomplete="off" autofocus required>
+            </div>
+            
+            <button type="submit" class="pixel-btn">VERIFY</button>
+        </form>
+        
+        <div class="help-text">
+            Open your authenticator app and enter the 6-digit code.<br><br>
+            Lost your device? Use a backup code instead.
+        </div>
+    </div>
+</div>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+    
+    function showMessage(message, isError = false) {
+        const container = document.getElementById('messageContainer');
+        container.innerHTML = `<div class="${isError ? 'error-msg' : 'success-msg'}">${message}</div>`;
+    }
+    
+    document.getElementById('twoFAForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const code = document.getElementById('codeInput').value.trim();
+        
+        if (!code || code.length !== 6) {
+            showMessage('PLEASE ENTER A 6-DIGIT CODE', true);
+            return;
+        }
+        
+        fetch('{% url "auth_app:verify_2fa_login" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ code: code })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage('VERIFICATION SUCCESSFUL!');
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 1000);
+            } else {
+                showMessage(data.error || 'VERIFICATION FAILED', true);
+                document.getElementById('codeInput').value = '';
+            }
+        })
+        .catch(error => {
+            showMessage('ERROR: ' + error, true);
+        });
+    });
+    
+    // Auto-submit when 6 digits entered
+    document.getElementById('codeInput').addEventListener('input', function(e) {
+        // Only allow numbers
+        this.value = this.value.replace(/[^0-9]/g, '');
+        
+        if (this.value.length === 6) {
+            document.getElementById('twoFAForm').dispatchEvent(new Event('submit'));
+        }
+    });
+</script>
+{% endblock %}

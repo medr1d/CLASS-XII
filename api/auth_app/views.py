@@ -159,9 +159,18 @@ def login_view(request):
                     successful=True
                 )
                 
-                login(request, authenticated_user)
-                messages.success(request, f'Welcome back, {user.username}!')
-                return redirect('auth_app:account')
+                # Check if 2FA is enabled
+                from .models import TwoFactorAuth
+                try:
+                    twofa = TwoFactorAuth.objects.get(user=authenticated_user, is_enabled=True)
+                    # Store user ID in session for 2FA verification
+                    request.session['2fa_user_id'] = authenticated_user.id
+                    return render(request, 'auth_app/verify_2fa.html', {'username': user.username})
+                except TwoFactorAuth.DoesNotExist:
+                    # No 2FA, proceed with normal login
+                    login(request, authenticated_user)
+                    messages.success(request, f'Welcome back, {user.username}!')
+                    return redirect('auth_app:account')
             else:
                 # Failed login - record attempt
                 LoginAttempt.objects.create(
@@ -219,8 +228,17 @@ def login_view(request):
 
 @login_required
 def account_view(request):
-    return render(request, 'auth_app/account.html', {
-        'user': request.user
+    from .models import TwoFactorAuth
+    
+    # Get or create 2FA object for template context
+    try:
+        two_factor = TwoFactorAuth.objects.get(user=request.user)
+    except TwoFactorAuth.DoesNotExist:
+        two_factor = TwoFactorAuth(user=request.user, is_enabled=False)
+    
+    return render(request, 'auth_app/account_pixel.html', {
+        'user': request.user,
+        'two_factor': two_factor
     })
 
 @login_required
@@ -351,7 +369,7 @@ def admin_panel_view(request):
     except EmptyPage:
         users = paginator.page(paginator.num_pages)
     
-    return render(request, 'auth_app/admin_panel_enhanced.html', {
+    return render(request, 'auth_app/admin_panel.html', {
         'users': users,
         'total_users': total_users,
         'paid_users_count': paid_count,
@@ -729,3 +747,152 @@ def resend_password_change_code(request):
     except Exception as e:
         print(f"Resend password change code error: {str(e)}")
         return JsonResponse({'success': False, 'error': 'Failed to resend code. Please try again.'}, status=500)
+
+
+# Two-Factor Authentication Views
+@login_required
+@require_http_methods(["POST"])
+def enable_2fa(request):
+    """Enable two-factor authentication for the user."""
+    try:
+        from .models import TwoFactorAuth
+        import io
+        import base64
+        import qrcode
+        
+        # Check if 2FA already enabled
+        twofa, created = TwoFactorAuth.objects.get_or_create(user=request.user)
+        
+        if twofa.is_enabled and not created:
+            return JsonResponse({'success': False, 'error': '2FA is already enabled.'}, status=400)
+        
+        # Generate new secret if not exists or regenerate for setup
+        if not twofa.secret_key or not twofa.is_enabled:
+            twofa.generate_secret()
+        
+        # Generate QR code
+        provisioning_uri = twofa.get_provisioning_uri(request.user.username)
+        qr = qrcode.QRCode(version=1, box_size=10, border=4)
+        qr.add_data(provisioning_uri)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        img_str = base64.b64encode(buffer.getvalue()).decode()
+        
+        qr_code_html = f'<img src="data:image/png;base64,{img_str}" alt="QR Code" style="max-width: 100%;">'
+        
+        return JsonResponse({
+            'success': True,
+            'qr_code': qr_code_html,
+            'secret': twofa.secret_key
+        })
+        
+    except Exception as e:
+        print(f"Enable 2FA error: {str(e)}")
+        return JsonResponse({'success': False, 'error': 'Failed to enable 2FA. Please try again.'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def verify_2fa(request):
+    """Verify TOTP code and complete 2FA setup."""
+    try:
+        from .models import TwoFactorAuth
+        
+        data = json.loads(request.body)
+        code = data.get('code', '').strip()
+        
+        if not code or len(code) != 6:
+            return JsonResponse({'success': False, 'error': 'Please enter a 6-digit code.'}, status=400)
+        
+        try:
+            twofa = TwoFactorAuth.objects.get(user=request.user)
+        except TwoFactorAuth.DoesNotExist:
+            return JsonResponse({'success': False, 'error': '2FA not initialized. Please start setup again.'}, status=404)
+        
+        if twofa.verify_totp(code):
+            # Enable 2FA and generate backup codes
+            twofa.is_enabled = True
+            backup_codes = twofa.generate_backup_codes()
+            twofa.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': '2FA enabled successfully!',
+                'backup_codes': backup_codes
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid code. Please try again.'}, status=400)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid request data.'}, status=400)
+    except Exception as e:
+        print(f"Verify 2FA error: {str(e)}")
+        return JsonResponse({'success': False, 'error': 'Failed to verify 2FA. Please try again.'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def disable_2fa(request):
+    """Disable two-factor authentication."""
+    try:
+        from .models import TwoFactorAuth
+        
+        try:
+            twofa = TwoFactorAuth.objects.get(user=request.user)
+            twofa.is_enabled = False
+            twofa.save()
+            
+            return JsonResponse({'success': True, 'message': '2FA disabled successfully.'})
+        except TwoFactorAuth.DoesNotExist:
+            return JsonResponse({'success': False, 'error': '2FA is not enabled.'}, status=404)
+            
+    except Exception as e:
+        print(f"Disable 2FA error: {str(e)}")
+        return JsonResponse({'success': False, 'error': 'Failed to disable 2FA. Please try again.'}, status=500)
+
+
+@require_http_methods(["POST"])
+def verify_2fa_login(request):
+    """Verify 2FA code during login."""
+    try:
+        from .models import TwoFactorAuth
+        
+        data = json.loads(request.body)
+        code = data.get('code', '').strip()
+        user_id = request.session.get('2fa_user_id')
+        
+        if not user_id:
+            return JsonResponse({'success': False, 'error': 'Session expired. Please login again.'}, status=400)
+        
+        if not code:
+            return JsonResponse({'success': False, 'error': 'Please enter a code.'}, status=400)
+        
+        try:
+            user = User.objects.get(id=int(user_id))
+            twofa = TwoFactorAuth.objects.get(user=user, is_enabled=True)
+        except (User.DoesNotExist, TwoFactorAuth.DoesNotExist, ValueError):
+            return JsonResponse({'success': False, 'error': 'Invalid session. Please login again.'}, status=404)
+        
+        # Verify TOTP or backup code
+        if twofa.verify_totp(code) or twofa.verify_backup_code(code):
+            # Complete login
+            login(request, user)
+            del request.session['2fa_user_id']
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Login successful!',
+                'redirect_url': '/python-environment/'
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid code. Please try again.'}, status=400)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid request data.'}, status=400)
+    except Exception as e:
+        print(f"Verify 2FA login error: {str(e)}")
+        return JsonResponse({'success': False, 'error': 'Failed to verify code. Please try again.'}, status=500)

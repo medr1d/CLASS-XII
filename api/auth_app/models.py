@@ -4,6 +4,8 @@ from django.utils import timezone
 from datetime import timedelta
 import random
 import string
+import pyotp
+
 
 class LoginAttempt(models.Model):
     """Track failed login attempts by IP address for rate limiting."""
@@ -193,3 +195,71 @@ class PasswordChangeRequest(models.Model):
         # Also delete verified ones older than 24 hours
         verified_threshold = timezone.now() - timedelta(hours=24)
         cls.objects.filter(created_at__lt=verified_threshold, verified=True).delete()
+
+
+class TwoFactorAuth(models.Model):
+    """Store two-factor authentication settings for users."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='two_factor')
+    secret_key = models.CharField(max_length=32)  # TOTP secret
+    is_enabled = models.BooleanField(default=False)
+    backup_codes = models.TextField(blank=True)  # Comma-separated backup codes
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['is_enabled']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - 2FA {'Enabled' if self.is_enabled else 'Disabled'}"
+    
+    @staticmethod
+    def generate_secret():
+        """Generate a new TOTP secret key."""
+        return pyotp.random_base32()
+    
+    @staticmethod
+    def generate_backup_codes(count=8):
+        """Generate backup codes for 2FA recovery."""
+        codes = []
+        for _ in range(count):
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            codes.append(f"{code[:4]}-{code[4:]}")
+        return codes
+    
+    def get_backup_codes(self):
+        """Return list of backup codes."""
+        if self.backup_codes:
+            return self.backup_codes.split(',')
+        return []
+    
+    def set_backup_codes(self, codes):
+        """Store backup codes as comma-separated string."""
+        self.backup_codes = ','.join(codes)
+    
+    def verify_totp(self, token):
+        """Verify a TOTP token."""
+        if not self.is_enabled:
+            return False
+        totp = pyotp.TOTP(self.secret_key)
+        return totp.verify(token, valid_window=1)  # Allow 30 seconds window
+    
+    def verify_backup_code(self, code):
+        """Verify and consume a backup code."""
+        codes = self.get_backup_codes()
+        if code in codes:
+            codes.remove(code)
+            self.set_backup_codes(codes)
+            self.save(update_fields=['backup_codes'])
+            return True
+        return False
+    
+    def get_provisioning_uri(self, username):
+        """Get provisioning URI for QR code generation."""
+        totp = pyotp.TOTP(self.secret_key)
+        return totp.provisioning_uri(
+            name=username,
+            issuer_name='CLASS XII PYTHON'
+        )
