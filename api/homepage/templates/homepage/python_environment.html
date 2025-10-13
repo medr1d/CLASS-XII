@@ -2450,6 +2450,7 @@
                                 <button class="cell-btn" onclick="runCell(this)" title="Run Cell">▶</button>
                                 <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
                                 <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand">⛶</button>
                                 <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
                             </div>
                         </div>
@@ -2510,6 +2511,7 @@ plt.show()</textarea>
                                 <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
                                 <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
                                 <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand">⛶</button>
                                 <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
                             </div>
                         </div>
@@ -2579,6 +2581,7 @@ plt.show()</textarea>
                                 <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
                                 <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
                                 <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand">⛶</button>
                                 <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
                             </div>
                         </div>
@@ -2656,6 +2659,7 @@ print(classification_report(y_test, y_pred))</textarea>
                                 <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
                                 <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
                                 <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">C</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand">⛶</button>
                                 <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
                             </div>
                         </div>
@@ -2708,6 +2712,7 @@ Happy coding! 🐍✨</textarea>
                                 <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
                                 <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
                                 <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand">⛶</button>
                                 <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
                             </div>
                         </div>
@@ -2792,6 +2797,8 @@ plt.show()</textarea>
                                 <button class="cell-btn" onclick="runCell(this)" title="Run Cell">▶</button>
                                 <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
                                 <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
+                                <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand">⛶</button>
                                 <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
                                 <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
                             </div>
@@ -2897,6 +2904,10 @@ print(f"Network density: {nx.density(G):.3f}")</textarea>
                                 <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
                                 <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
                                 <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand">⛶</button>
+                                <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
+                                <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
+                                <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
                                 <button class="cell-btn" onclick="deleteCell(this)" title="Delete">×</button>
                             </div>
                         </div>
@@ -2993,6 +3004,10 @@ print(contingency)</textarea>
                             </div>
                             <div class="cell-controls">
                                 <button class="cell-btn" onclick="runCell(this)" title="Run Cell">▶</button>
+                                <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
+                                <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
+                                <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
+                                <button class="cell-btn" onclick="expandCell(this)" title="Expand">⛶</button>
                                 <button class="cell-btn" onclick="moveCell(this, -1)" title="Move Up">↑</button>
                                 <button class="cell-btn" onclick="moveCell(this, 1)" title="Move Down">↓</button>
                                 <button class="cell-btn" onclick="convertCell(this)" title="Convert Type">M</button>
@@ -4912,6 +4927,95 @@ sys.stderr = sys.__stderr__
             cellTypeSpan.childNodes[cellTypeSpan.childNodes.length - 1].textContent = 
                 isMarkdown ? 'Markdown Cell' : 'Code Cell';
         }
+
+        // Global variable to track expanded cell editor
+        let expandedCellEditor = null;
+        let expandedCellTextarea = null;
+
+        function expandCell(button) {
+            const cell = button.closest('.notebook-cell');
+            const textarea = cell.querySelector('.cell-textarea');
+            const cellId = cell.dataset.cellId;
+            const cellType = cell.dataset.cellType;
+            
+            // Store reference to the original textarea
+            expandedCellTextarea = textarea;
+            
+            // Show the modal
+            const modal = document.getElementById('cell-expand-modal');
+            const titleEl = document.getElementById('expand-modal-title');
+            titleEl.textContent = `Cell ${cellId} - ${cellType === 'code' ? 'Code' : 'Markdown'} Editor`;
+            modal.classList.add('active');
+            
+            // Initialize Ace editor if not already done
+            if (!expandedCellEditor) {
+                expandedCellEditor = ace.edit('expanded-ace-editor');
+                expandedCellEditor.setOptions({
+                    enableBasicAutocompletion: true,
+                    enableLiveAutocompletion: true,
+                    enableSnippets: true,
+                    fontSize: '16px',
+                    showPrintMargin: false
+                });
+            }
+            
+            // Set the theme based on current theme
+            const body = document.body;
+            let aceTheme = 'ace/theme/monokai';
+            if (body.classList.contains('theme-greydom') || body.classList.contains('theme-default')) {
+                aceTheme = 'ace/theme/monokai';
+            } else if (body.classList.contains('theme-cloud')) {
+                aceTheme = 'ace/theme/katzenmilch';
+            } else if (body.classList.contains('theme-chaos')) {
+                aceTheme = 'ace/theme/chaos';
+            } else if (body.classList.contains('theme-lebron')) {
+                aceTheme = 'ace/theme/katzenmilch';
+            }
+            expandedCellEditor.setTheme(aceTheme);
+            
+            // Set mode for syntax highlighting
+            if (cellType === 'code') {
+                expandedCellEditor.session.setMode('ace/mode/python');
+            } else {
+                expandedCellEditor.session.setMode('ace/mode/markdown');
+            }
+            
+            // Load content from textarea
+            expandedCellEditor.setValue(textarea.value, -1);
+            
+            // Focus the editor
+            expandedCellEditor.focus();
+            
+            // Set up sync from editor back to textarea on every change
+            expandedCellEditor.session.on('change', function() {
+                if (expandedCellTextarea) {
+                    expandedCellTextarea.value = expandedCellEditor.getValue();
+                }
+            });
+        }
+
+        function closeExpandedCell() {
+            const modal = document.getElementById('cell-expand-modal');
+            modal.classList.remove('active');
+            
+            // Sync final content one more time
+            if (expandedCellEditor && expandedCellTextarea) {
+                expandedCellTextarea.value = expandedCellEditor.getValue();
+            }
+            
+            // Clear reference
+            expandedCellTextarea = null;
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('cell-expand-modal');
+                if (modal.classList.contains('active')) {
+                    closeExpandedCell();
+                }
+            }
+        });
 
         function runAllCells() {
             const cells = document.querySelectorAll('.notebook-cell');
