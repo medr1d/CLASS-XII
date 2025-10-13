@@ -3395,8 +3395,7 @@ print("✨ Environment ready - happy coding!")`;
                 // Step 3: Setup matplotlib
                 updateLoadingProgress("Configuring matplotlib...");
                 try {
-                    await pyodide.runPythonAsync(`
-import matplotlib
+                    await pyodide.runPythonAsync(`import matplotlib
 import matplotlib.pyplot as plt
 import io
 import base64
@@ -3406,7 +3405,6 @@ warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
 matplotlib.use('Agg')
 
 def show_plot():
-    """Custom show function that outputs plots as base64 images"""
     try:
         buf = io.BytesIO()
         plt.savefig(buf, format='png', bbox_inches='tight', dpi=96)
@@ -3419,8 +3417,7 @@ def show_plot():
         print(f'Plot error: {err}')
         plt.close()
 
-plt.show = show_plot
-`);
+plt.show = show_plot`);
                     updateTerminal("Matplotlib configured\n");
                 } catch (matplotError) {
                     console.warn("Matplotlib configuration failed:", matplotError);
@@ -3429,8 +3426,7 @@ plt.show = show_plot
                 
                 // Step 4: Setup I/O
                 updateLoadingProgress("Configuring input/output...");
-                await pyodide.runPythonAsync(`
-import builtins
+                await pyodide.runPythonAsync(`import builtins
 import os
 
 original_open = builtins.open
@@ -3455,15 +3451,13 @@ def safe_open(filename, mode='r', *args, **kwargs):
     raise PermissionError(f'Cannot open: {filename}')
 
 builtins.input = sync_web_input
-builtins.open = safe_open
-`);
+builtins.open = safe_open`);
                 updateTerminal("I/O configured\n");
                 
                 // Step 5: Setup package installer
                 updateLoadingProgress("Setting up package installer...");
                 try {
-                    await pyodide.runPythonAsync(`
-import micropip
+                    await pyodide.runPythonAsync(`import micropip
 
 async def install_package(package_name):
     try:
@@ -3473,8 +3467,7 @@ async def install_package(package_name):
         return True
     except Exception as err:
         print(f'✗ {package_name} failed: {err}')
-        return False
-`);
+        return False`);
                     updateTerminal("Package installer ready\n");
                 } catch (installerError) {
                     console.warn("Package installer failed:", installerError);
@@ -4114,12 +4107,10 @@ except Exception as e:
             
             try {
                 // Setup output capture
-                await pyodide.runPythonAsync(`
-import sys
+                await pyodide.runPythonAsync(`import sys
 from io import StringIO
 sys.stdout = StringIO()
-sys.stderr = StringIO()
-`);
+sys.stderr = StringIO()`);
                 
                 // Show input() notification
                 if (code.includes('input(')) {
@@ -4142,10 +4133,8 @@ sys.stderr = StringIO()
                 const stderr = await pyodide.runPythonAsync("sys.stderr.getvalue()");
                 
                 // Restore streams
-                await pyodide.runPythonAsync(`
-sys.stdout = sys.__stdout__
-sys.stderr = sys.__stderr__
-`);
+                await pyodide.runPythonAsync(`sys.stdout = sys.__stdout__
+sys.stderr = sys.__stderr__`);
                 
                 // Display results
                 if (stdout) {
