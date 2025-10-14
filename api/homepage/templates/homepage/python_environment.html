@@ -5402,10 +5402,10 @@ sys.stderr = sys.__stderr__
                             headers: {'X-CSRFToken': '{{ csrf_token }}'}
                         });
                         const filesData = await filesResponse.json();
+                        // Backend returns { python_files: {filename: content}, saved_files: [filenames] }
                         selectedFiles.forEach(filename => {
-                            const file = filesData.files.find(f => f.filename === filename);
-                            if (file) {
-                                importedFiles[filename] = file.content;
+                            if (filesData.python_files && filesData.python_files[filename]) {
+                                importedFiles[filename] = filesData.python_files[filename];
                             }
                         });
                     }
