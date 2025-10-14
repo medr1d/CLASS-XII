@@ -102,15 +102,28 @@ class ExecutionHistory(models.Model):
 
 class SharedCode(models.Model):
     """Allow users to share their code with unique URLs"""
+    SESSION_TYPE_CHOICES = [
+        ('simple', 'Simple Share (Read-only)'),
+        ('collaborative', 'Collaborative Session (Real-time editing)'),
+    ]
+    
     share_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, db_index=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_codes')
     title = models.CharField(max_length=200)
     code_content = models.TextField()
     description = models.TextField(blank=True)
     language = models.CharField(max_length=20, default='python')
+    session_type = models.CharField(max_length=20, choices=SESSION_TYPE_CHOICES, default='simple')
     is_public = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
     view_count = models.IntegerField(default=0)
     fork_count = models.IntegerField(default=0)
+    
+    # Collaborative session fields
+    imported_files = models.JSONField(default=dict, blank=True)  # {filename: content} for owner's imported .py files
+    session_state = models.JSONField(default=dict, blank=True)  # Store terminal output, current code state
+    members = models.ManyToManyField(User, through='SessionMember', related_name='collaborative_sessions')
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     expires_at = models.DateTimeField(null=True, blank=True)
@@ -122,6 +135,7 @@ class SharedCode(models.Model):
             models.Index(fields=['user', '-created_at']),
             models.Index(fields=['is_public', '-created_at']),
             models.Index(fields=['-view_count']),
+            models.Index(fields=['session_type', 'is_active']),
         ]
     
     def __str__(self):
@@ -134,6 +148,38 @@ class SharedCode(models.Model):
     def increment_fork_count(self):
         self.fork_count += 1
         self.save(update_fields=['fork_count'])
+    
+    def is_owner(self, user):
+        return self.user == user
+    
+    def is_expired(self):
+        from django.utils import timezone
+        return self.expires_at and timezone.now() > self.expires_at
+
+
+class SessionMember(models.Model):
+    """Track members in collaborative sessions"""
+    PERMISSION_CHOICES = [
+        ('view', 'View Only'),
+        ('edit', 'Can Edit'),
+    ]
+    
+    session = models.ForeignKey(SharedCode, on_delete=models.CASCADE, related_name='session_members')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='session_memberships')
+    permission = models.CharField(max_length=10, choices=PERMISSION_CHOICES, default='view')
+    is_online = models.BooleanField(default=False)
+    joined_at = models.DateTimeField(auto_now_add=True)
+    last_active = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['session', 'user']
+        indexes = [
+            models.Index(fields=['session', 'is_online']),
+            models.Index(fields=['user', '-last_active']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} in {self.session.title} ({self.permission})"
 
 
 

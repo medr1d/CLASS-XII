@@ -26,12 +26,14 @@ if os.getenv('VERCEL'):
 if not ALLOWED_HOSTS and DEBUG:
     ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
+    'daphne',  # Must be before django.contrib.staticfiles
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'homepage',
     'auth_app',
 ]
@@ -65,6 +67,24 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'mywebsite.wsgi.application'
+ASGI_APPLICATION = 'mywebsite.asgi.application'
+
+# Channels configuration
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'  # Use Redis in production
+    }
+}
+
+# For production, use Redis:
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             "hosts": [os.getenv('REDIS_URL', 'redis://localhost:6379')],
+#         },
+#     },
+# }
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 

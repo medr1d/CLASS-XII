@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PythonCodeSession, UserFiles, ExecutionHistory, SharedCode
+from .models import PythonCodeSession, UserFiles, ExecutionHistory, SharedCode, SessionMember
 
 @admin.register(PythonCodeSession)
 class PythonCodeSessionAdmin(admin.ModelAdmin):
@@ -25,8 +25,17 @@ class ExecutionHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(SharedCode)
 class SharedCodeAdmin(admin.ModelAdmin):
-    list_display = ('title', 'user', 'is_public', 'view_count', 'fork_count', 'created_at')
-    list_filter = ('is_public', 'created_at')
+    list_display = ('title', 'user', 'session_type', 'is_public', 'is_active', 'view_count', 'fork_count', 'created_at')
+    list_filter = ('session_type', 'is_public', 'is_active', 'created_at')
     search_fields = ('title', 'user__username', 'share_id')
     readonly_fields = ('share_id', 'created_at', 'updated_at', 'view_count', 'fork_count')
     ordering = ('-created_at',)
+
+
+@admin.register(SessionMember)
+class SessionMemberAdmin(admin.ModelAdmin):
+    list_display = ('user', 'session', 'permission', 'is_online', 'joined_at', 'last_active')
+    list_filter = ('permission', 'is_online', 'joined_at')
+    search_fields = ('user__username', 'session__title')
+    readonly_fields = ('joined_at', 'last_active')
+    ordering = ('-last_active',)

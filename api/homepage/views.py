@@ -839,3 +839,363 @@ def get_user_settings(request):
         
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+# Collaborative Session Views
+
+@login_required
+@rate_limit_per_user(max_requests=10, window=60)
+def create_collaborative_session(request):
+    """Create a new collaborative coding session"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            title = data.get('title', 'Untitled Session')
+            description = data.get('description', '')
+            is_public = data.get('is_public', True)
+            initial_code = data.get('code', '')
+            imported_files = data.get('imported_files', {})  # {filename: content}
+            expires_days = data.get('expires_days', 7)  # Default 7 days
+            
+            from .models import SharedCode
+            from datetime import timedelta
+            
+            expires_at = timezone.now() + timedelta(days=int(expires_days))
+            
+            session = SharedCode.objects.create(
+                user=request.user,
+                title=title,
+                code_content=initial_code,
+                description=description,
+                session_type='collaborative',
+                is_public=is_public,
+                is_active=True,
+                expires_at=expires_at,
+                imported_files=imported_files,
+                session_state={'code': initial_code, 'terminal_output': []}
+            )
+            
+            # Owner automatically has edit permission
+            from .models import SessionMember
+            SessionMember.objects.create(
+                session=session,
+                user=request.user,
+                permission='edit'
+            )
+            
+            session_url = f"/python/code/{session.share_id}/"
+            
+            return JsonResponse({
+                'status': 'success',
+                'session_id': str(session.share_id),
+                'session_url': session_url,
+                'expires_at': session.expires_at.isoformat()
+            })
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+@login_required
+def join_collaborative_session(request, session_id):
+    """Join a collaborative session"""
+    try:
+        from .models import SharedCode, SessionMember
+        
+        session = SharedCode.objects.get(share_id=session_id, is_active=True)
+        
+        # Check if expired
+        if session.is_expired():
+            return render(request, 'homepage/session_expired.html')
+        
+        # Check if public or user is owner
+        if not session.is_public and request.user != session.user:
+            # Check if user is already a member
+            if not SessionMember.objects.filter(session=session, user=request.user).exists():
+                return render(request, 'homepage/session_private.html')
+        
+        # Get or create member
+        member, created = SessionMember.objects.get_or_create(
+            session=session,
+            user=request.user,
+            defaults={'permission': 'view'}
+        )
+        
+        # Get imported files for owner
+        can_import_export = (request.user == session.user)
+        
+        # Get list of owner's .py files for import
+        user_py_files = []
+        if can_import_export:
+            user_py_files = list(PythonCodeSession.objects.filter(
+                user=request.user,
+                filename__endswith='.py'
+            ).values('filename', 'code_content'))
+        
+        context = {
+            'session': session,
+            'is_owner': request.user == session.user,
+            'can_edit': member.permission == 'edit' or request.user == session.user,
+            'can_import_export': can_import_export,
+            'user_py_files': user_py_files,
+            'member_permission': member.permission,
+        }
+        
+        return render(request, 'homepage/collaborative_session.html', context)
+        
+    except SharedCode.DoesNotExist:
+        return render(request, 'homepage/session_not_found.html', status=404)
+
+
+@login_required
+def get_session_members(request, session_id):
+    """Get list of members in a session"""
+    try:
+        from .models import SharedCode, SessionMember
+        
+        session = SharedCode.objects.get(share_id=session_id)
+        
+        # Only owner or members can see member list
+        if request.user != session.user and not SessionMember.objects.filter(session=session, user=request.user).exists():
+            return JsonResponse({'status': 'error', 'message': 'Not authorized'}, status=403)
+        
+        members = SessionMember.objects.filter(session=session).select_related('user')
+        
+        members_data = [{
+            'user_id': m.user.id,
+            'username': m.user.username,
+            'permission': m.permission,
+            'is_online': m.is_online,
+            'is_owner': m.user == session.user,
+            'joined_at': m.joined_at.isoformat(),
+            'last_active': m.last_active.isoformat()
+        } for m in members]
+        
+        return JsonResponse({
+            'status': 'success',
+            'members': members_data
+        })
+        
+    except SharedCode.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Session not found'}, status=404)
+
+
+@login_required
+def update_member_permission(request, session_id):
+    """Update a member's permission (owner only)"""
+    if request.method == 'POST':
+        try:
+            from .models import SharedCode, SessionMember
+            
+            session = SharedCode.objects.get(share_id=session_id)
+            
+            # Only owner can update permissions
+            if request.user != session.user:
+                return JsonResponse({'status': 'error', 'message': 'Not authorized'}, status=403)
+            
+            data = json.loads(request.body)
+            user_id = data.get('user_id')
+            permission = data.get('permission', 'view')
+            
+            if permission not in ['view', 'edit']:
+                return JsonResponse({'status': 'error', 'message': 'Invalid permission'}, status=400)
+            
+            member = SessionMember.objects.get(session=session, user_id=user_id)
+            member.permission = permission
+            member.save(update_fields=['permission'])
+            
+            # Notify via WebSocket
+            from channels.layers import get_channel_layer
+            from asgiref.sync import async_to_sync
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'code_session_{session_id}',
+                {
+                    'type': 'permission_changed',
+                    'user_id': user_id,
+                    'permission': permission,
+                }
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Permission updated'
+            })
+            
+        except SharedCode.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Session not found'}, status=404)
+        except SessionMember.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Member not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+@login_required
+def remove_member(request, session_id):
+    """Remove a member from session (owner only)"""
+    if request.method == 'POST':
+        try:
+            from .models import SharedCode, SessionMember
+            
+            session = SharedCode.objects.get(share_id=session_id)
+            
+            # Only owner can remove members
+            if request.user != session.user:
+                return JsonResponse({'status': 'error', 'message': 'Not authorized'}, status=403)
+            
+            data = json.loads(request.body)
+            user_id = data.get('user_id')
+            
+            # Can't remove owner
+            if user_id == session.user.id:
+                return JsonResponse({'status': 'error', 'message': 'Cannot remove owner'}, status=400)
+            
+            member = SessionMember.objects.get(session=session, user_id=user_id)
+            member.delete()
+            
+            # Notify via WebSocket
+            from channels.layers import get_channel_layer
+            from asgiref.sync import async_to_sync
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'code_session_{session_id}',
+                {
+                    'type': 'member_removed',
+                    'user_id': user_id,
+                }
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Member removed'
+            })
+            
+        except SharedCode.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Session not found'}, status=404)
+        except SessionMember.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Member not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+@login_required
+def import_files_to_session(request, session_id):
+    """Import .py files from owner's saved files to session (owner only)"""
+    if request.method == 'POST':
+        try:
+            from .models import SharedCode
+            
+            session = SharedCode.objects.get(share_id=session_id)
+            
+            # Only owner can import files
+            if request.user != session.user:
+                return JsonResponse({'status': 'error', 'message': 'Not authorized'}, status=403)
+            
+            data = json.loads(request.body)
+            filenames = data.get('filenames', [])
+            
+            imported_files = session.imported_files.copy()
+            
+            for filename in filenames:
+                try:
+                    py_session = PythonCodeSession.objects.get(
+                        user=request.user,
+                        filename=filename
+                    )
+                    imported_files[filename] = py_session.code_content
+                except PythonCodeSession.DoesNotExist:
+                    continue
+            
+            session.imported_files = imported_files
+            session.save(update_fields=['imported_files'])
+            
+            return JsonResponse({
+                'status': 'success',
+                'imported_files': imported_files
+            })
+            
+        except SharedCode.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Session not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+@login_required
+def export_session_to_files(request, session_id):
+    """Export session code to owner's saved .py files (owner only)"""
+    if request.method == 'POST':
+        try:
+            from .models import SharedCode
+            
+            session = SharedCode.objects.get(share_id=session_id)
+            
+            # Only owner can export files
+            if request.user != session.user:
+                return JsonResponse({'status': 'error', 'message': 'Not authorized'}, status=403)
+            
+            data = json.loads(request.body)
+            filename = data.get('filename', f"{session.title}.py")
+            code_content = data.get('code', session.session_state.get('code', ''))
+            
+            # Ensure .py extension
+            if not filename.endswith('.py'):
+                filename += '.py'
+            
+            # Create or update the file
+            py_session, created = PythonCodeSession.objects.update_or_create(
+                user=request.user,
+                filename=filename,
+                defaults={'code_content': code_content}
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'filename': filename,
+                'message': f'{"Created" if created else "Updated"} {filename}'
+            })
+            
+        except SharedCode.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Session not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+@login_required
+def end_session(request, session_id):
+    """End a collaborative session (owner only)"""
+    if request.method == 'POST':
+        try:
+            from .models import SharedCode
+            
+            session = SharedCode.objects.get(share_id=session_id)
+            
+            # Only owner can end session
+            if request.user != session.user:
+                return JsonResponse({'status': 'error', 'message': 'Not authorized'}, status=403)
+            
+            session.is_active = False
+            session.save(update_fields=['is_active'])
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Session ended'
+            })
+            
+        except SharedCode.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Session not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)

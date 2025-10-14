@@ -2613,12 +2613,24 @@
             
             <div class="editor-section">
                 <div class="editor-header">
-                    <h2>Python Code Editor (Client-Side)</h2>
+                    <h2>Collaborative Coding Session</h2>
+                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        <div id="session-info" style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary);">
+                            <span id="connection-status" style="display: inline-flex; align-items: center; gap: 5px;">
+                                <span style="display: inline-block; width: 8px; height: 8px; background: #666; border-radius: 50%;"></span>
+                                Connecting...
+                            </span>
+                            <span id="session-title" style="color: var(--text-bright); font-weight: bold;">{{ session.title }}</span>
+                            <span id="online-count" style="color: var(--text-secondary);">0 online</span>
+                        </div>
+                    </div>
                     <div class="editor-controls">
-                        <span id="current-file">untitled_script</span>
-                        <button id="history-btn" class="pixel-button" onclick="toggleHistory()" title="Execution History">HISTORY</button>
-                        <button id="share-btn" class="pixel-button" onclick="toggleShareModal()" title="Share Code">SHARE</button>
-                        <button id="members-btn" class="pixel-button" onclick="toggleMembersModal()" title="Session Members" style="display: none;">MEMBERS</button>
+                        <span id="current-file">{{ session.title }}</span>
+                        {% if is_owner %}
+                        <button id="import-files-btn" class="pixel-button" onclick="showImportFilesModal()" title="Import Files">IMPORT</button>
+                        <button id="export-files-btn" class="pixel-button" onclick="showExportModal()" title="Export to Saved Files">EXPORT</button>
+                        {% endif %}
+                        <button id="members-btn" class="pixel-button" onclick="toggleMembersModal()" title="Session Members">MEMBERS</button>
                         <button id="notebook-btn" class="pixel-button" onclick="toggleNotebookMode()" title="Jupyter-style Notebook Mode">NOTEBOOK</button>
                         <button id="focus-btn" class="pixel-button" onclick="toggleFocusMode()" title="Focus Mode">FOCUS</button>
                     </div>
@@ -5073,7 +5085,401 @@ sys.stderr = sys.__stderr__
             
             loadScriptList();
             initPyodide();
+            
+            // Initialize collaborative session
+            initCollaborativeSession();
         });
+
+        // Collaborative Session Variables
+        let collaborativeWS = null;
+        let sessionId = '{{ session.share_id }}';
+        let isSessionOwner = {{ is_owner|lower }};
+        let canEdit = {{ can_edit|lower }};
+        let reconnectAttempts = 0;
+        let maxReconnectAttempts = 10;
+        let codeChangeTimeout = null;
+        let lastReceivedCode = '';
+        let isReceivingRemoteChange = false;
+
+        // Initialize collaborative session
+        function initCollaborativeSession() {
+            // Set up session variables
+            currentSessionId = sessionId;
+            window.isSessionOwner = isSessionOwner;
+            
+            // Show members button
+            document.getElementById('members-btn').style.display = 'inline-block';
+            
+            // Set up Import/Export button event listeners (owner only)
+            if (isSessionOwner) {
+                const importBtn = document.getElementById('import-files-btn');
+                const exportBtn = document.getElementById('export-files-btn');
+                
+                if (importBtn) {
+                    importBtn.addEventListener('click', showImportFilesModal);
+                }
+                if (exportBtn) {
+                    exportBtn.addEventListener('click', showExportModal);
+                }
+            }
+            
+            // Set up editor based on permissions
+            if (!canEdit) {
+                makeEditorReadOnly();
+            }
+            
+            // Connect to WebSocket
+            connectWebSocket();
+            
+            // Set initial code
+            if ('{{ session.session_state.code|escapejs }}') {
+                const initialCode = `{{ session.session_state.code|escapejs }}`;
+                if (window.editor) {
+                    window.editor.setValue(initialCode, -1);
+                    lastReceivedCode = initialCode;
+                }
+            }
+        }
+
+        function makeEditorReadOnly() {
+            if (window.editor) {
+                window.editor.setReadOnly(true);
+                window.editor.setOption("highlightActiveLine", false);
+                window.editor.setOption("highlightGutterLine", false);
+            }
+            
+            // Show read-only message
+            const editorHeader = document.querySelector('.editor-header h2');
+            if (editorHeader) {
+                editorHeader.innerHTML = 'Collaborative Coding Session <span style="color: #ff4444; font-size: 14px; margin-left: 10px;">(VIEW ONLY)</span>';
+            }
+        }
+
+        // WebSocket Connection
+        function connectWebSocket() {
+            if (collaborativeWS && collaborativeWS.readyState === WebSocket.OPEN) {
+                return;
+            }
+            
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${wsProtocol}//${window.location.host}/ws/python/code/${sessionId}/`;
+            
+            try {
+                collaborativeWS = new WebSocket(wsUrl);
+                
+                collaborativeWS.onopen = handleWebSocketOpen;
+                collaborativeWS.onmessage = handleWebSocketMessage;
+                collaborativeWS.onclose = handleWebSocketClose;
+                collaborativeWS.onerror = handleWebSocketError;
+            } catch (error) {
+                console.error('WebSocket connection error:', error);
+                updateConnectionStatus('error', 'Connection failed');
+            }
+        }
+
+        function handleWebSocketOpen(event) {
+            console.log('WebSocket connected');
+            reconnectAttempts = 0;
+            updateConnectionStatus('connected', 'Connected');
+            
+            // Set up editor change listener
+            if (window.editor && canEdit) {
+                window.editor.on('change', handleEditorChange);
+            }
+        }
+
+        function handleWebSocketMessage(event) {
+            const data = JSON.parse(event.data);
+            
+            switch(data.type) {
+                case 'session_state':
+                    handleSessionState(data.state);
+                    break;
+                case 'members_update':
+                    handleMembersUpdate(data.members);
+                    break;
+                case 'user_joined':
+                    handleUserJoined(data);
+                    break;
+                case 'user_left':
+                    handleUserLeft(data);
+                    break;
+                case 'code_change':
+                    handleRemoteCodeChange(data);
+                    break;
+                case 'cursor_position':
+                    handleRemoteCursorPosition(data);
+                    break;
+                case 'terminal_output':
+                    handleRemoteTerminalOutput(data);
+                    break;
+                case 'permission_changed':
+                    handlePermissionChanged(data);
+                    break;
+                case 'removed_from_session':
+                    handleRemovedFromSession(data);
+                    break;
+                case 'error':
+                    console.error('WebSocket error:', data.message);
+                    showNotification(data.message, 'error');
+                    break;
+            }
+        }
+
+        function handleWebSocketClose(event) {
+            console.log('WebSocket disconnected');
+            updateConnectionStatus('disconnected', 'Disconnected');
+            
+            // Attempt to reconnect
+            if (reconnectAttempts < maxReconnectAttempts) {
+                reconnectAttempts++;
+                const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+                setTimeout(connectWebSocket, delay);
+                updateConnectionStatus('reconnecting', `Reconnecting (${reconnectAttempts}/${maxReconnectAttempts})`);
+            } else {
+                updateConnectionStatus('error', 'Connection lost');
+                showNotification('Lost connection to session. Please refresh the page.', 'error');
+            }
+        }
+
+        function handleWebSocketError(error) {
+            console.error('WebSocket error:', error);
+            updateConnectionStatus('error', 'Connection error');
+        }
+
+        function updateConnectionStatus(status, text) {
+            const statusElem = document.getElementById('connection-status');
+            if (!statusElem) return;
+            
+            const colors = {
+                'connected': '#00ff00',
+                'disconnected': '#666',
+                'reconnecting': '#ffaa00',
+                'error': '#ff4444'
+            };
+            
+            const dot = statusElem.querySelector('span');
+            if (dot) {
+                dot.style.background = colors[status] || '#666';
+            }
+            
+            statusElem.childNodes[1].textContent = text;
+        }
+
+        // WebSocket Message Handlers
+        function handleSessionState(state) {
+            if (state.code && state.code !== lastReceivedCode) {
+                isReceivingRemoteChange = true;
+                if (window.editor) {
+                    const cursorPos = window.editor.getCursorPosition();
+                    window.editor.setValue(state.code, -1);
+                    window.editor.moveCursorToPosition(cursorPos);
+                    lastReceivedCode = state.code;
+                }
+                isReceivingRemoteChange = false;
+            }
+            
+            if (state.terminal_output && Array.isArray(state.terminal_output)) {
+                // Could display terminal history if needed
+            }
+        }
+
+        function handleMembersUpdate(members) {
+            const onlineCount = members.filter(m => m.is_online).length;
+            const onlineCountElem = document.getElementById('online-count');
+            if (onlineCountElem) {
+                onlineCountElem.textContent = `${onlineCount} online`;
+            }
+        }
+
+        function handleUserJoined(data) {
+            showNotification(`${data.username} joined the session`, 'info');
+            // Refresh members list if modal is open
+            if (membersModal && membersModal.style.display === 'flex') {
+                loadSessionMembers();
+            }
+        }
+
+        function handleUserLeft(data) {
+            showNotification(`${data.username} left the session`, 'info');
+            // Refresh members list if modal is open
+            if (membersModal && membersModal.style.display === 'flex') {
+                loadSessionMembers();
+            }
+        }
+
+        function handleRemoteCodeChange(data) {
+            if (data.user_id === {{ user.id }}) {
+                return; // Ignore our own changes
+            }
+            
+            isReceivingRemoteChange = true;
+            
+            if (window.editor) {
+                const cursorPos = window.editor.getCursorPosition();
+                const scrollTop = window.editor.session.getScrollTop();
+                
+                window.editor.setValue(data.code, -1);
+                window.editor.moveCursorToPosition(cursorPos);
+                window.editor.session.setScrollTop(scrollTop);
+                
+                lastReceivedCode = data.code;
+            }
+            
+            // Show brief indicator
+            showUserEditingIndicator(data.username);
+            
+            isReceivingRemoteChange = false;
+        }
+
+        function handleRemoteCursorPosition(data) {
+            // Could show remote cursor positions here
+            // For now, we'll skip this feature
+        }
+
+        function handleRemoteTerminalOutput(data) {
+            // Terminal output is already handled by Pyodide
+            // This is just for sync purposes
+        }
+
+        function handlePermissionChanged(data) {
+            canEdit = data.permission === 'edit';
+            
+            if (canEdit && window.editor) {
+                window.editor.setReadOnly(false);
+                window.editor.setOption("highlightActiveLine", true);
+                window.editor.setOption("highlightGutterLine", true);
+                
+                const editorHeader = document.querySelector('.editor-header h2');
+                if (editorHeader) {
+                    editorHeader.textContent = 'Collaborative Coding Session';
+                }
+                
+                showNotification('You can now edit the code', 'success');
+            } else {
+                makeEditorReadOnly();
+                showNotification('Your permission changed to view-only', 'info');
+            }
+        }
+
+        function handleRemovedFromSession(data) {
+            showNotification(data.message, 'error');
+            setTimeout(() => {
+                window.location.href = '/python/';
+            }, 3000);
+        }
+
+        // Editor Change Handler
+        function handleEditorChange(delta) {
+            if (isReceivingRemoteChange) {
+                return; // Don't send changes that came from remote
+            }
+            
+            if (!canEdit) {
+                return; // Shouldn't happen, but safety check
+            }
+            
+            // Debounce code changes
+            if (codeChangeTimeout) {
+                clearTimeout(codeChangeTimeout);
+            }
+            
+            codeChangeTimeout = setTimeout(() => {
+                sendCodeChange();
+            }, 500); // Wait 500ms after user stops typing
+        }
+
+        function sendCodeChange() {
+            if (!collaborativeWS || collaborativeWS.readyState !== WebSocket.OPEN) {
+                return;
+            }
+            
+            const code = window.editor ? window.editor.getValue() : '';
+            
+            if (code === lastReceivedCode) {
+                return; // No actual change
+            }
+            
+            collaborativeWS.send(JSON.stringify({
+                type: 'code_change',
+                code: code
+            }));
+            
+            lastReceivedCode = code;
+        }
+
+        function sendCursorPosition() {
+            if (!collaborativeWS || collaborativeWS.readyState !== WebSocket.OPEN || !window.editor) {
+                return;
+            }
+            
+            const position = window.editor.getCursorPosition();
+            
+            collaborativeWS.send(JSON.stringify({
+                type: 'cursor_position',
+                position: position
+            }));
+        }
+
+        function sendTerminalOutput(output) {
+            if (!collaborativeWS || collaborativeWS.readyState !== WebSocket.OPEN) {
+                return;
+            }
+            
+            collaborativeWS.send(JSON.stringify({
+                type: 'terminal_output',
+                output: output
+            }));
+        }
+
+        // UI Helper Functions
+        function showUserEditingIndicator(username) {
+            const indicator = document.getElementById('editing-indicator');
+            if (!indicator) {
+                const div = document.createElement('div');
+                div.id = 'editing-indicator';
+                div.style.cssText = 'position: fixed; top: 70px; right: 20px; background: var(--primary-color); color: var(--bg-primary); padding: 8px 16px; border-radius: 4px; font-size: 13px; z-index: 9999; font-weight: bold;';
+                div.textContent = `${username} is editing...`;
+                document.body.appendChild(div);
+                
+                setTimeout(() => {
+                    div.remove();
+                }, 2000);
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const colors = {
+                'info': 'var(--primary-color)',
+                'success': '#00ff00',
+                'error': '#ff4444',
+                'warning': '#ffaa00'
+            };
+            
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${colors[type]};
+                color: var(--bg-primary);
+                padding: 12px 20px;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: bold;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                animation: slideIn 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
 
         let isFocusMode = false;
 
@@ -5711,6 +6117,183 @@ sys.stderr = sys.__stderr__
             } catch (error) {
                 console.error('Error removing member:', error);
                 alert('Error removing member');
+            }
+        }
+
+        // Import/Export Modal Functions (owner only)
+        function showImportFilesModal() {
+            if (!isSessionOwner) {
+                alert('Only the session owner can import files');
+                return;
+            }
+            
+            const modalHtml = `
+                <div id="import-modal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10000; justify-content: center; align-items: center;">
+                    <div style="background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 8px; width: 90%; max-width: 600px; max-height: 70vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);">
+                        <div style="padding: 20px; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary);">
+                            <h2 style="margin: 0; color: var(--text-bright); font-size: 24px;">IMPORT FILES</h2>
+                            <button onclick="closeImportModal()" class="pixel-button" style="padding: 8px 16px;">CLOSE</button>
+                        </div>
+                        <div style="padding: 20px; overflow-y: auto; flex: 1; color: var(--text-primary);">
+                            <p style="margin-bottom: 15px; color: var(--text-secondary);">Select .py files from your saved files to import into this session:</p>
+                            <div id="import-file-list" style="max-height: 300px; overflow-y: auto; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px;">
+                                <div style="text-align: center; color: var(--text-secondary); padding: 20px;">Loading files...</div>
+                            </div>
+                            <button onclick="importSelectedFiles()" class="pixel-button" style="width: 100%; margin-top: 15px; padding: 12px;">IMPORT SELECTED FILES</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            loadImportFileList();
+        }
+
+        function closeImportModal() {
+            const modal = document.getElementById('import-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        async function loadImportFileList() {
+            try {
+                const response = await fetch('/python/get-files/', {
+                    headers: {'X-CSRFToken': '{{ csrf_token }}'}
+                });
+                const data = await response.json();
+                
+                const fileList = document.getElementById('import-file-list');
+                const pyFiles = data.files.filter(f => f.filename.endsWith('.py'));
+                
+                if (pyFiles.length === 0) {
+                    fileList.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;">No .py files found in your saved files</div>';
+                    return;
+                }
+                
+                fileList.innerHTML = pyFiles.map(file => `
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 4px; margin-bottom: 4px;" onmouseover="this.style.background='var(--bg-primary)'" onmouseout="this.style.background='transparent'">
+                        <input type="checkbox" class="import-file-checkbox" value="${file.filename}" style="width: 16px; height: 16px;">
+                        <span style="color: var(--text-primary); font-family: monospace; font-size: 13px;">${file.filename}</span>
+                    </label>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading files:', error);
+            }
+        }
+
+        async function importSelectedFiles() {
+            const selectedFiles = Array.from(document.querySelectorAll('.import-file-checkbox:checked')).map(cb => cb.value);
+            
+            if (selectedFiles.length === 0) {
+                alert('Please select at least one file to import');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/python/session/${sessionId}/import-files/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        filenames: selectedFiles
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showNotification(`Imported ${selectedFiles.length} file(s) successfully`, 'success');
+                    closeImportModal();
+                } else {
+                    alert('Failed to import files: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error importing files:', error);
+                alert('Error importing files');
+            }
+        }
+
+        function showExportModal() {
+            if (!isSessionOwner) {
+                alert('Only the session owner can export files');
+                return;
+            }
+            
+            const modalHtml = `
+                <div id="export-modal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10000; justify-content: center; align-items: center;">
+                    <div style="background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);">
+                        <div style="padding: 20px; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary);">
+                            <h2 style="margin: 0; color: var(--text-bright); font-size: 24px;">EXPORT TO SAVED FILES</h2>
+                            <button onclick="closeExportModal()" class="pixel-button" style="padding: 8px 16px;">CLOSE</button>
+                        </div>
+                        <div style="padding: 20px; color: var(--text-primary);">
+                            <p style="margin-bottom: 15px; color: var(--text-secondary);">Save the current session code to your saved .py files:</p>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 8px; color: var(--text-bright); font-weight: bold;">Filename:</label>
+                                <input type="text" id="export-filename" value="{{ session.title }}.py" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-family: monospace;">
+                            </div>
+                            <button onclick="exportToSavedFiles()" class="pixel-button" style="width: 100%; padding: 12px;">EXPORT</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        function closeExportModal() {
+            const modal = document.getElementById('export-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        async function exportToSavedFiles() {
+            let filename = document.getElementById('export-filename').value.trim();
+            
+            if (!filename) {
+                alert('Please enter a filename');
+                return;
+            }
+            
+            if (!filename.endsWith('.py')) {
+                filename += '.py';
+            }
+            
+            const code = window.editor ? window.editor.getValue() : '';
+            
+            if (!code.trim()) {
+                alert('No code to export');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/python/session/${sessionId}/export/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        filename: filename,
+                        code: code
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showNotification(data.message, 'success');
+                    closeExportModal();
+                } else {
+                    alert('Failed to export: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error exporting:', error);
+                alert('Error exporting file');
             }
         }
 

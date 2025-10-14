@@ -18,4 +18,14 @@ urlpatterns = [
     path('python/fork/<uuid:share_id>/', views.fork_shared_code, name='fork_shared_code'),
     path('python/update-plot-theme/', views.update_plot_theme, name='update_plot_theme'),
     path('python/get-settings/', views.get_user_settings, name='get_user_settings'),
+    
+    # Collaborative sessions
+    path('python/session/create/', views.create_collaborative_session, name='create_collaborative_session'),
+    path('python/code/<uuid:session_id>/', views.join_collaborative_session, name='join_collaborative_session'),
+    path('python/session/<uuid:session_id>/members/', views.get_session_members, name='get_session_members'),
+    path('python/session/<uuid:session_id>/permission/', views.update_member_permission, name='update_member_permission'),
+    path('python/session/<uuid:session_id>/remove-member/', views.remove_member, name='remove_member'),
+    path('python/session/<uuid:session_id>/import-files/', views.import_files_to_session, name='import_files_to_session'),
+    path('python/session/<uuid:session_id>/export/', views.export_session_to_files, name='export_session_to_files'),
+    path('python/session/<uuid:session_id>/end/', views.end_session, name='end_session'),
 ]
