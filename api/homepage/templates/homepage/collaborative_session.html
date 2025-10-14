@@ -5778,19 +5778,25 @@ sys.stderr = sys.__stderr__
                 
                 const fileList = document.getElementById('file-import-list');
                 
-                // Handle both possible response structures
-                const files = data.files || data.user_files || [];
-                const pyFiles = files.filter(f => f.filename && f.filename.endsWith('.py'));
+                // Handle the actual response structure from backend
+                // Backend returns: { saved_files: ['file1.py', 'file2.py', ...] }
+                let pyFiles = [];
+                if (data.saved_files && Array.isArray(data.saved_files)) {
+                    pyFiles = data.saved_files.filter(filename => filename && filename.endsWith('.py'));
+                } else if (data.files && Array.isArray(data.files)) {
+                    // Fallback for object structure { files: [{filename: 'x.py'}, ...] }
+                    pyFiles = data.files.filter(f => f.filename && f.filename.endsWith('.py')).map(f => f.filename);
+                }
                 
                 if (pyFiles.length === 0) {
                     fileList.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;">No .py files found</div>';
                     return;
                 }
                 
-                fileList.innerHTML = pyFiles.map(file => `
+                fileList.innerHTML = pyFiles.map(filename => `
                     <label style="display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 4px; margin-bottom: 4px;" onmouseover="this.style.background='var(--bg-primary)'" onmouseout="this.style.background='transparent'">
-                        <input type="checkbox" class="import-file-checkbox" value="${file.filename}" style="width: 16px; height: 16px;">
-                        <span style="color: var(--text-primary); font-family: monospace; font-size: 13px;">${file.filename}</span>
+                        <input type="checkbox" class="import-file-checkbox" value="${filename}" style="width: 16px; height: 16px;">
+                        <span style="color: var(--text-primary); font-family: monospace; font-size: 13px;">${filename}</span>
                     </label>
                 `).join('');
             } catch (error) {
@@ -5949,7 +5955,7 @@ sys.stderr = sys.__stderr__
         // Members Modal Functions (for collaborative sessions)
         let membersModal = null;
         let currentSessionId = null;
-        let isSessionOwner = false;
+        // isSessionOwner is already declared above
         let membersRefreshInterval = null;
 
         function toggleMembersModal() {
