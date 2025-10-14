@@ -161,11 +161,11 @@
     <div class="header">
         <h1>{{ shared_code.title }}</h1>
         <div class="meta">
-            <span>👤 {{ shared_code.user.username }}</span>
-            <span>📅 {{ shared_code.created_at|date:"M d, Y" }}</span>
-            <span>👁️ {{ shared_code.view_count }} views</span>
+            <span>{{ shared_code.user.username }}</span>
+            <span>{{ shared_code.created_at|date:"M d, Y" }}</span>
+            <span>{{ shared_code.view_count }} views</span>
             {% if shared_code.expires_at %}
-            <span>⏱️ Expires: {{ shared_code.expires_at|date:"M d, Y" }}</span>
+            <span>Expires: {{ shared_code.expires_at|date:"M d, Y" }}</span>
             {% endif %}
         </div>
     </div>
@@ -177,20 +177,17 @@
     {% endif %}
 
     <div class="read-only-banner">
-        📖 READ-ONLY VIEW - You can view and copy this code. To edit, fork it to your account.
+        READ-ONLY VIEW - You can view and copy this code. To edit, fork it to your account.
     </div>
 
     <div class="actions">
         {% if user.is_authenticated %}
-        <form method="POST" action="{% url 'fork_shared_code' shared_code.share_id %}" style="display: inline;">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary">🔱 FORK TO MY ACCOUNT</button>
-        </form>
+        <button onclick="forkCode()" class="btn btn-primary" id="fork-btn">FORK TO MY ACCOUNT</button>
         {% else %}
-        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">🔱 LOGIN TO FORK</a>
+        <a href="/login/?next={{ request.path }}" class="btn btn-primary">LOGIN TO FORK</a>
         {% endif %}
         <button onclick="copyCode()" class="btn">📋 COPY CODE</button>
-        <a href="{% url 'python_environment' %}" class="btn">🏠 GO TO EDITOR</a>
+        <a href="/python/" class="btn">GO TO EDITOR</a>
     </div>
 
     <div class="editor-container">
@@ -199,8 +196,8 @@
 
     <div class="footer">
         <div class="stats">
-            <span>👁️ {{ shared_code.view_count }} views</span>
-            <span>🔱 {{ shared_code.fork_count }} forks</span>
+            <span>{{ shared_code.view_count }} views</span>
+            <span>{{ shared_code.fork_count }} forks</span>
         </div>
         <div>
             Shared by <strong>{{ shared_code.user.username }}</strong> via CLASS 12 PYTHON ASSEMBLY
@@ -234,6 +231,51 @@
                 alert('Failed to copy code');
                 console.error('Copy failed:', err);
             });
+        }
+
+        async function forkCode() {
+            const btn = document.getElementById('fork-btn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'FORKING...';
+            
+            try {
+                const response = await fetch('/python/fork/{{ shared_code.share_id }}/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    btn.textContent = '✓ FORKED!';
+                    btn.style.background = '#00aa00';
+                    setTimeout(() => {
+                        window.location.href = '/python/';
+                    }, 1500);
+                } else {
+                    btn.textContent = '✗ FAILED';
+                    btn.style.background = '#ff4444';
+                    alert('Failed to fork: ' + data.message);
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = '';
+                        btn.disabled = false;
+                    }, 2000);
+                }
+            } catch (error) {
+                btn.textContent = '✗ ERROR';
+                btn.style.background = '#ff4444';
+                alert('Error forking code');
+                console.error('Fork error:', error);
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 2000);
+            }
         }
     </script>
 </body>
