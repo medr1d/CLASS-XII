@@ -3497,50 +3497,6 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
             </div>
         </div>
     </div>
-
-    <!-- Share Modal -->
-    <div class="modal" id="share-modal" style="display: none;">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h2>SHARE YOUR CODE</h2>
-                <button class="close-btn" onclick="closeShareModal()">×</button>
-            </div>
-            <div class="modal-body">
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Title:</label>
-                    <input type="text" id="share-title" placeholder="My Awesome Code" style="width: 100%; padding: 10px; background: #000; border: 1px solid var(--border-color); color: var(--text-color); border-radius: 5px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Description (optional):</label>
-                    <textarea id="share-description" placeholder="Describe what this code does..." rows="3" style="width: 100%; padding: 10px; background: #000; border: 1px solid var(--border-color); color: var(--text-color); border-radius: 5px;"></textarea>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Expires After:</label>
-                    <select id="share-expires" style="width: 100%; padding: 10px; background: #000; border: 1px solid var(--border-color); color: var(--text-color); border-radius: 5px;">
-                        <option value="">Never</option>
-                        <option value="7">7 Days</option>
-                        <option value="30">30 Days</option>
-                        <option value="90">90 Days</option>
-                    </select>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" id="share-public" checked style="margin-right: 10px;">
-                        <span>Public (anyone with link can view)</span>
-                    </label>
-                </div>
-                <button onclick="shareCode()" class="focus-button" style="width: 100%; margin-top: 10px;">Generate Share Link</button>
-                <div id="share-result" style="margin-top: 15px; display: none;">
-                    <div style="padding: 15px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 5px;">
-                        <p style="margin-bottom: 10px; font-weight: bold; color: var(--text-bright);">Share Link Created!</p>
-                        <input type="text" id="share-url" readonly style="width: 100%; padding: 10px; background: #000; border: 1px solid var(--border-color); color: var(--text-color); border-radius: 5px; margin-bottom: 10px;">
-                        <button onclick="copyShareLink()" class="focus-button">📋 Copy Link</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Settings Modal -->
     <div class="modal" id="settings-modal" style="display: none;">
         <div class="modal-content" style="max-width: 500px;">
