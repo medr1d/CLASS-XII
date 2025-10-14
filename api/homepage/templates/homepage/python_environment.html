@@ -1068,12 +1068,12 @@
             box-shadow: 0 0 15px var(--shadow-color);
         }
 
-        /* 8-Bit Pixel Button Style */
+        /* 8-Bit Pixel Button Style - Theme Responsive */
         .pixel-button {
             background: var(--bg-secondary);
             border: 3px solid var(--border-color);
             color: var(--text-bright);
-            padding: 8px 12px;
+            padding: 8px 14px;
             cursor: pointer;
             font-family: 'Courier New', monospace;
             font-size: 11px;
@@ -1101,10 +1101,12 @@
             box-shadow: none;
         }
 
-        .pixel-icon {
-            display: inline-block;
-            margin-right: 5px;
-            filter: drop-shadow(0 0 3px var(--text-bright));
+        .pixel-button.active {
+            background: var(--primary-color);
+            border-color: var(--text-bright);
+            box-shadow: 
+                inset 2px 2px 0px var(--tertiary-color),
+                0 0 15px var(--glow-color);
         }
 
 
@@ -2614,14 +2616,10 @@
                     <h2>Python Code Editor (Client-Side)</h2>
                     <div class="editor-controls">
                         <span id="current-file">untitled_script</span>
-                        <button id="history-btn" class="pixel-button" onclick="toggleHistory()" title="Execution History">
-                            <span class="pixel-icon">📜</span> HISTORY
-                        </button>
-                        <button id="share-btn" class="pixel-button" onclick="shareCode()" title="Share Code">
-                            <span class="pixel-icon">🔗</span> SHARE
-                        </button>
-                        <button id="notebook-btn" class="focus-button" onclick="toggleNotebookMode()" title="Jupyter-style Notebook Mode">NOTEBOOK</button>
-                        <button id="focus-btn" class="focus-button" onclick="toggleFocusMode()" title="Focus Mode">FOCUS</button>
+                        <button id="history-btn" class="pixel-button" onclick="toggleHistory()" title="Execution History">HISTORY</button>
+                        <button id="share-btn" class="pixel-button" onclick="toggleShareModal()" title="Share Code">SHARE</button>
+                        <button id="notebook-btn" class="pixel-button" onclick="toggleNotebookMode()" title="Jupyter-style Notebook Mode">NOTEBOOK</button>
+                        <button id="focus-btn" class="pixel-button" onclick="toggleFocusMode()" title="Focus Mode">FOCUS</button>
                     </div>
                 </div>
                 <div class="editor-container">
@@ -2634,8 +2632,8 @@
             <div class="terminal-section">
                 <div class="terminal-header">
                     <h2>Python Terminal (Client-Side)</h2>
-                    <button onclick="executeCode()" class="execute-button" id="run-btn">Run Code (Ctrl+Enter)</button>
-                    <button onclick="clearTerminal()" class="execute-button">Clear Terminal</button>
+                    <button onclick="executeCode()" class="pixel-button" id="run-btn">RUN CODE</button>
+                    <button onclick="clearTerminal()" class="pixel-button">CLEAR</button>
                 </div>
                 <div class="terminal-output" id="terminal-output">
                     Initializing Python environment...<br>
@@ -2929,7 +2927,7 @@ This notebook demonstrates the **full power** of Python in the browser using Pyo
 import this  # The Zen of Python
 ```
 
-Happy coding! 🐍✨</textarea>
+Happy coding!</textarea>
                         </div>
                         <div class="cell-output" id="output-4"></div>
                     </div>
@@ -3488,7 +3486,7 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
     <div class="modal" id="history-modal" style="display: none;">
         <div class="modal-content" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
             <div class="modal-header">
-                <h2>📜 Execution History</h2>
+                <h2>EXECUTION HISTORY</h2>
                 <button class="close-btn" onclick="closeHistoryModal()">×</button>
             </div>
             <div class="modal-body" id="history-list">
@@ -3503,7 +3501,7 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
     <div class="modal" id="share-modal" style="display: none;">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
-                <h2>🔗 Share Your Code</h2>
+                <h2>SHARE YOUR CODE</h2>
                 <button class="close-btn" onclick="closeShareModal()">×</button>
             </div>
             <div class="modal-body">
@@ -3546,7 +3544,7 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
     <div class="modal" id="settings-modal" style="display: none;">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
-                <h2>⚙️ Editor Settings</h2>
+                <h2>EDITOR SETTINGS</h2>
                 <button class="close-btn" onclick="closeSettingsModal()">×</button>
             </div>
             <div class="modal-body">
@@ -4468,7 +4466,7 @@ except Exception as e:
             const fileList = document.getElementById('file-list');
             fileList.innerHTML = '';
             const computedStyle = getComputedStyle(document.body);
-            const textColor = computedStyle.getPropertyValue('--text-bright').trim() || '#0f0';
+            const textColor = computedStyle.getPropertyValue('--text-bright').trim() || '#00ff00';
             
             // Count data files
             let dataFileCount = 3; // Default files (text.txt, tester.csv, binary.dat)
@@ -4983,12 +4981,12 @@ sys.stderr = sys.__stderr__
                         opacity: 0.2;
                     }
                 </style>
-                <div class="input-modal-title">🔍 Python Input Required</div>
+                <div class="input-modal-title">PYTHON INPUT REQUIRED</div>
                 <div class="input-modal-prompt">${prompt || 'Enter your input:'}</div>
                 <input type="text" class="input-modal-field" id="python-input-field" placeholder="Type here..." autocomplete="off">
                 <div class="input-modal-buttons">
-                    <button class="input-modal-btn" id="input-ok-btn">✓ Submit</button>
-                    <button class="input-modal-btn" id="input-cancel-btn">✗ Cancel</button>
+                    <button class="input-modal-btn" id="input-ok-btn">SUBMIT</button>
+                    <button class="input-modal-btn" id="input-cancel-btn">CANCEL</button>
                 </div>
             `;
 
@@ -5129,6 +5127,256 @@ sys.stderr = sys.__stderr__
             }
             
             isNotebookMode = !isNotebookMode;
+        }
+
+        // History Modal Functions
+        let historyModal = null;
+
+        function toggleHistory() {
+            if (!historyModal) {
+                createHistoryModal();
+            }
+            
+            if (historyModal.style.display === 'flex') {
+                historyModal.style.display = 'none';
+            } else {
+                historyModal.style.display = 'flex';
+                loadExecutionHistory();
+            }
+        }
+
+        function createHistoryModal() {
+            const modalHtml = `
+                <div id="history-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10000; justify-content: center; align-items: center;">
+                    <div style="background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 8px; width: 80%; max-width: 800px; max-height: 80%; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);">
+                        <div style="padding: 20px; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary);">
+                            <h2 style="margin: 0; color: var(--text-bright); font-size: 24px;">EXECUTION HISTORY</h2>
+                            <button onclick="toggleHistory()" class="pixel-button" style="padding: 8px 16px;">CLOSE</button>
+                        </div>
+                        <div id="history-content" style="padding: 20px; overflow-y: auto; flex: 1; color: var(--text-primary);">
+                            <div style="text-align: center; color: var(--text-secondary);">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            historyModal = document.getElementById('history-modal');
+            
+            // Close on outside click
+            historyModal.addEventListener('click', (e) => {
+                if (e.target === historyModal) {
+                    toggleHistory();
+                }
+            });
+        }
+
+        async function loadExecutionHistory() {
+            const content = document.getElementById('history-content');
+            content.innerHTML = '<div style="text-align: center; color: var(--text-secondary);">Loading...</div>';
+            
+            try {
+                const response = await fetch('/python/get-history/', {
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.history && data.history.length > 0) {
+                    const historyHtml = data.history.map((entry, index) => {
+                        const date = new Date(entry.executed_at);
+                        const timeStr = date.toLocaleString();
+                        const codePreview = entry.code_snippet.substring(0, 100) + (entry.code_snippet.length > 100 ? '...' : '');
+                        
+                        return `
+                            <div style="border: 1px solid var(--border-color); border-radius: 4px; padding: 15px; margin-bottom: 15px; background: var(--bg-secondary); cursor: pointer; transition: all 0.2s;" 
+                                 onmouseover="this.style.borderColor='var(--primary-color)'" 
+                                 onmouseout="this.style.borderColor='var(--border-color)'"
+                                 onclick="restoreFromHistory(${index})">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <strong style="color: var(--text-bright);">${timeStr}</strong>
+                                    <span style="color: var(--secondary-color);">Execution time: ${entry.execution_time.toFixed(3)}s</span>
+                                </div>
+                                <pre style="margin: 10px 0; padding: 10px; background: var(--bg-tertiary); border-radius: 4px; overflow-x: auto; color: var(--text-primary); font-size: 12px; white-space: pre-wrap;">${codePreview}</pre>
+                                ${entry.output ? `<div style="margin-top: 10px; font-size: 12px; color: var(--text-secondary);">Output available</div>` : ''}
+                                ${entry.error ? `<div style="margin-top: 10px; font-size: 12px; color: #ff4444;">Error occurred</div>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    content.innerHTML = historyHtml;
+                    
+                    // Store history data for restoration
+                    window.historyData = data.history;
+                } else {
+                    content.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 40px;">No execution history yet. Run some code to see it here!</div>';
+                }
+            } catch (error) {
+                content.innerHTML = '<div style="text-align: center; color: #ff4444;">Failed to load history</div>';
+                console.error('Error loading history:', error);
+            }
+        }
+
+        function restoreFromHistory(index) {
+            if (window.historyData && window.historyData[index]) {
+                const code = window.historyData[index].code_snippet;
+                if (isNotebookMode) {
+                    const firstCell = document.querySelector('.cell-textarea');
+                    if (firstCell) {
+                        firstCell.value = code;
+                    }
+                } else {
+                    if (window.editor) {
+                        window.editor.setValue(code, -1);
+                    }
+                }
+                toggleHistory();
+            }
+        }
+
+        // Share Modal Functions
+        let shareModal = null;
+
+        function toggleShareModal() {
+            if (!shareModal) {
+                createShareModal();
+            }
+            
+            if (shareModal.style.display === 'flex') {
+                shareModal.style.display = 'none';
+            } else {
+                shareModal.style.display = 'flex';
+            }
+        }
+
+        function createShareModal() {
+            const modalHtml = `
+                <div id="share-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10000; justify-content: center; align-items: center;">
+                    <div style="background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 8px; width: 90%; max-width: 600px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);">
+                        <div style="padding: 20px; border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary);">
+                            <h2 style="margin: 0; color: var(--text-bright); font-size: 24px;">SHARE CODE</h2>
+                            <button onclick="toggleShareModal()" class="pixel-button" style="padding: 8px 16px;">CLOSE</button>
+                        </div>
+                        <div id="share-content" style="padding: 20px; color: var(--text-primary);">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 8px; color: var(--text-bright); font-weight: bold;">Title:</label>
+                                <input type="text" id="share-title" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-family: inherit;" placeholder="My Awesome Code">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 8px; color: var(--text-bright); font-weight: bold;">Description (Optional):</label>
+                                <textarea id="share-description" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-family: inherit; resize: vertical; min-height: 80px;" placeholder="Describe what your code does..."></textarea>
+                            </div>
+                            <div style="margin-bottom: 15px; display: flex; gap: 20px;">
+                                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-primary); cursor: pointer;">
+                                    <input type="checkbox" id="share-public" checked style="width: 18px; height: 18px;">
+                                    <span>Public (anyone can view)</span>
+                                </label>
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; color: var(--text-bright); font-weight: bold;">Expires in:</label>
+                                <select id="share-expiry" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-family: inherit;">
+                                    <option value="7">7 days</option>
+                                    <option value="30" selected>30 days</option>
+                                    <option value="90">90 days</option>
+                                    <option value="365">1 year</option>
+                                </select>
+                            </div>
+                            <button onclick="shareCode()" class="pixel-button" style="width: 100%; padding: 12px; font-size: 16px;">GENERATE SHARE LINK</button>
+                            <div id="share-result" style="margin-top: 20px;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            shareModal = document.getElementById('share-modal');
+            
+            // Close on outside click
+            shareModal.addEventListener('click', (e) => {
+                if (e.target === shareModal) {
+                    toggleShareModal();
+                }
+            });
+        }
+
+        async function shareCode() {
+            const resultDiv = document.getElementById('share-result');
+            const title = document.getElementById('share-title').value.trim();
+            const description = document.getElementById('share-description').value.trim();
+            const isPublic = document.getElementById('share-public').checked;
+            const expiryDays = parseInt(document.getElementById('share-expiry').value);
+            
+            if (!title) {
+                resultDiv.innerHTML = '<div style="padding: 10px; background: #ff4444; color: white; border-radius: 4px;">Please enter a title</div>';
+                return;
+            }
+            
+            // Get current code
+            let code = '';
+            if (isNotebookMode) {
+                const cells = document.querySelectorAll('.cell-textarea');
+                code = Array.from(cells).map(cell => cell.value).join('\n\n# --- Cell Break ---\n\n');
+            } else {
+                code = window.editor ? window.editor.getValue() : '';
+            }
+            
+            if (!code.trim()) {
+                resultDiv.innerHTML = '<div style="padding: 10px; background: #ff4444; color: white; border-radius: 4px;">No code to share</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div style="text-align: center; color: var(--text-secondary);">Generating share link...</div>';
+            
+            try {
+                const response = await fetch('/python/share/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        title: title,
+                        description: description,
+                        is_public: isPublic,
+                        expires_in_days: expiryDays
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.share_url) {
+                    const fullUrl = window.location.origin + data.share_url;
+                    resultDiv.innerHTML = `
+                        <div style="padding: 15px; background: var(--bg-secondary); border: 2px solid var(--primary-color); border-radius: 4px;">
+                            <div style="margin-bottom: 10px; color: var(--text-bright); font-weight: bold;">Share Link Generated!</div>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" value="${fullUrl}" readonly id="share-url-input" style="flex: 1; padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-family: monospace; font-size: 12px;">
+                                <button onclick="copyShareUrl()" class="pixel-button" style="padding: 8px 16px;">COPY</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<div style="padding: 10px; background: #ff4444; color: white; border-radius: 4px;">Failed to generate share link</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div style="padding: 10px; background: #ff4444; color: white; border-radius: 4px;">Error: ' + error.message + '</div>';
+                console.error('Error sharing code:', error);
+            }
+        }
+
+        function copyShareUrl() {
+            const input = document.getElementById('share-url-input');
+            input.select();
+            document.execCommand('copy');
+            
+            const resultDiv = document.getElementById('share-result');
+            const originalHtml = resultDiv.innerHTML;
+            resultDiv.innerHTML = '<div style="padding: 10px; background: var(--primary-color); color: var(--bg-primary); border-radius: 4px; text-align: center; font-weight: bold;">COPIED TO CLIPBOARD!</div>';
+            
+            setTimeout(() => {
+                resultDiv.innerHTML = originalHtml;
+            }, 2000);
         }
 
         function addNotebookCell(type = 'code') {
@@ -5484,7 +5732,7 @@ sys.stderr = sys.__stderr__
         function showKeyboardShortcuts() {
             const helpContent = `
 <div style="background: #111; color: #fff; padding: 20px; border-radius: 8px; max-width: 500px;">
-    <h3 style="color: var(--text-bright); margin-top: 0;">⌨️ Keyboard Shortcuts</h3>
+    <h3 style="color: var(--text-bright); margin-top: 0;">KEYBOARD SHORTCUTS</h3>
     
     <h4 style="color: #ccc; margin-bottom: 10px;">Cell Execution:</h4>
     <div style="font-family: monospace; margin-bottom: 15px;">
@@ -5752,7 +6000,7 @@ sys.stderr = _old_stderr
                         <div class="theme-preview theme-preview-lebron theme-preview-sun-only"></div>
                         <div class="theme-info">
                             <div class="theme-name">LeBron</div>
-                            <div class="theme-desc">Premium 👑</div>
+                            <div class="theme-desc">Premium</div>
                         </div>
                         <div class="theme-check">✓</div>
                     </div>
@@ -5767,12 +6015,12 @@ sys.stderr = _old_stderr
                     <span class="settings-hint">Matplotlib charts theme</span>
                 </label>
                 <div class="toggle-group">
-                    <div class="toggle-option" data-plot-theme="dark">
-                        <div class="toggle-icon">🌙</div>
+                    <div class="toggle-option active" data-plot-theme="dark">
+                        <div class="toggle-icon">DARK</div>
                         <div class="toggle-text">Dark Mode</div>
                     </div>
                     <div class="toggle-option" data-plot-theme="light">
-                        <div class="toggle-icon">☀️</div>
+                        <div class="toggle-icon">LIGHT</div>
                         <div class="toggle-text">Light Mode</div>
                     </div>
                 </div>
@@ -6078,8 +6326,10 @@ sys.stderr = _old_stderr
         }
 
         .toggle-icon {
-            font-size: 24px;
-            filter: drop-shadow(0 0 5px var(--text-color));
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-color);
+            letter-spacing: 1px;
         }
 
         .toggle-text {
