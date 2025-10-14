@@ -193,6 +193,7 @@ class SessionMember(models.Model):
     joined_at = models.DateTimeField(auto_now_add=True)
     last_active = models.DateTimeField(auto_now=True)
     
+    
     class Meta:
         unique_together = ['session', 'user']
         indexes = [
@@ -203,6 +204,99 @@ class SessionMember(models.Model):
     def __str__(self):
         return f"{self.user.username} in {self.session.title} ({self.permission})"
 
+
+class Friendship(models.Model):
+    """Manage friendships between users"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+        ('blocked', 'Blocked'),
+    ]
+    
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_friend_requests')
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_friend_requests')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['from_user', 'to_user']
+        indexes = [
+            models.Index(fields=['from_user', 'status']),
+            models.Index(fields=['to_user', 'status']),
+            models.Index(fields=['-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.from_user.username} → {self.to_user.username} ({self.status})"
+    
+    @classmethod
+    def are_friends(cls, user1, user2):
+        """Check if two users are friends"""
+        return cls.objects.filter(
+            models.Q(from_user=user1, to_user=user2, status='accepted') |
+            models.Q(from_user=user2, to_user=user1, status='accepted')
+        ).exists()
+    
+    @classmethod
+    def get_friends(cls, user):
+        """Get all friends of a user"""
+        friends = cls.objects.filter(
+            models.Q(from_user=user, status='accepted') |
+            models.Q(to_user=user, status='accepted')
+        ).select_related('from_user', 'to_user')
+        
+        friend_users = []
+        for friendship in friends:
+            if friendship.from_user == user:
+                friend_users.append(friendship.to_user)
+            else:
+                friend_users.append(friendship.from_user)
+        return friend_users
+
+
+class DirectMessage(models.Model):
+    """Direct messages between users"""
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['sender', 'recipient', '-created_at']),
+            models.Index(fields=['recipient', 'is_read']),
+            models.Index(fields=['-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.sender.username} → {self.recipient.username}: {self.message[:30]}"
+
+
+class UserStatus(models.Model):
+    """Track user online/offline status"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='online_status')
+    is_online = models.BooleanField(default=False)
+    last_seen = models.DateTimeField(default=timezone.now)
+    status_message = models.CharField(max_length=100, blank=True, default='')
+    
+    class Meta:
+        verbose_name_plural = 'User statuses'
+        indexes = [
+            models.Index(fields=['is_online', '-last_seen']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - {'Online' if self.is_online else 'Offline'}"
+    
+    def update_status(self, is_online=True):
+        """Update user online status"""
+        self.is_online = is_online
+        self.last_seen = timezone.now()
+        self.save()
 
 
 

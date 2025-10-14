@@ -1337,6 +1337,14 @@
                             <span class="menu-text">Python Environment</span>
                         </a>
                     </li>
+                    {% if user.is_authenticated %}
+                    <li class="menu-item">
+                        <a href="/community/" class="menu-link">
+                            <span class="menu-icon">CM</span>
+                            <span class="menu-text">Community</span>
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
 

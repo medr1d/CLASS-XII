@@ -2,9 +2,11 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.db import transaction, IntegrityError
+from django.db import models
 from .models import PythonCodeSession, UserFiles, UserProfile
 from auth_app.rate_limiting import rate_limit_per_user
 import json
@@ -1219,3 +1221,322 @@ def end_session(request, session_id):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     
     return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+# ==================== COMMUNITY FEATURES ====================
+
+@login_required
+def community(request):
+    """Community page with friends and DMs"""
+    from .models import Friendship, UserStatus
+    
+    user = request.user
+    
+    # Get or create user status
+    user_status, created = UserStatus.objects.get_or_create(user=user)
+    user_status.update_status(is_online=True)
+    
+    # Get friends
+    friends = Friendship.get_friends(user)
+    friends_data = []
+    for friend in friends:
+        friend_status, _ = UserStatus.objects.get_or_create(user=friend)
+        friends_data.append({
+            'id': friend.id,
+            'username': friend.username,
+            'is_online': friend_status.is_online,
+            'last_seen': friend_status.last_seen.isoformat() if friend_status.last_seen else '',
+            'status_message': friend_status.status_message,
+        })
+    
+    # Get pending friend requests
+    pending_requests = Friendship.objects.filter(
+        to_user=user,
+        status='pending'
+    ).select_related('from_user')
+    
+    # Get sent requests
+    sent_requests = Friendship.objects.filter(
+        from_user=user,
+        status='pending'
+    ).select_related('to_user')
+    
+    # Get user theme
+    user_theme = 'default'
+    try:
+        from .models import UserProfile
+        user_profile = UserProfile.objects.get(user=user)
+        user_theme = user_profile.theme
+    except UserProfile.DoesNotExist:
+        pass
+    
+    context = {
+        'user': user,
+        'friends_json': json.dumps(friends_data),
+        'pending_requests': pending_requests,
+        'sent_requests': sent_requests,
+        'user_theme': user_theme,
+    }
+    
+    return render(request, 'homepage/community.html', context)
+
+
+@login_required
+def send_friend_request(request):
+    """Send a friend request to another user"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username', '').strip()
+            
+            if not username:
+                return JsonResponse({'status': 'error', 'message': 'Username required'}, status=400)
+            
+            # Find target user
+            try:
+                target_user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+            
+            # Can't friend yourself
+            if target_user == request.user:
+                return JsonResponse({'status': 'error', 'message': 'Cannot add yourself as a friend'}, status=400)
+            
+            # Check if friendship already exists
+            from .models import Friendship
+            existing = Friendship.objects.filter(
+                models.Q(from_user=request.user, to_user=target_user) |
+                models.Q(from_user=target_user, to_user=request.user)
+            ).first()
+            
+            if existing:
+                if existing.status == 'accepted':
+                    return JsonResponse({'status': 'error', 'message': 'Already friends'}, status=400)
+                elif existing.status == 'pending':
+                    return JsonResponse({'status': 'error', 'message': 'Friend request already sent'}, status=400)
+                elif existing.status == 'blocked':
+                    return JsonResponse({'status': 'error', 'message': 'Cannot send friend request'}, status=400)
+            
+            # Create friend request
+            friendship = Friendship.objects.create(
+                from_user=request.user,
+                to_user=target_user,
+                status='pending'
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Friend request sent to {username}'
+            })
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+@login_required
+def respond_friend_request(request):
+    """Accept or reject a friend request"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            request_id = data.get('request_id')
+            action = data.get('action')  # 'accept' or 'reject'
+            
+            from .models import Friendship
+            friendship = Friendship.objects.get(
+                id=request_id,
+                to_user=request.user,
+                status='pending'
+            )
+            
+            if action == 'accept':
+                friendship.status = 'accepted'
+                friendship.save()
+                message = f'You are now friends with {friendship.from_user.username}'
+            elif action == 'reject':
+                friendship.status = 'rejected'
+                friendship.save()
+                message = 'Friend request rejected'
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Invalid action'}, status=400)
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': message
+            })
+            
+        except Friendship.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Request not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+@login_required
+def remove_friend(request):
+    """Remove a friend"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            friend_id = data.get('friend_id')
+            
+            friend_user = User.objects.get(id=friend_id)
+            
+            from .models import Friendship
+            friendship = Friendship.objects.filter(
+                models.Q(from_user=request.user, to_user=friend_user) |
+                models.Q(from_user=friend_user, to_user=request.user),
+                status='accepted'
+            ).first()
+            
+            if friendship:
+                friendship.delete()
+                return JsonResponse({
+                    'status': 'success',
+                    'message': f'Removed {friend_user.username} from friends'
+                })
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Not friends'}, status=404)
+            
+        except User.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+@login_required
+def get_friends_list(request):
+    """Get list of friends with online status"""
+    try:
+        from .models import Friendship, UserStatus
+        
+        friends = Friendship.get_friends(request.user)
+        friends_data = []
+        
+        for friend in friends:
+            friend_status, _ = UserStatus.objects.get_or_create(user=friend)
+            friends_data.append({
+                'id': friend.id,
+                'username': friend.username,
+                'is_online': friend_status.is_online,
+                'last_seen': friend_status.last_seen.isoformat(),
+                'status_message': friend_status.status_message,
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'friends': friends_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+def update_status_message(request):
+    """Update user's status message"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            status_message = data.get('status_message', '')[:100]  # Max 100 chars
+            
+            from .models import UserStatus
+            user_status, created = UserStatus.objects.get_or_create(user=request.user)
+            user_status.status_message = status_message
+            user_status.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Status updated'
+            })
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+@login_required
+def send_direct_message(request):
+    """Send a direct message to a friend"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            recipient_id = data.get('recipient_id')
+            message = data.get('message', '').strip()
+            
+            if not message:
+                return JsonResponse({'status': 'error', 'message': 'Message cannot be empty'}, status=400)
+            
+            recipient = User.objects.get(id=recipient_id)
+            
+            # Check if they are friends
+            from .models import Friendship, DirectMessage
+            if not Friendship.are_friends(request.user, recipient):
+                return JsonResponse({'status': 'error', 'message': 'You must be friends to send messages'}, status=403)
+            
+            # Create message
+            dm = DirectMessage.objects.create(
+                sender=request.user,
+                recipient=recipient,
+                message=message
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'message_id': dm.id,
+                'created_at': dm.created_at.isoformat()
+            })
+            
+        except User.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+@login_required
+def get_direct_messages(request, user_id):
+    """Get direct messages between current user and another user"""
+    try:
+        other_user = User.objects.get(id=user_id)
+        
+        from .models import DirectMessage
+        messages = DirectMessage.objects.filter(
+            models.Q(sender=request.user, recipient=other_user) |
+            models.Q(sender=other_user, recipient=request.user)
+        ).order_by('created_at').select_related('sender', 'recipient')
+        
+        # Mark messages as read
+        DirectMessage.objects.filter(
+            sender=other_user,
+            recipient=request.user,
+            is_read=False
+        ).update(is_read=True)
+        
+        messages_data = [{
+            'id': msg.id,
+            'sender_id': msg.sender.id,
+            'sender_username': msg.sender.username,
+            'message': msg.message,
+            'is_read': msg.is_read,
+            'created_at': msg.created_at.isoformat(),
+            'is_mine': msg.sender == request.user
+        } for msg in messages]
+        
+        return JsonResponse({
+            'status': 'success',
+            'messages': messages_data
+        })
+        
+    except User.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+

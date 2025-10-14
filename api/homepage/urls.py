@@ -28,4 +28,15 @@ urlpatterns = [
     path('python/session/<uuid:session_id>/import-files/', views.import_files_to_session, name='import_files_to_session'),
     path('python/session/<uuid:session_id>/export/', views.export_session_to_files, name='export_session_to_files'),
     path('python/session/<uuid:session_id>/end/', views.end_session, name='end_session'),
+    
+    # Community features
+    path('community/', views.community, name='community'),
+    path('community/send-friend-request/', views.send_friend_request, name='send_friend_request'),
+    path('community/respond-friend-request/', views.respond_friend_request, name='respond_friend_request'),
+    path('community/remove-friend/', views.remove_friend, name='remove_friend'),
+    path('community/friends/', views.get_friends_list, name='get_friends_list'),
+    path('community/update-status/', views.update_status_message, name='update_status_message'),
+    path('community/send-message/', views.send_direct_message, name='send_direct_message'),
+    path('community/messages/<int:user_id>/', views.get_direct_messages, name='get_direct_messages'),
 ]
+
