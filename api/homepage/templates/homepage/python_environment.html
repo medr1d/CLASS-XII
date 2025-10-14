@@ -5244,6 +5244,16 @@ sys.stderr = sys.__stderr__
                                 <label style="display: block; margin-bottom: 8px; color: var(--text-bright); font-weight: bold;">Title:</label>
                                 <input type="text" id="share-title" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-family: inherit;" placeholder="My Awesome Code">
                             </div>
+                            
+                            <!-- File Selection Dropdown -->
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 8px; color: var(--text-bright); font-weight: bold;">Select File to Share:</label>
+                                <select id="share-file-select" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-family: inherit;">
+                                    <option value="current">Current Editor Content</option>
+                                </select>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">Choose which file to share</div>
+                            </div>
+                            
                             <div style="margin-bottom: 15px;">
                                 <label style="display: block; margin-bottom: 8px; color: var(--text-bright); font-weight: bold;">Description (Optional):</label>
                                 <textarea id="share-description" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-family: inherit; resize: vertical; min-height: 80px;" placeholder="Describe what your code does..."></textarea>
@@ -5264,14 +5274,10 @@ sys.stderr = sys.__stderr__
                                     <span>Public (anyone can join)</span>
                                 </label>
                             </div>
-                            <div style="margin-bottom: 20px;">
-                                <label style="display: block; margin-bottom: 8px; color: var(--text-bright); font-weight: bold;">Expires in:</label>
-                                <select id="share-expiry" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-family: inherit;">
-                                    <option value="7" id="expiry-7">7 days</option>
-                                    <option value="30" selected>30 days</option>
-                                    <option value="90">90 days</option>
-                                    <option value="365">1 year</option>
-                                </select>
+                            <div style="margin-bottom: 15px; padding: 10px; background: var(--bg-secondary); border-radius: 4px; border: 1px solid var(--border-color);">
+                                <div style="font-size: 13px; color: var(--text-secondary);">
+                                    ⏱️ Session will expire in <strong style="color: var(--text-bright);">7 days</strong>
+                                </div>
                             </div>
                             <button onclick="shareCode()" id="share-submit-btn" class="pixel-button" style="width: 100%; padding: 12px; font-size: 16px;">GENERATE SHARE LINK</button>
                             <div id="share-result" style="margin-top: 20px;"></div>
@@ -5297,16 +5303,12 @@ sys.stderr = sys.__stderr__
             const shareType = document.querySelector('input[name="share-type"]:checked').value;
             const fileImportSection = document.getElementById('file-import-section');
             const submitBtn = document.getElementById('share-submit-btn');
-            const expiry7 = document.getElementById('expiry-7');
-            const expirySelect = document.getElementById('share-expiry');
             const simpleOption = document.getElementById('simple-share-option');
             const collabOption = document.getElementById('collab-share-option');
             
             if (shareType === 'collaborative') {
                 fileImportSection.style.display = 'block';
                 submitBtn.textContent = 'CREATE COLLABORATIVE SESSION';
-                // Set default to 7 days for collaborative
-                expirySelect.value = '7';
                 simpleOption.style.borderColor = 'transparent';
                 collabOption.style.borderColor = 'var(--primary-color)';
             } else {
@@ -5327,6 +5329,7 @@ sys.stderr = sys.__stderr__
                 const data = await response.json();
                 
                 const fileList = document.getElementById('file-import-list');
+                const fileSelect = document.getElementById('share-file-select');
                 
                 // Handle the actual response structure from backend
                 // Backend returns: { saved_files: ['file1.py', 'file2.py', ...] }
@@ -5338,17 +5341,32 @@ sys.stderr = sys.__stderr__
                     pyFiles = data.files.filter(f => f.filename && f.filename.endsWith('.py')).map(f => f.filename);
                 }
                 
-                if (pyFiles.length === 0) {
-                    fileList.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;">No .py files found</div>';
-                    return;
+                // Populate the file selection dropdown
+                if (fileSelect) {
+                    // Keep "Current Editor Content" option and add saved files
+                    const fileOptions = pyFiles.map(filename => 
+                        `<option value="${filename}">${filename}</option>`
+                    ).join('');
+                    fileSelect.innerHTML = `
+                        <option value="current">Current Editor Content</option>
+                        ${pyFiles.length > 0 ? '<option disabled>──────────</option>' : ''}
+                        ${fileOptions}
+                    `;
                 }
                 
-                fileList.innerHTML = pyFiles.map(filename => `
-                    <label style="display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 4px; margin-bottom: 4px;" onmouseover="this.style.background='var(--bg-primary)'" onmouseout="this.style.background='transparent'">
-                        <input type="checkbox" class="import-file-checkbox" value="${filename}" style="width: 16px; height: 16px;">
-                        <span style="color: var(--text-primary); font-family: monospace; font-size: 13px;">${filename}</span>
-                    </label>
-                `).join('');
+                // Populate the collaborative import checkboxes
+                if (fileList) {
+                    if (pyFiles.length === 0) {
+                        fileList.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;">No .py files found</div>';
+                    } else {
+                        fileList.innerHTML = pyFiles.map(filename => `
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 8px; cursor: pointer; border-radius: 4px; margin-bottom: 4px;" onmouseover="this.style.background='var(--bg-primary)'" onmouseout="this.style.background='transparent'">
+                                <input type="checkbox" class="import-file-checkbox" value="${filename}" style="width: 16px; height: 16px;">
+                                <span style="color: var(--text-primary); font-family: monospace; font-size: 13px;">${filename}</span>
+                            </label>
+                        `).join('');
+                    }
+                }
             } catch (error) {
                 console.error('Error loading files:', error);
                 const fileList = document.getElementById('file-import-list');
@@ -5363,25 +5381,49 @@ sys.stderr = sys.__stderr__
             const title = document.getElementById('share-title').value.trim();
             const description = document.getElementById('share-description').value.trim();
             const isPublic = document.getElementById('share-public').checked;
-            const expiryDays = parseInt(document.getElementById('share-expiry').value);
+            const expiryDays = 7; // Fixed to 7 days
             const shareType = document.querySelector('input[name="share-type"]:checked').value;
+            const selectedFile = document.getElementById('share-file-select').value;
             
             if (!title) {
                 resultDiv.innerHTML = '<div style="padding: 10px; background: #ff4444; color: white; border-radius: 4px;">Please enter a title</div>';
                 return;
             }
             
-            // Get current code
+            // Get code based on selected file
             let code = '';
-            if (isNotebookMode) {
-                const cells = document.querySelectorAll('.cell-textarea');
-                code = Array.from(cells).map(cell => cell.value).join('\n\n# --- Cell Break ---\n\n');
+            
+            if (selectedFile === 'current') {
+                // Use current editor content
+                if (isNotebookMode) {
+                    const cells = document.querySelectorAll('.cell-textarea');
+                    code = Array.from(cells).map(cell => cell.value).join('\n\n# --- Cell Break ---\n\n');
+                } else {
+                    code = window.editor ? window.editor.getValue() : '';
+                }
             } else {
-                code = window.editor ? window.editor.getValue() : '';
+                // Fetch selected file content from backend
+                resultDiv.innerHTML = '<div style="text-align: center; color: var(--text-secondary);">Loading file...</div>';
+                try {
+                    const filesResponse = await fetch('/python/get-files/', {
+                        headers: {'X-CSRFToken': '{{ csrf_token }}'}
+                    });
+                    const filesData = await filesResponse.json();
+                    
+                    if (filesData.python_files && filesData.python_files[selectedFile]) {
+                        code = filesData.python_files[selectedFile];
+                    } else {
+                        resultDiv.innerHTML = '<div style="padding: 10px; background: #ff4444; color: white; border-radius: 4px;">Could not load selected file</div>';
+                        return;
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = '<div style="padding: 10px; background: #ff4444; color: white; border-radius: 4px;">Error loading file</div>';
+                    return;
+                }
             }
             
             if (!code.trim()) {
-                resultDiv.innerHTML = '<div style="padding: 10px; background: #ff4444; color: white; border-radius: 4px;">No code to share</div>';
+                resultDiv.innerHTML = '<div style="padding: 10px; background: #ff4444; color: white; border-radius: 4px;">No code to share. Please select a file or write code in the editor.</div>';
                 return;
             }
             
