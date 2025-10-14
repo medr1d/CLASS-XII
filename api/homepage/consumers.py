@@ -76,6 +76,9 @@ class CollaborativeSessionConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         message_type = data.get('type')
         
+        # Update session activity timestamp
+        await self.update_session_activity()
+        
         if message_type == 'code_change':
             # Check if user has edit permission
             has_permission = await self.check_edit_permission()
@@ -293,3 +296,13 @@ class CollaborativeSessionConsumer(AsyncWebsocketConsumer):
             } for m in members]
         except SharedCode.DoesNotExist:
             return []
+    
+    @database_sync_to_async
+    def update_session_activity(self):
+        """Update the last_activity timestamp for the session"""
+        from .models import SharedCode
+        try:
+            session = SharedCode.objects.get(share_id=self.session_id)
+            session.update_activity()
+        except SharedCode.DoesNotExist:
+            pass

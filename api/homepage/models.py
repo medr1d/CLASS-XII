@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 import uuid
 
 class UserProfile(models.Model):
@@ -127,6 +128,7 @@ class SharedCode(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     expires_at = models.DateTimeField(null=True, blank=True)
+    last_activity = models.DateTimeField(default=timezone.now, db_index=True)
     
     class Meta:
         ordering = ['-created_at']
@@ -153,8 +155,28 @@ class SharedCode(models.Model):
         return self.user == user
     
     def is_expired(self):
-        from django.utils import timezone
         return self.expires_at and timezone.now() > self.expires_at
+    
+    def is_inactive(self, hours=1):
+        """Check if session has been inactive for specified hours"""
+        from datetime import timedelta
+        if self.session_type != 'collaborative':
+            return False
+        inactive_threshold = timezone.now() - timedelta(hours=hours)
+        return self.last_activity < inactive_threshold
+    
+    def update_activity(self):
+        """Update last activity timestamp"""
+        self.last_activity = timezone.now()
+        self.save(update_fields=['last_activity'])
+    
+    def deactivate_if_inactive(self):
+        """Deactivate session if it's been inactive for 1 hour"""
+        if self.is_inactive(hours=1) and self.is_active:
+            self.is_active = False
+            self.save(update_fields=['is_active'])
+            return True
+        return False
 
 
 class SessionMember(models.Model):

@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.db import transaction, IntegrityError
-from .models import PythonCodeSession, UserFiles
+from .models import PythonCodeSession, UserFiles, UserProfile
 from auth_app.rate_limiting import rate_limit_per_user
 import json
 from django.conf import settings
@@ -904,10 +904,20 @@ def join_collaborative_session(request, session_id):
     try:
         from .models import SharedCode, SessionMember
         
-        session = SharedCode.objects.get(share_id=session_id, is_active=True)
+        session = SharedCode.objects.get(share_id=session_id, session_type='collaborative')
         
         # Check if expired
         if session.is_expired():
+            return render(request, 'homepage/session_expired.html')
+        
+        # Check for inactivity and deactivate if needed
+        if session.deactivate_if_inactive():
+            return render(request, 'homepage/session_expired.html', {
+                'message': 'This session has been closed due to inactivity (1 hour with no users).'
+            })
+        
+        # Check if session is inactive
+        if not session.is_active:
             return render(request, 'homepage/session_expired.html')
         
         # Check if public or user is owner
@@ -934,6 +944,15 @@ def join_collaborative_session(request, session_id):
                 filename__endswith='.py'
             ).values('filename', 'code_content'))
         
+        # Get user theme preference
+        user_theme = 'default'
+        if request.user.is_authenticated:
+            try:
+                user_profile = UserProfile.objects.get(user=request.user)
+                user_theme = user_profile.theme
+            except UserProfile.DoesNotExist:
+                pass
+        
         context = {
             'session': session,
             'is_owner': request.user == session.user,
@@ -941,6 +960,7 @@ def join_collaborative_session(request, session_id):
             'can_import_export': can_import_export,
             'user_py_files': user_py_files,
             'member_permission': member.permission,
+            'user_theme': user_theme,
         }
         
         return render(request, 'homepage/collaborative_session.html', context)
