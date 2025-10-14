@@ -2322,6 +2322,192 @@
         body.theme-lebron .cell-expand-modal {
             background: rgba(255, 192, 203, 0.98);
         }
+
+        /* Mobile Toolbar */
+        .mobile-toolbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 2px solid var(--border-color);
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            z-index: 1000;
+            box-shadow: 0 -2px 10px var(--shadow-color);
+        }
+
+        .mobile-toolbar button {
+            flex: 1;
+            min-width: 60px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+
+        .mobile-toolbar button:hover {
+            background: var(--secondary-color);
+            color: var(--text-bright);
+            transform: translateY(-2px);
+        }
+
+        /* General Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 30px var(--shadow-color);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--text-bright);
+        }
+
+        .close-btn {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: var(--secondary-color);
+            color: var(--text-bright);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        /* History List Styles */
+        .history-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 10px var(--shadow-color);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .history-time {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .history-code {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 3px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .history-output {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 3px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            max-height: 100px;
+            overflow-y: auto;
+            color: var(--text-color);
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .history-actions button {
+            padding: 5px 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .history-actions button:hover {
+            background: var(--secondary-color);
+            color: var(--text-bright);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .mobile-toolbar {
+                display: flex !important;
+            }
+
+            .editor-controls {
+                flex-wrap: wrap;
+            }
+
+            .focus-button {
+                font-size: 10px;
+                padding: 6px 12px;
+            }
+        }
     </style>
 </head>
 <body class="{% if user_theme == 'greydom' %}theme-greydom{% elif user_theme == 'cloud' %}theme-cloud{% elif user_theme == 'chaos' %}theme-chaos{% elif user_theme == 'lebron' %}theme-lebron{% endif %}">
@@ -2387,8 +2573,11 @@
                     <h2>Python Code Editor (Client-Side)</h2>
                     <div class="editor-controls">
                         <span id="current-file">untitled_script</span>
+                        <button id="history-btn" class="focus-button" onclick="toggleHistory()" title="Execution History">📜 HISTORY</button>
+                        <button id="share-btn" class="focus-button" onclick="shareCode()" title="Share Code">🔗 SHARE</button>
                         <button id="notebook-btn" class="focus-button" onclick="toggleNotebookMode()" title="Jupyter-style Notebook Mode">NOTEBOOK</button>
                         <button id="focus-btn" class="focus-button" onclick="toggleFocusMode()" title="Focus Mode">FOCUS</button>
+                        <button id="settings-btn" class="focus-button" onclick="toggleSettings()" title="Settings">⚙️</button>
                     </div>
                 </div>
                 <div class="editor-container">
@@ -3231,6 +3420,113 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
                 <h3>binary.dat</h3>
                 <div class="file-content" id="binary-content">Loading from Pyodide...</div>
                 <div class="file-content binary-hex" id="binary-hex" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Code Toolbar -->
+    <div class="mobile-toolbar" id="mobile-toolbar" style="display: none;">
+        <button onclick="insertText('def ')">def</button>
+        <button onclick="insertText('for ')">for</button>
+        <button onclick="insertText('if ')">if</button>
+        <button onclick="insertText('import ')">import</button>
+        <button onclick="insertText('print()')">print</button>
+        <button onclick="insertText('    ')">Tab</button>
+        <button onclick="insertText('[]')">[ ]</button>
+        <button onclick="insertText('()')">( )</button>
+        <button onclick="insertText('{}')">{ }</button>
+        <button onclick="insertText('\"\"')">" "</button>
+        <button onclick="insertText(':'  )">:</button>
+        <button onclick="insertText('=')">=</button>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal" id="history-modal" style="display: none;">
+        <div class="modal-content" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>📜 Execution History</h2>
+                <button class="close-btn" onclick="closeHistoryModal()">×</button>
+            </div>
+            <div class="modal-body" id="history-list">
+                <div style="text-align: center; padding: 40px; color: #888;">
+                    Loading history...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal" id="share-modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>🔗 Share Your Code</h2>
+                <button class="close-btn" onclick="closeShareModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Title:</label>
+                    <input type="text" id="share-title" placeholder="My Awesome Code" style="width: 100%; padding: 10px; background: #000; border: 1px solid var(--border-color); color: var(--text-color); border-radius: 5px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Description (optional):</label>
+                    <textarea id="share-description" placeholder="Describe what this code does..." rows="3" style="width: 100%; padding: 10px; background: #000; border: 1px solid var(--border-color); color: var(--text-color); border-radius: 5px;"></textarea>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Expires After:</label>
+                    <select id="share-expires" style="width: 100%; padding: 10px; background: #000; border: 1px solid var(--border-color); color: var(--text-color); border-radius: 5px;">
+                        <option value="">Never</option>
+                        <option value="7">7 Days</option>
+                        <option value="30">30 Days</option>
+                        <option value="90">90 Days</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="share-public" checked style="margin-right: 10px;">
+                        <span>Public (anyone with link can view)</span>
+                    </label>
+                </div>
+                <button onclick="createShareLink()" class="focus-button" style="width: 100%; margin-top: 10px;">Generate Share Link</button>
+                <div id="share-result" style="margin-top: 15px; display: none;">
+                    <div style="padding: 15px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 5px;">
+                        <p style="margin-bottom: 10px; font-weight: bold; color: var(--text-bright);">Share Link Created!</p>
+                        <input type="text" id="share-url" readonly style="width: 100%; padding: 10px; background: #000; border: 1px solid var(--border-color); color: var(--text-color); border-radius: 5px; margin-bottom: 10px;">
+                        <button onclick="copyShareLink()" class="focus-button">📋 Copy Link</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>⚙️ Editor Settings</h2>
+                <button class="close-btn" onclick="closeSettingsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px; color: var(--text-bright);">Matplotlib Plot Theme</h3>
+                    <label style="display: flex; align-items: center; cursor: pointer; padding: 10px; background: var(--bg-tertiary); border-radius: 5px;">
+                        <input type="checkbox" id="settings-dark-plots" checked style="margin-right: 10px;">
+                        <span>Use Dark Mode for Plots</span>
+                    </label>
+                    <p style="margin-top: 8px; font-size: 0.9em; color: #888;">Changes will apply to next plot generation</p>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px; color: var(--text-bright);">Editor Font Size</h3>
+                    <input type="range" id="settings-font-size" min="10" max="24" value="14" style="width: 100%;">
+                    <div style="text-align: center; margin-top: 5px; color: var(--text-color);"><span id="font-size-display">14</span>px</div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 10px; color: var(--text-bright);">Auto-Save</h3>
+                    <label style="display: flex; align-items: center; cursor: pointer; padding: 10px; background: var(--bg-tertiary); border-radius: 5px;">
+                        <input type="checkbox" id="settings-auto-save" checked style="margin-right: 10px;">
+                        <span>Enable Auto-Save (every 5 seconds)</span>
+                    </label>
+                </div>
+                <button onclick="saveSettings()" class="focus-button" style="width: 100%;">Save Settings</button>
             </div>
         </div>
     </div>

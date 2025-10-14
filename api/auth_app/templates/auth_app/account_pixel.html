@@ -838,6 +838,26 @@
                         {% endif %}
                     </div>
                 </div>
+
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3 class="setting-title">Matplotlib Plot Theme</h3>
+                        {% if user.profile.dark_mode_plots %}
+                            <span class="status-indicator status-active">Dark Mode</span>
+                        {% else %}
+                            <span class="status-indicator status-inactive">Light Mode</span>
+                        {% endif %}
+                    </div>
+                    <div class="setting-description">
+                        Choose whether matplotlib plots use dark or light backgrounds.
+                    </div>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <div class="toggle-switch {% if user.profile.dark_mode_plots %}active{% endif %}" id="plot-theme-toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <span id="plot-theme-status">{{ user.profile.dark_mode_plots|yesno:"Dark Mode,Light Mode" }}</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Security Section -->
@@ -1114,6 +1134,43 @@
         function logout() {
             window.location.href = '{% url "auth_app:logout" %}';
         }
+
+        // Plot theme toggle
+        document.getElementById('plot-theme-toggle')?.addEventListener('click', function() {
+            const isActive = this.classList.contains('active');
+            const newValue = !isActive;
+            
+            fetch('/python/update-plot-theme/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content
+                },
+                body: JSON.stringify({
+                    dark_mode_plots: newValue
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    this.classList.toggle('active');
+                    document.getElementById('plot-theme-status').textContent = newValue ? 'Dark Mode' : 'Light Mode';
+                    const indicator = this.parentElement.parentElement.querySelector('.status-indicator');
+                    if (indicator) {
+                        indicator.textContent = newValue ? 'Dark Mode' : 'Light Mode';
+                        indicator.classList.toggle('status-active', newValue);
+                        indicator.classList.toggle('status-inactive', !newValue);
+                    }
+                    showNotification('Plot theme updated!', 'success');
+                } else {
+                    showNotification('Failed to update plot theme', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to update plot theme', 'error');
+            });
+        });
 
         function showNotification(message, type) {
             // Create notification element

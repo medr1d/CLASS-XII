@@ -1,0 +1,214 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ shared_code.title }} - Shared Code</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #00ff00;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            border: 1px solid #00aa00;
+            padding: 20px;
+        }
+        .header {
+            border-bottom: 1px solid #00aa00;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #00ff00;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            margin-bottom: 10px;
+        }
+        .meta {
+            color: #00cc00;
+            font-size: 0.9em;
+        }
+        .description {
+            background: #111;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+        .editor-container {
+            height: 500px;
+            border: 1px solid #00aa00;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: linear-gradient(45deg, #000 0%, #00aa00 50%, #000 100%);
+            border: 2px solid #00aa00;
+            color: #fff;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: linear-gradient(45deg, #00aa00 0%, #00ff00 50%, #00aa00 100%);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: #111;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+        .stat-item {
+            display: inline-block;
+            margin-right: 20px;
+        }
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #00aa00;
+            color: #000;
+            padding: 15px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ shared_code.title }}</h1>
+            <div class="meta">
+                Shared by <strong>{{ shared_code.user.username }}</strong> • 
+                {{ shared_code.created_at|date:"F d, Y" }}
+            </div>
+        </div>
+
+        {% if shared_code.description %}
+        <div class="description">
+            {{ shared_code.description|linebreaks }}
+        </div>
+        {% endif %}
+
+        <div class="editor-container" id="code-editor"></div>
+
+        <div class="actions">
+            <button onclick="copyCode()">📋 Copy Code</button>
+            {% if user.is_authenticated %}
+                <button onclick="forkCode()">🍴 Fork to My Account</button>
+            {% else %}
+                <button onclick="window.location.href='/auth/login/'">🔐 Login to Fork</button>
+            {% endif %}
+            <button onclick="downloadCode()">⬇️ Download</button>
+            <button onclick="window.location.href='/python/'">🏠 Go to Editor</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">👁️ <strong>{{ shared_code.view_count }}</strong> views</div>
+            <div class="stat-item">🍴 <strong>{{ shared_code.fork_count }}</strong> forks</div>
+            <div class="stat-item">📅 Created: <strong>{{ shared_code.created_at|date:"M d, Y" }}</strong></div>
+        </div>
+    </div>
+
+    <div class="copy-notification" id="copy-notification">✓ Code copied to clipboard!</div>
+
+    <script>
+        const code = {{ shared_code.code_content|safe|escapejs }};
+        const shareId = "{{ shared_code.share_id }}";
+        
+        // Initialize Ace editor
+        const editor = ace.edit("code-editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/python");
+        editor.setValue(code, -1);
+        editor.setReadOnly(true);
+        editor.setOptions({
+            fontSize: "14px",
+            showPrintMargin: false,
+            highlightActiveLine: false
+        });
+
+        function copyCode() {
+            navigator.clipboard.writeText(code).then(() => {
+                const notification = document.getElementById('copy-notification');
+                notification.style.display = 'block';
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 3000);
+            });
+        }
+
+        function forkCode() {
+            fetch(`/python/fork/${shareId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(`✓ Code forked as ${data.filename}!\nRedirecting to editor...`);
+                    window.location.href = '/python/';
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error forking code: ' + error);
+            });
+        }
+
+        function downloadCode() {
+            const blob = new Blob([code], { type: 'text/x-python' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '{{ shared_code.title }}.py';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

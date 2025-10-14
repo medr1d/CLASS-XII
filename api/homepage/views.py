@@ -609,3 +609,233 @@ def load_user_data(request):
         
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+@rate_limit_per_user(max_requests=100, window=60)
+def save_execution_history(request):
+    """Save code execution history"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            code = data.get('code', '')
+            output = data.get('output', '')
+            error = data.get('error', '')
+            execution_time = data.get('execution_time', 0)
+            filename = data.get('filename', 'untitled.py')
+            was_successful = data.get('was_successful', True)
+            
+            from .models import ExecutionHistory
+            
+            # Limit history to last 100 entries per user
+            history_count = ExecutionHistory.objects.filter(user=request.user).count()
+            if history_count >= 100:
+                # Delete oldest entries
+                oldest = ExecutionHistory.objects.filter(user=request.user).order_by('executed_at')[:history_count-99]
+                ExecutionHistory.objects.filter(id__in=[h.id for h in oldest]).delete()
+            
+            history = ExecutionHistory.objects.create(
+                user=request.user,
+                code_snippet=code,
+                output=output,
+                error=error,
+                execution_time=execution_time,
+                filename=filename,
+                was_successful=was_successful
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'history_id': history.id
+            })
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+@login_required
+def get_execution_history(request):
+    """Retrieve execution history for the user"""
+    try:
+        from .models import ExecutionHistory
+        
+        limit = int(request.GET.get('limit', 50))
+        offset = int(request.GET.get('offset', 0))
+        
+        history = ExecutionHistory.objects.filter(user=request.user)[offset:offset+limit]
+        
+        history_data = []
+        for h in history:
+            history_data.append({
+                'id': h.id,
+                'code_snippet': h.code_snippet[:200] + ('...' if len(h.code_snippet) > 200 else ''),
+                'full_code': h.code_snippet,
+                'output': h.output[:500] + ('...' if len(h.output) > 500 else ''),
+                'error': h.error,
+                'execution_time': h.execution_time,
+                'filename': h.filename,
+                'was_successful': h.was_successful,
+                'executed_at': h.executed_at.isoformat()
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'history': history_data,
+            'total': ExecutionHistory.objects.filter(user=request.user).count()
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+def share_code(request):
+    """Create a shareable link for code"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            title = data.get('title', 'Untitled')
+            code_content = data.get('code', '')
+            description = data.get('description', '')
+            is_public = data.get('is_public', True)
+            expires_days = data.get('expires_days', None)
+            
+            from .models import SharedCode
+            from datetime import timedelta
+            
+            expires_at = None
+            if expires_days:
+                expires_at = timezone.now() + timedelta(days=int(expires_days))
+            
+            shared_code = SharedCode.objects.create(
+                user=request.user,
+                title=title,
+                code_content=code_content,
+                description=description,
+                is_public=is_public,
+                expires_at=expires_at
+            )
+            
+            share_url = f"{request.scheme}://{request.get_host()}/share/{shared_code.share_id}"
+            
+            return JsonResponse({
+                'status': 'success',
+                'share_id': str(shared_code.share_id),
+                'share_url': share_url
+            })
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+def view_shared_code(request, share_id):
+    """View a shared code snippet"""
+    try:
+        from .models import SharedCode
+        
+        shared_code = SharedCode.objects.get(share_id=share_id)
+        
+        # Check if expired
+        if shared_code.expires_at and timezone.now() > shared_code.expires_at:
+            return render(request, 'homepage/shared_code_expired.html')
+        
+        # Check if public or user is owner
+        if not shared_code.is_public and (not request.user.is_authenticated or request.user != shared_code.user):
+            return render(request, 'homepage/shared_code_private.html')
+        
+        # Increment view count
+        shared_code.increment_view_count()
+        
+        return render(request, 'homepage/shared_code.html', {
+            'shared_code': shared_code,
+            'is_owner': request.user.is_authenticated and request.user == shared_code.user
+        })
+        
+    except SharedCode.DoesNotExist:
+        return render(request, 'homepage/shared_code_not_found.html', status=404)
+
+
+@login_required
+def fork_shared_code(request, share_id):
+    """Fork a shared code to user's account"""
+    try:
+        from .models import SharedCode
+        
+        shared_code = SharedCode.objects.get(share_id=share_id)
+        
+        # Create a new file in user's account
+        base_filename = f"forked_{shared_code.title.replace(' ', '_')}.py"
+        filename = base_filename
+        counter = 1
+        
+        while PythonCodeSession.objects.filter(user=request.user, filename=filename).exists():
+            filename = f"forked_{shared_code.title.replace(' ', '_')}_{counter}.py"
+            counter += 1
+        
+        PythonCodeSession.objects.create(
+            user=request.user,
+            filename=filename,
+            code_content=shared_code.code_content
+        )
+        
+        # Increment fork count
+        shared_code.increment_fork_count()
+        
+        return JsonResponse({
+            'status': 'success',
+            'filename': filename,
+            'message': f'Code forked as {filename}'
+        })
+        
+    except SharedCode.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Shared code not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+def update_plot_theme(request):
+    """Update dark mode plots setting"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            dark_mode_plots = data.get('dark_mode_plots', True)
+            
+            from .models import UserProfile
+            profile, _ = UserProfile.objects.get_or_create(user=request.user)
+            profile.dark_mode_plots = dark_mode_plots
+            profile.save(update_fields=['dark_mode_plots'])
+            
+            return JsonResponse({
+                'status': 'success',
+                'dark_mode_plots': dark_mode_plots
+            })
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+
+
+@login_required
+def get_user_settings(request):
+    """Get user settings including plot theme preference"""
+    try:
+        from .models import UserProfile
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        
+        return JsonResponse({
+            'status': 'success',
+            'settings': {
+                'theme': profile.theme,
+                'dark_mode_plots': profile.dark_mode_plots,
+                'paidUser': profile.paidUser
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
