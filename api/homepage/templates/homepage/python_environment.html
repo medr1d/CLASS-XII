@@ -3838,15 +3838,18 @@ print(data.groupby('category').describe())`;
                 pyodide = await loadPyodide();
                 
                 updateLoadingProgress("Installing core packages...");
+                // Only load essential packages - numpy and matplotlib are most commonly used
                 await pyodide.loadPackage(["numpy", "matplotlib", "micropip"]);
                 
-                updateLoadingProgress("Installing packages via micropip...");
+                updateLoadingProgress("Installing essential packages via micropip...");
+                // Reduced package list - only install what's commonly needed
+                // Users can install additional packages on-demand using micropip
                 await pyodide.runPythonAsync(`
 import micropip
 await micropip.install([
-    'pandas', 'scipy', 'scikit-learn', 'seaborn', 'sympy', 'networkx',
-    'plotly', 'bokeh', 'altair', 'wordcloud', 'beautifulsoup4', 'requests',
-    'pillow', 'openpyxl', 'faker', 'tqdm', 'rich', 'pydantic'
+    'pandas',  # Data analysis
+    'scipy',   # Scientific computing
+    'sympy'    # Symbolic mathematics
 ])
                 `);
                 
@@ -6851,7 +6854,7 @@ sys.stderr = _old_stderr
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
+                        'X-CSRFToken': '{{ csrf_token }}'
                     },
                     body: JSON.stringify({ dark_mode_plots: darkMode })
                 })
