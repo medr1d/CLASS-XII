@@ -1068,6 +1068,46 @@
             box-shadow: 0 0 15px var(--shadow-color);
         }
 
+        /* 8-Bit Pixel Button Style */
+        .pixel-button {
+            background: var(--bg-secondary);
+            border: 3px solid var(--border-color);
+            color: var(--text-bright);
+            padding: 8px 12px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            box-shadow: 
+                3px 3px 0px var(--tertiary-color),
+                6px 6px 0px var(--bg-tertiary);
+            transition: all 0.1s ease;
+        }
+
+        .pixel-button:hover {
+            background: var(--secondary-color);
+            box-shadow: 
+                3px 3px 0px var(--primary-color),
+                6px 6px 0px var(--secondary-color),
+                0 0 20px var(--glow-color);
+            transform: translate(-1px, -1px);
+        }
+
+        .pixel-button:active {
+            transform: translate(3px, 3px);
+            box-shadow: none;
+        }
+
+        .pixel-icon {
+            display: inline-block;
+            margin-right: 5px;
+            filter: drop-shadow(0 0 3px var(--text-bright));
+        }
+
+
         .expand-button {
             background: #333;
             color: #fff;
@@ -1400,7 +1440,7 @@
 
         .terminal-input-line {
             display: none;
-            color: #0f0;
+            color: var(--text-bright);
             background: transparent;
             border: none;
             outline: none;
@@ -1409,10 +1449,11 @@
             width: 100%;
             margin: 0;
             padding: 0;
+            padding: 0;
         }
 
         .terminal-prompt {
-            color: #0f0;
+            color: var(--text-bright);
         }
 
         .file-viewers {
@@ -1492,7 +1533,7 @@
             white-space: pre-wrap;
             word-break: break-all;
             scrollbar-width: thin;
-            scrollbar-color: var(--text-bright) #0a0a0a;
+            scrollbar-color: var(--text-bright) var(--bg-secondary);
             border-radius: 3px;
             box-shadow: inset 0 0 10px var(--glow-color);
             transition: all 0.3s ease;
@@ -1527,12 +1568,12 @@
 
         .status-bar {
             background: 
-                linear-gradient(90deg, #111 0%, #0a0a0a 50%, #111 100%);
+                linear-gradient(90deg, #111 0%, var(--bg-secondary) 50%, #111 100%);
             padding: 5px 15px;
             border-top: 1px solid #333;
             font-size: 11px;
             color: var(--text-bright);
-            text-shadow: 0 0 5px #00ff00;
+            text-shadow: 0 0 5px var(--text-bright);
             position: relative;
             z-index: 2;
         }
@@ -1546,7 +1587,7 @@
             height: 1px;
             background: linear-gradient(90deg, 
                 transparent 0%, 
-                #00ff00 50%, 
+                var(--text-bright) 50%, 
                 transparent 100%);
             animation: statusGlow 3s ease-in-out infinite;
         }
@@ -1566,7 +1607,7 @@
         }
 
         .success {
-            color: #0f0;
+            color: var(--text-bright);
         }
 
         .error {
@@ -1709,7 +1750,7 @@
         }
 
         .ace_gutter-active-line {
-            background-color: #0a0a0a !important;
+            background-color: var(--bg-secondary) !important;
         }
 
         body.theme-cloud .ace_gutter-active-line {
@@ -2573,11 +2614,14 @@
                     <h2>Python Code Editor (Client-Side)</h2>
                     <div class="editor-controls">
                         <span id="current-file">untitled_script</span>
-                        <button id="history-btn" class="focus-button" onclick="toggleHistory()" title="Execution History">📜 HISTORY</button>
-                        <button id="share-btn" class="focus-button" onclick="shareCode()" title="Share Code">🔗 SHARE</button>
+                        <button id="history-btn" class="pixel-button" onclick="toggleHistory()" title="Execution History">
+                            <span class="pixel-icon">📜</span> HISTORY
+                        </button>
+                        <button id="share-btn" class="pixel-button" onclick="shareCode()" title="Share Code">
+                            <span class="pixel-icon">🔗</span> SHARE
+                        </button>
                         <button id="notebook-btn" class="focus-button" onclick="toggleNotebookMode()" title="Jupyter-style Notebook Mode">NOTEBOOK</button>
                         <button id="focus-btn" class="focus-button" onclick="toggleFocusMode()" title="Focus Mode">FOCUS</button>
-                        <button id="settings-btn" class="focus-button" onclick="toggleSettings()" title="Settings">⚙️</button>
                     </div>
                 </div>
                 <div class="editor-container">
@@ -5672,7 +5716,7 @@ sys.stderr = _old_stderr
                 <label class="settings-label">Theme</label>
                 <div class="theme-selector">
                     <div class="theme-option" data-theme="default">
-                        <div class="theme-preview" style="background: linear-gradient(135deg, #000 0%, #008800 100%);"></div>
+                        <div class="theme-preview" style="background: linear-gradient(135deg, #000 0%, var(--secondary-color) 100%);"></div>
                         <div class="theme-info">
                             <div class="theme-name">Default</div>
                             <div class="theme-desc">Green Matrix</div>
@@ -5713,6 +5757,24 @@ sys.stderr = _old_stderr
                         <div class="theme-check">✓</div>
                     </div>
                     {% endif %}
+                </div>
+            </div>
+            
+            <!-- Plot Theme Section -->
+            <div class="settings-section">
+                <label class="settings-label">
+                    <span>Plot Background</span>
+                    <span class="settings-hint">Matplotlib charts theme</span>
+                </label>
+                <div class="toggle-group">
+                    <div class="toggle-option" data-plot-theme="dark">
+                        <div class="toggle-icon">🌙</div>
+                        <div class="toggle-text">Dark Mode</div>
+                    </div>
+                    <div class="toggle-option" data-plot-theme="light">
+                        <div class="toggle-icon">☀️</div>
+                        <div class="toggle-text">Light Mode</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -5975,6 +6037,63 @@ sys.stderr = _old_stderr
             opacity: 1;
         }
 
+        /* Plot Theme Toggle Group */
+        .settings-hint {
+            display: block;
+            font-size: 10px;
+            color: #888;
+            font-weight: normal;
+            margin-top: 2px;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .toggle-option {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 12px 8px;
+            background: var(--bg-secondary);
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-option:hover {
+            border-color: var(--border-color);
+            box-shadow: 0 2px 8px var(--glow-color);
+        }
+
+        .toggle-option.active {
+            border-color: var(--text-bright);
+            background: var(--bg-tertiary);
+            box-shadow: 0 4px 12px var(--glow-color);
+        }
+
+        .toggle-icon {
+            font-size: 24px;
+            filter: drop-shadow(0 0 5px var(--text-color));
+        }
+
+        .toggle-text {
+            font-size: 10px;
+            color: var(--text-color);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .toggle-option.active .toggle-text {
+            color: var(--text-bright);
+        }
+
         /* Scrollbar for dropdown */
         .settings-dropdown::-webkit-scrollbar {
             width: 6px;
@@ -6107,7 +6226,238 @@ sys.stderr = _old_stderr
                 }
                 return cookieValue;
             }
+
+            // Plot Theme Toggle
+            const plotToggleOptions = document.querySelectorAll('.toggle-option');
+            let currentPlotTheme = '{{ user.profile.dark_mode_plots|default:True }}' === 'True' ? 'dark' : 'light';
+            
+            // Set initial active state
+            plotToggleOptions.forEach(opt => {
+                if (opt.getAttribute('data-plot-theme') === currentPlotTheme) {
+                    opt.classList.add('active');
+                } else {
+                    opt.classList.remove('active');
+                }
+            });
+
+            plotToggleOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const plotTheme = this.getAttribute('data-plot-theme');
+                    changePlotTheme(plotTheme);
+                });
+            });
+
+            function changePlotTheme(plotTheme) {
+                const darkMode = plotTheme === 'dark';
+                
+                // Update active state
+                plotToggleOptions.forEach(opt => {
+                    if (opt.getAttribute('data-plot-theme') === plotTheme) {
+                        opt.classList.add('active');
+                    } else {
+                        opt.classList.remove('active');
+                    }
+                });
+
+                currentPlotTheme = plotTheme;
+
+                // Save to server
+                fetch('/python/update-plot-theme/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ dark_mode_plots: darkMode })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        console.log('Plot theme saved successfully');
+                        updateMatplotlibTheme(darkMode);
+                    }
+                })
+                .catch(error => console.error('Error saving plot theme:', error));
+            }
+
+            async function updateMatplotlibTheme(darkMode) {
+                if (!pyodide) return;
+                
+                try {
+                    await pyodide.runPythonAsync(`
+import matplotlib.pyplot as plt
+
+# Set plot theme
+if ${darkMode ? 'True' : 'False'}:
+    plt.style.use('dark_background')
+    plt.rcParams['figure.facecolor'] = '#000000'
+    plt.rcParams['axes.facecolor'] = '#111111'
+    plt.rcParams['axes.edgecolor'] = '#00aa00'
+    plt.rcParams['text.color'] = '#00ff00'
+    plt.rcParams['xtick.color'] = '#00cc00'
+    plt.rcParams['ytick.color'] = '#00cc00'
+    plt.rcParams['grid.color'] = '#004400'
+    plt.rcParams['legend.facecolor'] = '#111111'
+    plt.rcParams['legend.edgecolor'] = '#00aa00'
+else:
+    plt.style.use('default')
+    plt.rcParams['figure.facecolor'] = 'white'
+    plt.rcParams['axes.facecolor'] = 'white'
+
+print(f"Matplotlib theme updated to {'dark' if ${darkMode ? 'True' : 'False'} else 'light'} mode")
+                    `);
+                } catch (error) {
+                    console.error('Error updating matplotlib theme:', error);
+                }
+            }
         });
+
+        // History and Share Functions
+        function toggleHistory() {
+            const modal = document.getElementById('history-modal');
+            if (modal) {
+                modal.classList.toggle('active');
+                if (modal.classList.contains('active')) {
+                    loadExecutionHistory();
+                }
+            }
+        }
+
+        async function loadExecutionHistory() {
+            const historyList = document.getElementById('history-list');
+            if (!historyList) return;
+            
+            historyList.innerHTML = '<div style="text-align: center; padding: 20px;">Loading...</div>';
+            
+            try {
+                const response = await fetch('/python/get-history/');
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.history.length > 0) {
+                    historyList.innerHTML = data.history.map(h => `
+                        <div class="history-item ${h.was_successful ? 'success' : 'error'}">
+                            <div class="history-header">
+                                <strong>${h.filename}</strong>
+                                <span>${new Date(h.executed_at).toLocaleString()}</span>
+                            </div>
+                            <div class="history-code">${escapeHtml(h.code_snippet)}</div>
+                            <div class="history-meta">
+                                <span>⏱️ ${h.execution_time.toFixed(2)}ms</span>
+                                <button onclick="loadHistoryCode(${h.id})" class="btn-small">Load Code</button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    historyList.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;">No execution history yet.</div>';
+                }
+            } catch (error) {
+                historyList.innerHTML = '<div style="text-align: center; padding: 20px; color: #f44;">Error loading history</div>';
+                console.error('Error loading history:', error);
+            }
+        }
+
+        async function loadHistoryCode(historyId) {
+            try {
+                const response = await fetch(`/python/get-history/`);
+                const data = await response.json();
+                const history = data.history.find(h => h.id === historyId);
+                
+                if (history) {
+                    setEditorValue(history.full_code);
+                    document.getElementById('history-modal').classList.remove('active');
+                    updateStatus('Code loaded from history', 'success');
+                }
+            } catch (error) {
+                console.error('Error loading history code:', error);
+            }
+        }
+
+        function shareCode() {
+            const modal = document.getElementById('share-modal');
+            if (modal) {
+                modal.classList.add('active');
+            }
+        }
+
+        async function generateShareLink() {
+            const code = getEditorValue();
+            const title = document.getElementById('share-title')?.value || 'Untitled Code';
+            const description = document.getElementById('share-description')?.value || '';
+            const isPublic = document.getElementById('share-public')?.checked !== false;
+            const expiresDay = document.getElementById('share-expires')?.value || null;
+            
+            if (!code.trim()) {
+                alert('Cannot share empty code');
+                return;
+            }
+            
+            const shareResult = document.getElementById('share-result');
+            shareResult.innerHTML = 'Generating link...';
+            
+            try {
+                const response = await fetch('/python/share/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        title: title,
+                        description: description,
+                        is_public: isPublic,
+                        expires_days: expiresDay
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    shareResult.innerHTML = `
+                        <div style="padding: 15px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 5px;">
+                            <strong>✓ Link Generated!</strong><br><br>
+                            <input type="text" value="${data.share_url}" readonly style="width: 100%; padding: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-bright); border-radius: 3px; margin-bottom: 10px;">
+                            <button onclick="copyToClipboard('${data.share_url}')" class="modal-btn">📋 Copy Link</button>
+                            <button onclick="window.open('${data.share_url}', '_blank')" class="modal-btn">🔗 Open Link</button>
+                        </div>
+                    `;
+                } else {
+                    shareResult.innerHTML = `<div style="color: #f44;">Error: ${data.message}</div>`;
+                }
+            } catch (error) {
+                shareResult.innerHTML = `<div style="color: #f44;">Error generating share link</div>`;
+                console.error('Error:', error);
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                updateStatus('Link copied to clipboard!', 'success');
+            }).catch(err => {
+                console.error('Copy failed:', err);
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
 
         // Optimized LeBron bouncing basketball physics
         (function(){

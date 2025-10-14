@@ -858,6 +858,22 @@
                         <span id="plot-theme-status">{{ user.profile.dark_mode_plots|yesno:"Dark Mode,Light Mode" }}</span>
                     </div>
                 </div>
+                
+                <!-- Plot Theme Settings -->
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3 class="setting-title">Matplotlib Plot Theme</h3>
+                    </div>
+                    <div class="setting-description">
+                        Choose the background color for matplotlib charts and plots.
+                    </div>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <div class="toggle-switch {% if user.profile.dark_mode_plots %}active{% endif %}" id="plot-theme-toggle">
+                            <div class="toggle-slider"></div>
+                        </div>
+                        <span id="plot-theme-label">{% if user.profile.dark_mode_plots %}Dark Mode{% else %}Light Mode{% endif %}</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Security Section -->
@@ -1200,7 +1216,53 @@
         // Load files on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadUserFiles();
+            setupPlotThemeToggle();
         });
+
+        // Plot Theme Toggle
+        function setupPlotThemeToggle() {
+            const toggle = document.getElementById('plot-theme-toggle');
+            const label = document.getElementById('plot-theme-label');
+            
+            if (toggle) {
+                toggle.addEventListener('click', function() {
+                    const isDark = !toggle.classList.contains('active');
+                    toggle.classList.toggle('active');
+                    label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+                    
+                    fetch('/python/update-plot-theme/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({ dark_mode_plots: isDark })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            console.log('Plot theme updated');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
 
         function loadUserFiles() {
             fetch('{% url "homepage:get_files" %}')
