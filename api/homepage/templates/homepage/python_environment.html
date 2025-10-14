@@ -5474,17 +5474,18 @@ sys.stderr = sys.__stderr__
                     if (data.session_url) {
                         const fullUrl = window.location.origin + data.session_url;
                         const expiresDate = new Date(data.expires_at).toLocaleDateString();
+                        const selectedFilesCount = selectedFiles.length;
                         resultDiv.innerHTML = `
                             <div style="padding: 15px; background: var(--bg-secondary); border: 2px solid var(--primary-color); border-radius: 4px;">
-                                <div style="margin-bottom: 10px; color: var(--text-bright); font-weight: bold;">Collaborative Session Created!</div>
+                                <div style="margin-bottom: 10px; color: var(--text-bright); font-weight: bold;">✓ Collaborative Session Created!</div>
                                 <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">
-                                    Expires: ${expiresDate} | Imported: ${selectedFiles.length} file(s)
+                                    Expires: ${expiresDate} | Imported: ${selectedFilesCount} file(s)
                                 </div>
                                 <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
                                     <input type="text" value="${fullUrl}" readonly id="share-url-input" style="flex: 1; padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-family: monospace; font-size: 12px;">
                                     <button onclick="copyShareUrl()" class="pixel-button" style="padding: 8px 16px;">COPY</button>
                                 </div>
-                                <button onclick="window.location.href='${data.session_url}'" class="pixel-button" style="width: 100%; padding: 10px;">JOIN SESSION</button>
+                                <button onclick="window.location.href = '${data.session_url}'" class="pixel-button" style="width: 100%; padding: 10px;">JOIN SESSION</button>
                             </div>
                         `;
                     } else {
@@ -5510,14 +5511,19 @@ sys.stderr = sys.__stderr__
                     data = await response.json();
                     
                     if (data.share_url) {
-                        const fullUrl = window.location.origin + data.share_url;
+                        // Backend already returns full URL, no need to prepend origin
+                        const fullUrl = data.share_url;
                         resultDiv.innerHTML = `
                             <div style="padding: 15px; background: var(--bg-secondary); border: 2px solid var(--primary-color); border-radius: 4px;">
-                                <div style="margin-bottom: 10px; color: var(--text-bright); font-weight: bold;">Share Link Generated!</div>
-                                <div style="display: flex; gap: 10px; align-items: center;">
+                                <div style="margin-bottom: 10px; color: var(--text-bright); font-weight: bold;">✓ Share Link Generated!</div>
+                                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">
+                                    Anyone with this link can view your code (expires in 7 days)
+                                </div>
+                                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
                                     <input type="text" value="${fullUrl}" readonly id="share-url-input" style="flex: 1; padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-family: monospace; font-size: 12px;">
                                     <button onclick="copyShareUrl()" class="pixel-button" style="padding: 8px 16px;">COPY</button>
                                 </div>
+                                <button onclick="window.open('${fullUrl}', '_blank')" class="pixel-button" style="width: 100%; padding: 10px;">VIEW SHARED CODE</button>
                             </div>
                         `;
                     } else {

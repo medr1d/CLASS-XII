@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share Expired</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
+    <style>
+        body {
+            background: #000;
+            color: #00cc00;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            border: 2px solid #008800;
+            background: #020202;
+            max-width: 500px;
+        }
+        h1 {
+            color: #ff4444;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        a {
+            color: #00ff00;
+            text-decoration: none;
+            border: 2px solid #008800;
+            padding: 10px 20px;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        a:hover {
+            background: #008800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏰ EXPIRED</h1>
+        <p>This shared code has expired and is no longer available.</p>
+        <a href="{% url 'python_environment' %}">← GO TO EDITOR</a>
+    </div>
+</body>
+</html>

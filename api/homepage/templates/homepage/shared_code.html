@@ -1,0 +1,240 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ shared_code.title }} - Shared Code</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/mode-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-monokai.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #00aa00;
+            --bg-primary: #000000;
+            --bg-secondary: #020202;
+            --bg-tertiary: #050505;
+            --border-color: #008800;
+            --text-color: #00cc00;
+            --text-bright: #00ff00;
+            --text-secondary: #00aa00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-color);
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            padding: 20px 30px;
+        }
+
+        .header h1 {
+            color: var(--text-bright);
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header .meta {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            flex-wrap: wrap;
+        }
+
+        .header .meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .description {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            padding: 15px 30px;
+            color: var(--text-color);
+        }
+
+        .actions {
+            padding: 15px 30px;
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: var(--bg-tertiary);
+            color: var(--text-bright);
+            border: 2px solid var(--border-color);
+            padding: 10px 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: var(--border-color);
+            box-shadow: 0 0 10px rgba(0, 136, 0, 0.5);
+        }
+
+        .btn-primary {
+            background: var(--border-color);
+        }
+
+        .editor-container {
+            flex: 1;
+            position: relative;
+            margin: 20px 30px;
+            border: 2px solid var(--border-color);
+        }
+
+        #editor {
+            width: 100%;
+            height: 600px;
+            font-size: 14px;
+        }
+
+        .read-only-banner {
+            background: rgba(255, 136, 0, 0.2);
+            border: 1px solid #ff8800;
+            color: #ffaa00;
+            padding: 10px 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 2px solid var(--border-color);
+            padding: 20px 30px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header, .description, .actions, .editor-container, .footer {
+                padding: 15px;
+                margin: 10px 15px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            #editor {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ shared_code.title }}</h1>
+        <div class="meta">
+            <span>👤 {{ shared_code.user.username }}</span>
+            <span>📅 {{ shared_code.created_at|date:"M d, Y" }}</span>
+            <span>👁️ {{ shared_code.view_count }} views</span>
+            {% if shared_code.expires_at %}
+            <span>⏱️ Expires: {{ shared_code.expires_at|date:"M d, Y" }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if shared_code.description %}
+    <div class="description">
+        {{ shared_code.description }}
+    </div>
+    {% endif %}
+
+    <div class="read-only-banner">
+        📖 READ-ONLY VIEW - You can view and copy this code. To edit, fork it to your account.
+    </div>
+
+    <div class="actions">
+        {% if user.is_authenticated %}
+        <form method="POST" action="{% url 'fork_shared_code' shared_code.share_id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">🔱 FORK TO MY ACCOUNT</button>
+        </form>
+        {% else %}
+        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">🔱 LOGIN TO FORK</a>
+        {% endif %}
+        <button onclick="copyCode()" class="btn">📋 COPY CODE</button>
+        <a href="{% url 'python_environment' %}" class="btn">🏠 GO TO EDITOR</a>
+    </div>
+
+    <div class="editor-container">
+        <div id="editor">{{ shared_code.code_content }}</div>
+    </div>
+
+    <div class="footer">
+        <div class="stats">
+            <span>👁️ {{ shared_code.view_count }} views</span>
+            <span>🔱 {{ shared_code.fork_count }} forks</span>
+        </div>
+        <div>
+            Shared by <strong>{{ shared_code.user.username }}</strong> via CLASS 12 PYTHON ASSEMBLY
+        </div>
+    </div>
+
+    <script>
+        // Initialize Ace Editor
+        const editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/python");
+        editor.setReadOnly(true);
+        editor.setShowPrintMargin(false);
+        editor.setOptions({
+            fontSize: "14px",
+            showLineNumbers: true,
+            showGutter: true,
+            highlightActiveLine: false,
+            readOnly: true
+        });
+
+        function copyCode() {
+            const code = editor.getValue();
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = event.target.textContent;
+                event.target.textContent = '✓ COPIED!';
+                setTimeout(() => {
+                    event.target.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy code');
+                console.error('Copy failed:', err);
+            });
+        }
+    </script>
+</body>
+</html>
