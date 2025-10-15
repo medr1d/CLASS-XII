@@ -1433,7 +1433,6 @@ def update_profile(request):
 
 
 @login_required
-@login_required
 def upload_profile_picture(request):
     """Upload or remove profile picture"""
     
@@ -1456,7 +1455,7 @@ def upload_profile_picture(request):
         return JsonResponse({'status': 'error', 'message': 'POST or DELETE required'}, status=400)
     
     try:
-        import requests
+        import vercel_blob
         import os
         
         # Check for both 'file' and 'profile_picture' field names
@@ -1478,25 +1477,20 @@ def upload_profile_picture(request):
         if not blob_token:
             return JsonResponse({'status': 'error', 'message': 'Blob storage not configured'}, status=500)
         
-        # Upload to Vercel Blob
-        filename = f"profile_{request.user.id}_{timezone.now().timestamp()}.{file.name.split('.')[-1]}"
+        # Upload to Vercel Blob using vercel_blob library
+        filename = f"profile_{request.user.id}_{int(timezone.now().timestamp())}.{file.name.split('.')[-1]}"
         
-        # Vercel Blob API endpoint
-        blob_url = 'https://blob.vercel-storage.com/upload'
+        # Read file content
+        file_content = file.read()
         
-        headers = {
-            'Authorization': f'Bearer {blob_token}',
-        }
+        # Upload using vercel_blob.put()
+        response = vercel_blob.put(filename, file_content, {})
         
-        files = {
-            'file': (filename, file.read(), file.content_type)
-        }
-        
-        response = requests.post(blob_url, headers=headers, files=files)
-        
-        if response.status_code == 200:
-            blob_data = response.json()
-            image_url = blob_data.get('url')
+        # Get the URL from response
+        if response and 'url' in response:
+            image_url = response['url']
+            
+            # Save to user profile
             profile, _ = UserProfile.objects.get_or_create(user=request.user)
             profile.profile_picture_url = image_url
             profile.save()
@@ -1509,8 +1503,11 @@ def upload_profile_picture(request):
         else:
             return JsonResponse({
                 'status': 'error',
-                'message': f'Upload failed: {response.text}'
+                'message': f'Upload failed: {str(response)}'
             }, status=500)
         
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Profile picture upload error: {error_details}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
