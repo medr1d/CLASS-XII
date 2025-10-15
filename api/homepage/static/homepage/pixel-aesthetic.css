@@ -123,6 +123,85 @@
    LOADING SPINNER
    ====================== */
 
+/* Homepage-Style Loader */
+.loader {
+    width: 64px;
+    height: 64px;
+    border: var(--pixel-border) solid var(--border-color);
+    background: var(--primary-bg);
+    position: relative;
+    animation: pixelSpin 1.5s linear infinite;
+    box-shadow: 
+        inset 4px 4px 0 rgba(255, 255, 255, 0.2),
+        inset -4px -4px 0 rgba(0, 0, 0, 0.5),
+        0 0 16px rgba(255, 255, 255, 0.3);
+}
+
+.loader::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    border: var(--pixel-border) solid var(--accent-color);
+    animation: pixelSpin 1s linear infinite reverse;
+}
+
+.loader::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    background: var(--text-secondary);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 8px currentColor;
+    animation: pixelPulse 0.8s ease-in-out infinite;
+}
+
+@keyframes pixelSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Loading Overlay for Pages */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--primary-bg);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+.loading-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-text {
+    margin-top: 20px;
+    font-size: 10px;
+    color: var(--accent-color);
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+    animation: loadingTextPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes loadingTextPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
 .pixel-loader-overlay {
     position: fixed;
     top: 0;
