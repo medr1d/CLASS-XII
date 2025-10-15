@@ -277,17 +277,32 @@ def get_files(request):
         })
 
 @login_required
-@require_POST
 @ensure_csrf_cookie
 @rate_limit_per_user(max_requests=100, window=3600)  # 100 saves per hour
 def save_user_data(request):
     """Save user data with CSRF protection and file limit enforcement."""
+    # Only accept POST requests
+    if request.method != 'POST':
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Only POST requests are allowed'
+        }, status=405)
+    
     try:
         user_data = json.loads(request.body)
         user = request.user
         
+        # Log what we're receiving
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"💾 Saving data for user {user.username}")
+        logger.info(f"📝 Scripts to save: {list(user_data.get('scripts', {}).keys())}")
+        
         # Check total file limit before saving
         existing_files = PythonCodeSession.objects.filter(user=user).count()
+        files_saved = 0
+        files_updated = 0
+        files_skipped = 0
         
         # Save current code
         if user_data.get('currentCode'):
@@ -295,6 +310,8 @@ def save_user_data(request):
                 session = PythonCodeSession.objects.get(user=user, filename='main.py')
                 session.code_content = user_data['currentCode']
                 session.save()
+                files_updated += 1
+                logger.info(f"✅ Updated main.py")
             except PythonCodeSession.DoesNotExist:
                 if existing_files >= 10:
                     return JsonResponse({
@@ -307,6 +324,8 @@ def save_user_data(request):
                         filename='main.py',
                         code_content=user_data['currentCode']
                     )
+                    files_saved += 1
+                    logger.info(f"✅ Created main.py")
                 except IntegrityError:
                     # File was created by another request
                     pass
@@ -320,10 +339,14 @@ def save_user_data(request):
                         session = PythonCodeSession.objects.get(user=user, filename=filename)
                         session.code_content = content
                         session.save()
+                        files_updated += 1
+                        logger.info(f"✅ Updated {filename}")
                     except PythonCodeSession.DoesNotExist:
                         # Check limit before creating
                         current_count = PythonCodeSession.objects.filter(user=user).count()
                         if current_count >= 10:
+                            files_skipped += 1
+                            logger.warning(f"⚠️ Skipped {filename} - file limit reached")
                             continue  # Skip this file
                         try:
                             PythonCodeSession.objects.create(
@@ -331,7 +354,10 @@ def save_user_data(request):
                                 filename=filename,
                                 code_content=content
                             )
+                            files_saved += 1
+                            logger.info(f"✅ Created {filename}")
                         except IntegrityError:
+                            logger.warning(f"⚠️ IntegrityError for {filename}")
                             pass  # File exists, skip
                             
                 elif key.startswith('data_file_'):
@@ -340,6 +366,8 @@ def save_user_data(request):
                         file_obj = UserFiles.objects.get(user=user, filename=filename)
                         file_obj.content = content
                         file_obj.save()
+                        files_updated += 1
+                        logger.info(f"✅ Updated data file {filename}")
                     except UserFiles.DoesNotExist:
                         try:
                             UserFiles.objects.create(
@@ -348,6 +376,8 @@ def save_user_data(request):
                                 content=content,
                                 is_system_file=False
                             )
+                            files_saved += 1
+                            logger.info(f"✅ Created data file {filename}")
                         except IntegrityError:
                             pass  # File exists, skip
         
@@ -367,7 +397,17 @@ def save_user_data(request):
                 except IntegrityError:
                     pass
         
-        return JsonResponse({'status': 'success', 'message': 'Data saved successfully'})
+        logger.info(f"📊 Save complete: {files_saved} created, {files_updated} updated, {files_skipped} skipped")
+        
+        return JsonResponse({
+            'status': 'success', 
+            'message': 'Data saved successfully',
+            'stats': {
+                'created': files_saved,
+                'updated': files_updated,
+                'skipped': files_skipped
+            }
+        })
         
     except json.JSONDecodeError:
         return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)

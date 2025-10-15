@@ -3801,7 +3801,7 @@ print(data.groupby('category').describe())`;
             }
 
             try {
-                const response = await fetch('/save_user_data', {
+                const response = await fetch('/save_user_data/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -3810,16 +3810,23 @@ print(data.groupby('category').describe())`;
                     body: JSON.stringify(userData)
                 });
                 
+                const result = await response.json();
+                
                 if (response.ok) {
-                    console.log('User data saved to account');
+                    console.log('✅ User data saved to account:', result);
                     updateStatus('Data saved to account', 'success');
+                    return true;
                 } else {
-                    console.log('Failed to save to account, using local storage');
+                    console.error('❌ Failed to save to account:', result);
+                    updateStatus(`Save failed: ${result.message || 'Unknown error'}`, 'error');
                     localStorage.setItem('user_data_backup', JSON.stringify(userData));
+                    return false;
                 }
             } catch (error) {
-                console.log('Network error, using local storage backup');
+                console.error('❌ Network error saving data:', error);
+                updateStatus('Network error, data saved locally', 'warning');
                 localStorage.setItem('user_data_backup', JSON.stringify(userData));
+                return false;
             }
         }
 
@@ -4445,7 +4452,14 @@ except Exception as e:
             
             localStorage.setItem(storageKey, code);
             updateStatus(`${isPythonScript ? 'Script' : 'Data file'} '${scriptName}' saved to browser storage`, 'success');
-            scheduleAutoSave(); 
+            
+            // Immediately save to database
+            saveUserData().then(() => {
+                console.log(`File ${scriptName} saved to account`);
+            }).catch((error) => {
+                console.error('Error saving to account:', error);
+            });
+            
             loadScriptList();
             currentScript = scriptName;
             document.getElementById('current-file').textContent = currentScript;
