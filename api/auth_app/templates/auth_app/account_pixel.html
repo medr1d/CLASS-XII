@@ -772,6 +772,35 @@
             <div class="content-section" id="profile">
                 <h1 class="section-title">Profile Settings</h1>
                 
+                <!-- Profile Picture Section -->
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3 class="setting-title">Profile Picture</h3>
+                    </div>
+                    <div class="setting-description">
+                        Upload a custom profile picture for your account.
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 20px; margin-top: 15px;">
+                        <div class="user-avatar" style="width: 80px; height: 80px; font-size: 1.5rem;">
+                            {% if user.profile.profile_picture_url %}
+                                <img src="{{ user.profile.profile_picture_url }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                {{ user.username|slice:":1"|upper }}
+                            {% endif %}
+                        </div>
+                        <div style="flex: 1;">
+                            <input type="file" id="profile-picture-input" accept="image/*" style="display: none;" onchange="uploadProfilePicture(this)">
+                            <button class="btn" onclick="document.getElementById('profile-picture-input').click()">Upload New Picture</button>
+                            {% if user.profile.profile_picture_url %}
+                                <button class="btn btn-danger" onclick="removeProfilePicture()" style="margin-left: 10px;">Remove Picture</button>
+                            {% endif %}
+                            <div style="margin-top: 10px; font-size: 0.7rem; color: #888;">
+                                Max file size: 5MB. Supported formats: JPG, PNG, GIF
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="setting-card">
                     <div class="setting-header">
                         <h3 class="setting-title">Account Information</h3>
@@ -838,42 +867,6 @@
                         {% endif %}
                     </div>
                 </div>
-
-                <div class="setting-card">
-                    <div class="setting-header">
-                        <h3 class="setting-title">Matplotlib Plot Theme</h3>
-                        {% if user.profile.dark_mode_plots %}
-                            <span class="status-indicator status-active">Dark Mode</span>
-                        {% else %}
-                            <span class="status-indicator status-inactive">Light Mode</span>
-                        {% endif %}
-                    </div>
-                    <div class="setting-description">
-                        Choose whether matplotlib plots use dark or light backgrounds.
-                    </div>
-                    <div style="display: flex; gap: 15px; align-items: center;">
-                        <div class="toggle-switch {% if user.profile.dark_mode_plots %}active{% endif %}" id="plot-theme-toggle">
-                            <div class="toggle-slider"></div>
-                        </div>
-                        <span id="plot-theme-status">{{ user.profile.dark_mode_plots|yesno:"Dark Mode,Light Mode" }}</span>
-                    </div>
-                </div>
-                
-                <!-- Plot Theme Settings -->
-                <div class="setting-card">
-                    <div class="setting-header">
-                        <h3 class="setting-title">Matplotlib Plot Theme</h3>
-                    </div>
-                    <div class="setting-description">
-                        Choose the background color for matplotlib charts and plots.
-                    </div>
-                    <div style="display: flex; gap: 15px; align-items: center;">
-                        <div class="toggle-switch {% if user.profile.dark_mode_plots %}active{% endif %}" id="plot-theme-toggle">
-                            <div class="toggle-slider"></div>
-                        </div>
-                        <span id="plot-theme-label">{% if user.profile.dark_mode_plots %}Dark Mode{% else %}Light Mode{% endif %}</span>
-                    </div>
-                </div>
             </div>
 
             <!-- Security Section -->
@@ -925,7 +918,7 @@
                 <div class="setting-card">
                     <div class="setting-header">
                         <h3 class="setting-title">Saved Python Files</h3>
-                        <span class="status-indicator status-active">{{ user_files_count|default:0 }}/10 Files</span>
+                        <span class="status-indicator status-active" id="files-count">0/10 Files</span>
                     </div>
                     <div class="setting-description">
                         Manage your saved Python files. You can store up to 10 files in your account.
@@ -1269,6 +1262,13 @@
                 .then(response => response.json())
                 .then(data => {
                     const filesContainer = document.getElementById('files-list');
+                    const filesCount = document.getElementById('files-count');
+                    
+                    // Update file count
+                    const count = data.files ? data.files.length : 0;
+                    if (filesCount) {
+                        filesCount.textContent = `${count}/10 Files`;
+                    }
                     
                     if (data.files && data.files.length > 0) {
                         filesContainer.innerHTML = data.files.map(file => `
@@ -1329,6 +1329,78 @@
                     showNotification('Failed to delete file', 'error');
                 });
             }
+        }
+
+        // Profile Picture Upload
+        function uploadProfilePicture(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('File size must be less than 5MB', 'error');
+                return;
+            }
+
+            // Validate file type
+            if (!file.type.match(/^image\/(jpeg|jpg|png|gif)$/)) {
+                showNotification('Only JPG, PNG, and GIF images are supported', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('profile_picture', file);
+
+            showNotification('Uploading profile picture...', 'info');
+
+            fetch('{% url "homepage:upload_profile_picture" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showNotification('Profile picture updated successfully!', 'success');
+                    // Reload the page to show new picture
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification(data.message || 'Failed to upload profile picture', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to upload profile picture', 'error');
+            });
+        }
+
+        function removeProfilePicture() {
+            if (!confirm('Are you sure you want to remove your profile picture?')) {
+                return;
+            }
+
+            fetch('{% url "homepage:upload_profile_picture" %}', {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showNotification('Profile picture removed successfully!', 'success');
+                    // Reload the page to show default avatar
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification(data.message || 'Failed to remove profile picture', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to remove profile picture', 'error');
+            });
         }
 
         // Add CSS animation for notifications

@@ -157,210 +157,6 @@ print("Your Python files are saved to your account!")
                 filename=current_filename,
                 code_content=code_content
             )
-            
-            # Create additional example files for data science
-            matplotlib_example = '''import matplotlib.pyplot as plt
-import numpy as np
-
-print("Creating advanced matplotlib visualizations...")
-
-fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10))
-
-x = np.linspace(0, 10, 100)
-ax1.plot(x, np.sin(x), 'b-', label='sin(x)')
-ax1.plot(x, np.cos(x), 'r--', label='cos(x)')
-ax1.set_title('Trigonometric Functions')
-ax1.legend()
-ax1.grid(True, alpha=0.3)
-
-n = 50
-x = np.random.randn(n)
-y = np.random.randn(n)
-colors = np.random.rand(n)
-ax2.scatter(x, y, c=colors, alpha=0.6)
-ax2.set_title('Random Scatter Plot')
-
-data = np.random.normal(100, 15, 1000)
-ax3.hist(data, bins=30, alpha=0.7, color='skyblue', edgecolor='black')
-ax3.set_title('Normal Distribution')
-ax3.set_xlabel('Value')
-ax3.set_ylabel('Frequency')
-
-categories = ['Python', 'Java', 'JavaScript', 'C++', 'Go']
-values = [85, 70, 75, 60, 55]
-ax4.bar(categories, values, color=['#3776ab', '#ed8b00', '#f7df1e', '#00599c', '#00add8'])
-ax4.set_title('Programming Languages Popularity')
-ax4.set_ylabel('Popularity Score')
-
-plt.tight_layout()
-plt.show()
-
-print("Advanced plots created successfully!")
-'''
-
-            pandas_example = '''import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-
-print("Pandas Data Analysis Demo...")
-
-np.random.seed(42)
-
-sales_data = {
-    'Month': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    'Product_A': [100, 120, 140, 110, 160, 180],
-    'Product_B': [80, 90, 100, 95, 110, 120],
-    'Product_C': [60, 70, 80, 85, 90, 95]
-}
-df_sales = pd.DataFrame(sales_data)
-
-print("Sales Data:")
-print(df_sales)
-print("\\nData Info:")
-print(df_sales.describe())
-
-df_sales.set_index('Month').plot(kind='bar', figsize=(10, 6))
-plt.title('Monthly Sales by Product')
-plt.ylabel('Sales Amount')
-plt.xticks(rotation=45)
-plt.legend(title='Products')
-plt.tight_layout()
-plt.show()
-
-students_data = {
-    'Name': ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank'],
-    'Math': np.random.randint(70, 100, 6),
-    'Science': np.random.randint(65, 95, 6),
-    'English': np.random.randint(75, 100, 6),
-    'History': np.random.randint(60, 90, 6)
-}
-df_students = pd.DataFrame(students_data)
-
-print("\\nStudent Grades:")
-print(df_students)
-
-df_students['Average'] = df_students[['Math', 'Science', 'English', 'History']].mean(axis=1)
-print("\\nWith Averages:")
-print(df_students)
-
-plt.figure(figsize=(12, 8))
-
-plt.subplot(2, 2, 1)
-df_students[['Math', 'Science', 'English', 'History']].plot(kind='box')
-plt.title('Grade Distribution by Subject')
-
-plt.subplot(2, 2, 2)
-df_students['Average'].hist(bins=10, alpha=0.7, color='lightgreen')
-plt.title('Average Grade Distribution')
-plt.xlabel('Average Grade')
-plt.ylabel('Number of Students')
-
-plt.subplot(2, 2, 3)
-subject_means = df_students[['Math', 'Science', 'English', 'History']].mean()
-subject_means.plot(kind='pie', autopct='%1.1f%%')
-plt.title('Subject Performance Distribution')
-
-plt.subplot(2, 2, 4)
-df_students.set_index('Name')[['Math', 'Science', 'English', 'History']].plot(kind='bar')
-plt.title('Individual Student Performance')
-plt.xticks(rotation=45)
-
-plt.tight_layout()
-plt.show()
-
-print("Pandas analysis complete!")
-'''
-
-            numpy_example = '''import numpy as np
-import matplotlib.pyplot as plt
-
-print("NumPy Scientific Computing Demo...")
-
-print("\\nArray Operations:")
-arr1 = np.array([1, 2, 3, 4, 5])
-arr2 = np.array([5, 4, 3, 2, 1])
-
-print(f"Array 1: {arr1}")
-print(f"Array 2: {arr2}")
-print(f"Addition: {arr1 + arr2}")
-print(f"Multiplication: {arr1 * arr2}")
-print(f"Dot product: {np.dot(arr1, arr2)}")
-
-print("\\nMatrix Operations:")
-matrix_a = np.random.randint(1, 10, (3, 3))
-matrix_b = np.random.randint(1, 10, (3, 3))
-
-print("Matrix A:")
-print(matrix_a)
-print("\\nMatrix B:")
-print(matrix_b)
-print("\\nMatrix Multiplication:")
-print(np.matmul(matrix_a, matrix_b))
-
-print("\\nStatistical Operations:")
-data = np.random.normal(100, 15, 1000)
-print(f"Mean: {np.mean(data):.2f}")
-print(f"Standard Deviation: {np.std(data):.2f}")
-print(f"Min: {np.min(data):.2f}")
-print(f"Max: {np.max(data):.2f}")
-
-fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10))
-
-x = np.linspace(0, 4*np.pi, 1000)
-y1 = np.sin(x)
-y2 = np.cos(x)
-ax1.plot(x, y1, 'b-', label='sin(x)', linewidth=2)
-ax1.plot(x, y2, 'r-', label='cos(x)', linewidth=2)
-ax1.set_title('Trigonometric Functions')
-ax1.legend()
-ax1.grid(True, alpha=0.3)
-
-x_3d = np.linspace(-5, 5, 50)
-y_3d = np.linspace(-5, 5, 50)
-X, Y = np.meshgrid(x_3d, y_3d)
-Z = np.sin(np.sqrt(X**2 + Y**2))
-contour = ax2.contour(X, Y, Z, levels=20)
-ax2.set_title('Contour Plot of sin(√(x²+y²))')
-
-ax3.hist(data, bins=50, alpha=0.7, color='skyblue', edgecolor='black')
-ax3.set_title('Normal Distribution (μ=100, σ=15)')
-ax3.set_xlabel('Value')
-ax3.set_ylabel('Frequency')
-
-t = np.linspace(0, 1, 500)
-signal = np.sin(2*np.pi*5*t) + 0.5*np.sin(2*np.pi*10*t) + 0.3*np.random.randn(500)
-fft = np.fft.fft(signal)
-freqs = np.fft.fftfreq(len(t), t[1]-t[0])
-ax4.plot(freqs[:len(freqs)//2], np.abs(fft[:len(fft)//2]))
-ax4.set_title('FFT of Mixed Signal')
-ax4.set_xlabel('Frequency (Hz)')
-ax4.set_ylabel('Magnitude')
-
-plt.tight_layout()
-plt.show()
-
-print("NumPy demonstrations complete!")
-'''
-
-            # Create the example files
-            try:
-                PythonCodeSession.objects.get_or_create(
-                    user=user,
-                    filename='matplotlib_examples.py',
-                    defaults={'code_content': matplotlib_example}
-                )
-                PythonCodeSession.objects.get_or_create(
-                    user=user,
-                    filename='pandas_analysis.py',
-                    defaults={'code_content': pandas_example}
-                )
-                PythonCodeSession.objects.get_or_create(
-                    user=user,
-                    filename='numpy_computing.py',
-                    defaults={'code_content': numpy_example}
-                )
-            except:
-                pass
         
         saved_files = PythonCodeSession.objects.filter(user=user).values_list('filename', flat=True)
         
@@ -1637,19 +1433,37 @@ def update_profile(request):
 
 
 @login_required
+@login_required
 def upload_profile_picture(request):
-    """Upload profile picture to Vercel Blob"""
+    """Upload or remove profile picture"""
+    
+    # Handle DELETE request to remove profile picture
+    if request.method == 'DELETE':
+        try:
+            profile, _ = UserProfile.objects.get_or_create(user=request.user)
+            profile.profile_picture_url = None
+            profile.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Profile picture removed'
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    # Handle POST request to upload profile picture
     if request.method != 'POST':
-        return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+        return JsonResponse({'status': 'error', 'message': 'POST or DELETE required'}, status=400)
     
     try:
         import requests
         import os
         
-        if 'file' not in request.FILES:
-            return JsonResponse({'status': 'error', 'message': 'No file provided'}, status=400)
+        # Check for both 'file' and 'profile_picture' field names
+        file = request.FILES.get('profile_picture') or request.FILES.get('file')
         
-        file = request.FILES['file']
+        if not file:
+            return JsonResponse({'status': 'error', 'message': 'No file provided'}, status=400)
         
         # Validate file
         if not file.content_type.startswith('image/'):
@@ -1683,8 +1497,6 @@ def upload_profile_picture(request):
         if response.status_code == 200:
             blob_data = response.json()
             image_url = blob_data.get('url')
-            
-            # Update profile
             profile, _ = UserProfile.objects.get_or_create(user=request.user)
             profile.profile_picture_url = image_url
             profile.save()
