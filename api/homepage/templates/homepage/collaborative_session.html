@@ -10,6 +10,9 @@
     <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
     <link rel="shortcut icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
     
+    <!-- Pixel Aesthetic CSS -->
+    <link rel="stylesheet" href="{% static 'homepage/pixel-aesthetic.css' %}">
+    
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-4GQ8NQ38P5"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -2556,32 +2559,42 @@
 <body class="{% if user_theme == 'greydom' %}theme-greydom{% elif user_theme == 'cloud' %}theme-cloud{% elif user_theme == 'chaos' %}theme-chaos{% elif user_theme == 'lebron' %}theme-lebron{% endif %}">
     
     <div class="loading-screen {% if user_theme == 'lebron' %}theme-lebron{% endif %}" id="loading-screen">
-        <div class="boot-sequence">
-            > INITIALIZING PYTHON TERMINAL v3.11.4<br>
-            > Loading Python Environment...<br>
-            > SETTING UP VIRTUAL FILE SYSTEM...<br>
-            > CONFIGURING SECURITY RESTRICTIONS...<br>
+        <!-- Matrix Background -->
+        <div class="pixel-background"></div>
+        <div class="pixel-rain" id="pixel-rain-collab"></div>
+        <div class="ambient-glow"></div>
+        
+        <!-- Loading Container -->
+        <div class="pixel-loader-container">
+            <div class="pixel-loader-text" id="loading-title-collab">INITIALIZING PYTHON ASSEMBLY</div>
+            
+            <!-- Pixel Loader Animation -->
+            <div class="pixel-loader">
+                <div class="pixel-loader-block"></div>
+                <div class="pixel-loader-block"></div>
+                <div class="pixel-loader-block"></div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="pixel-loader-bar">
+                <div class="pixel-loader-bar-fill" id="loading-bar-fill-collab" style="width: 0%"></div>
+            </div>
+            
+            <!-- Status Text -->
+            <div class="pixel-loader-progress" id="loading-text">Loading Pyodide WebAssembly...</div>
+            
+            <!-- Package Loading List -->
+            <div class="pixel-loader-progress" id="package-status-collab" style="margin-top: 5px; font-family: 'Courier New', monospace; font-size: 10px; color: #888;"></div>
         </div>
         
-        <div class="loading-title">PYTHON TERMINAL</div>
-        
-        <div class="retro-computer"></div>
-        
-        <div class="loading-dots">
-            <div class="loading-dot"></div>
-            <div class="loading-dot"></div>
-            <div class="loading-dot"></div>
-            <div class="loading-dot"></div>
-            <div class="loading-dot"></div>
+        <!-- Boot Sequence Terminal -->
+        <div class="boot-sequence" style="font-family: 'Courier New', monospace; font-size: 10px; color: rgba(255,255,255,0.4); position: absolute; top: 20px; left: 20px; right: 20px;">
+            <span style="color: #00ff00;">&gt;</span> COLLABORATIVE PYTHON TERMINAL v3.11.4<br>
+            <span style="color: #00ff00;">&gt;</span> Loading WebAssembly Runtime...<br>
+            <span style="color: #00ff00;">&gt;</span> Initializing Virtual File System...<br>
+            <span style="color: #00ff00;">&gt;</span> Configuring Security Sandbox...<br>
+            <span style="color: #00ff00;">&gt;</span> <span style="animation: blink 1s infinite;">█</span>
         </div>
-        
-        <div class="loading-text" id="loading-text">INITIALIZING ENVIRONMENT</div>
-        
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
-        </div>
-        
-        <div class="loading-progress" id="loading-progress">Loading Pyodide WebAssembly</div>
     </div>
 
     <div class="container" id="main-container">
@@ -3597,14 +3610,76 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
         let isInitialized = false;
         let isWaitingForInput = false;
         let inputResolver = null;
+        let loadingProgressCollab = 0;
+        const loadingStepsCollab = [
+            { percent: 10, text: 'Loading Pyodide WebAssembly...', title: 'LOADING RUNTIME' },
+            { percent: 30, text: 'Installing numpy...', title: 'INSTALLING PACKAGES', package: 'numpy' },
+            { percent: 40, text: 'Installing matplotlib...', title: 'INSTALLING PACKAGES', package: 'matplotlib' },
+            { percent: 50, text: 'Installing micropip...', title: 'INSTALLING PACKAGES', package: 'micropip' },
+            { percent: 60, text: 'Installing pandas...', title: 'CONFIGURING ENVIRONMENT', package: 'pandas' },
+            { percent: 70, text: 'Installing scipy...', title: 'CONFIGURING ENVIRONMENT', package: 'scipy' },
+            { percent: 80, text: 'Installing sympy...', title: 'CONFIGURING ENVIRONMENT', package: 'sympy' },
+            { percent: 90, text: 'Setting up matplotlib backend...', title: 'FINALIZING SETUP' },
+            { percent: 95, text: 'Setting up virtual file system...', title: 'FINALIZING SETUP' },
+            { percent: 100, text: 'Environment ready!', title: 'COMPLETE' }
+        ];
+        let currentStepIndexCollab = 0;
 
 
         function updateLoadingProgress(message) {
-            const progressElement = document.getElementById('loading-progress');
+            const progressElement = document.getElementById('loading-text');
+            const titleElement = document.getElementById('loading-title-collab');
+            const barFill = document.getElementById('loading-bar-fill-collab');
+            const packageStatus = document.getElementById('package-status-collab');
+            
             if (progressElement) {
                 progressElement.textContent = message;
             }
+            
+            // Find matching step or advance to next
+            let step = loadingStepsCollab.find(s => s.text === message);
+            if (!step && currentStepIndexCollab < loadingStepsCollab.length) {
+                currentStepIndexCollab++;
+                step = loadingStepsCollab[currentStepIndexCollab];
+            }
+            
+            if (step) {
+                // Update progress bar
+                if (barFill) {
+                    barFill.style.width = step.percent + '%';
+                }
+                
+                // Update title
+                if (titleElement && step.title) {
+                    titleElement.textContent = step.title;
+                }
+                
+                // Update package status
+                if (packageStatus && step.package) {
+                    packageStatus.innerHTML = `<span style="color: #00ff00;">✓</span> ${step.package} installed`;
+                    setTimeout(() => {
+                        packageStatus.style.opacity = '0.5';
+                    }, 1000);
+                }
+            }
         }
+
+
+        // Initialize pixel rain effect
+        document.addEventListener('DOMContentLoaded', () => {
+            const pixelRain = document.getElementById('pixel-rain-collab');
+            if (pixelRain) {
+                // Create 30 pixel drops
+                for (let i = 0; i < 30; i++) {
+                    const drop = document.createElement('div');
+                    drop.className = 'pixel-drop';
+                    drop.style.left = Math.random() * 100 + '%';
+                    drop.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                    drop.style.animationDelay = Math.random() * 5 + 's';
+                    pixelRain.appendChild(drop);
+                }
+            }
+        });
 
 
         function showMainInterface() {

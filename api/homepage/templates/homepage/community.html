@@ -9,6 +9,9 @@
     <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     
+    <!-- Pixel Aesthetic CSS -->
+    <link rel="stylesheet" href="{% static 'homepage/pixel-aesthetic.css' %}">
+    
     <style>
         :root {
             --primary-bg: #000000;
@@ -1249,6 +1252,9 @@
 
         // Load and display friends
         function loadFriends() {
+            // Show loading skeletons
+            showFriendLoadingState();
+            
             fetch('/community/friends/', {
                 headers: {
                     'X-CSRFToken': csrfToken
@@ -1258,9 +1264,29 @@
             .then(data => {
                 if (data.status === 'success') {
                     friendsData = data.friends;
-                    displayFriends(data.friends);
+                    // Small delay to show the loading animation
+                    setTimeout(() => displayFriends(data.friends), 300);
                 }
             });
+        }
+        
+        // Show loading skeleton for friends
+        function showFriendLoadingState() {
+            const onlineContainer = document.getElementById('onlineFriends');
+            const offlineContainer = document.getElementById('offlineFriends');
+            
+            const skeletonHTML = `
+                <div class="friend-skeleton" style="display: flex; align-items: center; padding: 10px; margin-bottom: 8px; border: 1px solid var(--border-color); background: var(--secondary-bg); animation: pulse 1.5s ease-in-out infinite;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--tertiary-bg); margin-right: 10px;"></div>
+                    <div style="flex: 1;">
+                        <div style="height: 10px; background: var(--tertiary-bg); border-radius: 2px; margin-bottom: 5px; width: 60%;"></div>
+                        <div style="height: 8px; background: var(--tertiary-bg); border-radius: 2px; width: 40%;"></div>
+                    </div>
+                </div>
+            `;
+            
+            onlineContainer.innerHTML = skeletonHTML + skeletonHTML;
+            offlineContainer.innerHTML = skeletonHTML;
         }
 
         function displayFriends(friends) {
@@ -1555,14 +1581,32 @@
 
         // Profile Modal Functions
         function showMiniProfile(userId) {
-            fetch(`/profile/${userId}/`)
-                .then(response => response.json())
+            console.log('Loading profile for user:', userId); // Debug log
+            
+            fetch(`/community/profile/${userId}/`, {
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Profile data received:', data); // Debug log
                     if (data.status === 'success') {
                         displayMiniProfile(data.profile);
+                    } else {
+                        console.error('Profile fetch failed:', data.message);
+                        showToast('Failed to load profile: ' + (data.message || 'Unknown error'), 'error');
                     }
                 })
-                .catch(error => console.error('Error loading profile:', error));
+                .catch(error => {
+                    console.error('Error loading profile:', error);
+                    showToast('Failed to load profile', 'error');
+                });
         }
 
         function displayMiniProfile(profile) {
@@ -1612,14 +1656,28 @@
             // Close mini profile if open
             closeProfileModal();
             
-            fetch(`/profile/${userId}/`)
-                .then(response => response.json())
+            fetch(`/community/profile/${userId}/`, {
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.status === 'success') {
                         displayFullProfile(data.profile);
+                    } else {
+                        showToast('Failed to load profile: ' + (data.message || 'Unknown error'), 'error');
                     }
                 })
-                .catch(error => console.error('Error loading profile:', error));
+                .catch(error => {
+                    console.error('Error loading profile:', error);
+                    showToast('Failed to load full profile', 'error');
+                });
         }
 
         function displayFullProfile(profile) {
