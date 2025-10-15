@@ -448,8 +448,16 @@ def get_files(request):
         binary_file = UserFiles.objects.get(user=user, filename='binary.dat')
         
         python_files = {}
+        files_list = []
         for session in PythonCodeSession.objects.filter(user=user):
             python_files[session.filename] = session.code_content
+            # Add file info for account page display
+            files_list.append({
+                'filename': session.filename,
+                'updated_at': session.updated_at.isoformat(),
+                'created_at': session.created_at.isoformat(),
+                'size': len(session.code_content)
+            })
         
         return JsonResponse({
             'text_content': text_file.content,
@@ -457,7 +465,8 @@ def get_files(request):
             'binary_content': binary_file.content,
             'binary_hex': f"User file for {user.username}",
             'python_files': python_files,
-            'saved_files': list(python_files.keys())
+            'saved_files': list(python_files.keys()),
+            'files': files_list  # Added for account page
         })
         
     except UserFiles.DoesNotExist:
@@ -466,7 +475,8 @@ def get_files(request):
             'csv_content': f"name,age,city,user\n{user.username},25,Home,active",
             'binary_content': f"Personal data for {user.username}",
             'python_files': {},
-            'saved_files': []
+            'saved_files': [],
+            'files': []  # Added for account page
         })
 
 @login_required
@@ -1552,9 +1562,8 @@ def get_user_profile(request, user_id):
         # Check if they're friends
         from .models import Friendship
         is_friend = Friendship.objects.filter(
-            models.Q(user1=request.user, user2=user) | 
-            models.Q(user1=user, user2=request.user),
-            status='accepted'
+            models.Q(from_user=request.user, to_user=user, status='accepted') | 
+            models.Q(from_user=user, to_user=request.user, status='accepted')
         ).exists()
         
         # Get stats
@@ -1579,8 +1588,7 @@ def get_user_profile(request, user_id):
             'stats': {
                 'shared_codes': shared_codes_count,
                 'friends_count': Friendship.objects.filter(
-                    models.Q(user1=user) | models.Q(user2=user),
-                    status='accepted'
+                    models.Q(from_user=user, status='accepted') | models.Q(to_user=user, status='accepted')
                 ).count()
             }
         }

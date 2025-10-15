@@ -1875,14 +1875,14 @@
             // Find the friend in friendsData
             const friend = friendsData.find(f => f.id === userId);
             if (friend) {
-                openDM(friend.id, friend.username);
+                openChat(friend.id, friend.username);
             } else {
                 // If not in friendsData, fetch the profile to get username
                 fetch(`/profile/${userId}/`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
-                            openDM(userId, data.profile.username);
+                            openChat(userId, data.profile.username);
                         }
                     })
                     .catch(error => console.error('Error:', error));
