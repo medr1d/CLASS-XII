@@ -3959,6 +3959,18 @@ try:
     plt.rcParams['font.sans-serif'] = ['Arial', 'Helvetica', 'DejaVu Sans', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif']
     plt.rcParams['axes.unicode_minus'] = False  # Use ASCII minus
     
+    # Configure colors for dark mode display
+    plt.rcParams['figure.facecolor'] = '#D3D3D3'  # Light grey background
+    plt.rcParams['axes.facecolor'] = '#D3D3D3'
+    plt.rcParams['text.color'] = 'black'
+    plt.rcParams['axes.labelcolor'] = 'black'
+    plt.rcParams['xtick.color'] = 'black'
+    plt.rcParams['ytick.color'] = 'black'
+    plt.rcParams['axes.edgecolor'] = 'black'
+    plt.rcParams['grid.color'] = 'black'
+    plt.rcParams['legend.facecolor'] = '#D3D3D3'
+    plt.rcParams['legend.edgecolor'] = 'black'
+    
     # Clear font cache to avoid cached font path issues
     fm.fontManager.__init__()
     
@@ -3969,14 +3981,38 @@ except Exception as e:
 # Function to display plots in the terminal
 def show_plot():
     try:
+        # Configure plot colors for dark mode
+        fig = plt.gcf()
+        fig.patch.set_facecolor('#D3D3D3')  # Light grey background
+        
+        # Set all text to black
+        for ax in fig.get_axes():
+            ax.set_facecolor('#D3D3D3')  # Light grey for axes background
+            ax.title.set_color('black')
+            ax.xaxis.label.set_color('black')
+            ax.yaxis.label.set_color('black')
+            ax.tick_params(colors='black', which='both')
+            
+            # Set spine colors to black
+            for spine in ax.spines.values():
+                spine.set_edgecolor('black')
+            
+            # Set legend text to black if legend exists
+            legend = ax.get_legend()
+            if legend:
+                for text in legend.get_texts():
+                    text.set_color('black')
+                legend.get_frame().set_facecolor('#D3D3D3')
+                legend.get_frame().set_edgecolor('black')
+        
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', bbox_inches='tight', dpi=100, facecolor='white')
+        plt.savefig(buf, format='png', bbox_inches='tight', dpi=100, facecolor='#D3D3D3', edgecolor='black')
         buf.seek(0)
         img_base64 = base64.b64encode(buf.read()).decode('utf-8')
         buf.close()
         
         # Display image in terminal
-        print(f'<img src="data:image/png;base64,{img_base64}" style="max-width: 100%; height: auto; background: white; border-radius: 5px;" />')
+        print(f'<img src="data:image/png;base64,{img_base64}" style="max-width: 100%; height: auto; background: #D3D3D3; border-radius: 5px;" />')
         plt.close()  # Close the figure to free memory
         
     except Exception as e:

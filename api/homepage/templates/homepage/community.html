@@ -629,6 +629,7 @@
             border: 2px solid var(--border-color);
             cursor: pointer;
             transition: all 0.3s;
+            object-fit: cover;
         }
 
         .message-avatar:hover {
@@ -862,6 +863,7 @@
             display: block;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             transition: all 0.3s;
+            object-fit: cover;
         }
 
         .profile-avatar-large:hover {
@@ -1564,8 +1566,9 @@
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message-item ${msg.is_mine ? 'mine' : ''}`;
                 
-                // Get profile picture URL (you'll need to add this to the message data)
-                const avatarUrl = `https://ui-avatars.com/api/?name=${msg.sender_username}&background=ffffff&color=000000&size=200`;
+                // Use actual profile picture if available, otherwise fallback to ui-avatars
+                const avatarUrl = msg.sender_profile_picture || 
+                    `https://ui-avatars.com/api/?name=${msg.sender_username}&background=ffffff&color=000000&size=200`;
                 
                 messageDiv.innerHTML = `
                     <div class="message-bubble">

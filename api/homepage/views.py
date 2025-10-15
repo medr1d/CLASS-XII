@@ -1325,15 +1325,25 @@ def get_direct_messages(request, user_id):
             is_read=False
         ).update(is_read=True)
         
-        messages_data = [{
-            'id': msg.id,
-            'sender_id': msg.sender.id,
-            'sender_username': msg.sender.username,
-            'message': msg.message,
-            'is_read': msg.is_read,
-            'created_at': msg.created_at.isoformat(),
-            'is_mine': msg.sender == request.user
-        } for msg in messages]
+        messages_data = []
+        for msg in messages:
+            # Get sender's profile picture
+            try:
+                profile = UserProfile.objects.get(user=msg.sender)
+                profile_pic = profile.profile_picture_url
+            except UserProfile.DoesNotExist:
+                profile_pic = None
+            
+            messages_data.append({
+                'id': msg.id,
+                'sender_id': msg.sender.id,
+                'sender_username': msg.sender.username,
+                'sender_profile_picture': profile_pic,
+                'message': msg.message,
+                'is_read': msg.is_read,
+                'created_at': msg.created_at.isoformat(),
+                'is_mine': msg.sender == request.user
+            })
         
         return JsonResponse({
             'status': 'success',
