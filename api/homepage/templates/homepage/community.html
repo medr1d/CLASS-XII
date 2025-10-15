@@ -561,36 +561,144 @@
             flex-direction: column;
         }
 
+        /* Polished Chat Bubbles */
         .message-item {
-            margin-bottom: 15px;
-            padding: 10px;
-            background: var(--tertiary-bg);
-            border: 2px solid var(--border-color);
-            max-width: 70%;
+            margin-bottom: 20px;
+            padding: 0;
+            background: transparent;
+            border: none;
+            max-width: 65%;
+            display: flex;
+            flex-direction: column;
+            animation: fadeInUp 0.3s ease;
         }
 
         .message-item.mine {
             align-self: flex-end;
-            background: var(--secondary-bg);
+        }
+
+        .message-bubble {
+            padding: 14px 18px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--tertiary-bg) 0%, #252525 100%);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .message-item.mine .message-bubble {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #e0e0e0 100%);
+            border-color: var(--accent-color);
+            color: var(--primary-bg);
+            box-shadow: 0 2px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .message-bubble:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .message-item.mine .message-bubble:hover {
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Chat bubble tail */
+        .message-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 0;
+            height: 0;
+            border: 8px solid transparent;
+        }
+
+        .message-item:not(.mine) .message-bubble::before {
+            left: -8px;
+            border-right-color: var(--tertiary-bg);
+            border-bottom-color: var(--tertiary-bg);
+            border-left: 0;
+        }
+
+        .message-item.mine .message-bubble::before {
+            right: -8px;
+            border-left-color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+            border-right: 0;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .message-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .message-avatar:hover {
+            transform: scale(1.1);
             border-color: var(--accent-color);
         }
 
         .message-sender {
-            font-size: 9px;
+            font-size: 10px;
             color: var(--accent-color);
-            margin-bottom: 5px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .message-sender:hover {
+            text-decoration: underline;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+
+        .message-item.mine .message-sender {
+            color: var(--primary-bg);
         }
 
         .message-text {
-            font-size: 10px;
+            font-size: 11px;
             word-wrap: break-word;
             font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .message-item.mine .message-text {
+            color: var(--primary-bg);
+        }
+
+        .message-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message-item.mine .message-footer {
+            border-top-color: rgba(0, 0, 0, 0.1);
         }
 
         .message-time {
-            font-size: 7px;
+            font-size: 8px;
             color: var(--text-muted);
-            margin-top: 5px;
+            opacity: 0.7;
+        }
+
+        .message-item.mine .message-time {
+            color: rgba(0, 0, 0, 0.6);
         }
 
         .message-input-container {
@@ -606,26 +714,355 @@
 
         .message-input {
             flex: 1;
-            padding: 10px;
+            padding: 12px 16px;
             background: var(--primary-bg);
             border: 2px solid var(--border-color);
+            border-radius: 25px;
             color: var(--text-primary);
             font-family: 'Courier New', monospace;
-            font-size: 10px;
+            font-size: 11px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
         }
 
         .send-message-btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             background: var(--accent-color);
-            color: #000000;
-            border: none;
+            color: var(--primary-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 25px;
             cursor: pointer;
-            font-family: 'Press Start 2P', monospace;
-            font-size: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .send-message-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.2);
+            transition: all 0.5s;
+            transform: translate(-50%, -50%);
+        }
+
+        .send-message-btn:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         .send-message-btn:hover {
-            opacity: 0.8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Profile Modals */
+        .profile-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .profile-modal-overlay.active {
+            display: flex;
+        }
+
+        /* Mini Profile Card */
+        .mini-profile-card {
+            background: linear-gradient(135deg, var(--secondary-bg) 0%, var(--tertiary-bg) 100%);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 25px;
+            width: 350px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUpScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        @keyframes slideUpScale {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .profile-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .profile-close-btn:hover {
+            background: var(--border-color);
+            color: var(--accent-color);
+            transform: rotate(90deg);
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid var(--accent-color);
+            margin: 0 auto 15px;
+            display: block;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+        }
+
+        .profile-avatar-large:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+        }
+
+        .profile-username {
+            font-size: 18px;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-joined {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .profile-bio {
+            background: var(--primary-bg);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 15px;
+            min-height: 60px;
+        }
+
+        .profile-bio-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-family: 'Courier New', monospace;
+        }
+
+        .profile-bio-empty {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-style: italic;
+            text-align: center;
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .profile-stat {
+            text-align: center;
+        }
+
+        .profile-stat-value {
+            font-size: 20px;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .profile-stat-label {
+            font-size: 9px;
+            color: var(--text-muted);
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .profile-btn {
+            flex: 1;
+            padding: 12px;
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .profile-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-btn.secondary {
+            background: transparent;
+            color: var(--accent-color);
+        }
+
+        .profile-btn.secondary:hover {
+            background: var(--accent-color);
+            color: var(--primary-bg);
+        }
+
+        /* Full Profile Modal */
+        .full-profile-modal {
+            background: linear-gradient(135deg, var(--secondary-bg) 0%, var(--primary-bg) 100%);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+            animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .full-profile-modal::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .full-profile-modal::-webkit-scrollbar-track {
+            background: var(--primary-bg);
+        }
+
+        .full-profile-modal::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .profile-section {
+            margin-bottom: 30px;
+        }
+
+        .profile-section-title {
+            font-size: 14px;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .profile-section-title::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            animation: blink 1.5s infinite;
+        }
+
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .profile-info-item {
+            background: var(--tertiary-bg);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .profile-info-item:hover {
+            border-color: var(--accent-color);
+            transform: translateX(5px);
+        }
+
+        .profile-info-label {
+            font-size: 9px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .profile-info-value {
+            font-size: 12px;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+        }
+
+        .profile-info-value a {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .profile-info-value a:hover {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .profile-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            border-radius: 20px;
+            font-size: 9px;
+            letter-spacing: 1px;
+            margin-top: 5px;
         }
 
         /* Empty State */
@@ -853,9 +1290,11 @@
         }
 
         function createFriendElement(friend, isOnline) {
+            const avatarUrl = `https://ui-avatars.com/api/?name=${friend.username}&background=ffffff&color=000000&size=200`;
             return `
-                <div class="friend-item" onclick="openChat(${friend.id}, '${friend.username}')">
-                    <div class="friend-info">
+                <div class="friend-item">
+                    <div class="friend-info" onclick="showMiniProfile(${friend.id})" style="cursor: pointer; flex: 1;">
+                        <img src="${avatarUrl}" alt="${friend.username}" class="message-avatar" style="width: 40px; height: 40px; margin-right: 10px;">
                         <div class="status-dot ${isOnline ? 'online' : 'offline'}"></div>
                         <div>
                             <div class="friend-username">${friend.username}</div>
@@ -986,10 +1425,21 @@
             messages.forEach(msg => {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message-item ${msg.is_mine ? 'mine' : ''}`;
+                
+                // Get profile picture URL (you'll need to add this to the message data)
+                const avatarUrl = `https://ui-avatars.com/api/?name=${msg.sender_username}&background=ffffff&color=000000&size=200`;
+                
                 messageDiv.innerHTML = `
-                    <div class="message-sender">${msg.sender_username}</div>
-                    <div class="message-text">${escapeHtml(msg.message)}</div>
-                    <div class="message-time">${formatTime(msg.created_at)}</div>
+                    <div class="message-bubble">
+                        <div class="message-header">
+                            <img src="${avatarUrl}" alt="${msg.sender_username}" class="message-avatar" onclick="showMiniProfile(${msg.sender_id})">
+                            <span class="message-sender" onclick="showMiniProfile(${msg.sender_id})">${msg.sender_username}</span>
+                        </div>
+                        <div class="message-text">${escapeHtml(msg.message)}</div>
+                        <div class="message-footer">
+                            <span class="message-time">${formatTime(msg.created_at)}</span>
+                        </div>
+                    </div>
                 `;
                 container.appendChild(messageDiv);
             });
@@ -1102,6 +1552,178 @@
             // Refresh friends list every 30 seconds
             setInterval(loadFriends, 30000);
         });
+
+        // Profile Modal Functions
+        function showMiniProfile(userId) {
+            fetch(`/profile/${userId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        displayMiniProfile(data.profile);
+                    }
+                })
+                .catch(error => console.error('Error loading profile:', error));
+        }
+
+        function displayMiniProfile(profile) {
+            const modalHTML = `
+                <div class="profile-modal-overlay active" id="miniProfileModal" onclick="closeProfileModal(event)">
+                    <div class="mini-profile-card" onclick="event.stopPropagation()">
+                        <button class="profile-close-btn" onclick="closeProfileModal()">×</button>
+                        
+                        <div class="profile-header">
+                            <img src="${profile.profile_picture_url}" alt="${profile.username}" class="profile-avatar-large">
+                            <div class="profile-username">${profile.username}</div>
+                            <div class="profile-joined">Joined ${profile.joined_date}</div>
+                        </div>
+
+                        <div class="profile-bio">
+                            ${profile.bio ? 
+                                `<div class="profile-bio-text">${profile.bio}</div>` : 
+                                `<div class="profile-bio-empty">No bio yet</div>`
+                            }
+                        </div>
+
+                        <div class="profile-stats">
+                            <div class="profile-stat">
+                                <div class="profile-stat-value">${profile.stats.shared_codes}</div>
+                                <div class="profile-stat-label">Projects</div>
+                            </div>
+                            <div class="profile-stat">
+                                <div class="profile-stat-value">${profile.stats.friends_count}</div>
+                                <div class="profile-stat-label">Friends</div>
+                            </div>
+                        </div>
+
+                        <div class="profile-actions">
+                            ${!profile.is_own_profile ? `
+                                <button class="profile-btn" onclick="sendMessage(${profile.user_id})">Message</button>
+                            ` : ''}
+                            <button class="profile-btn secondary" onclick="showFullProfile(${profile.user_id})">View Full Profile</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function showFullProfile(userId) {
+            // Close mini profile if open
+            closeProfileModal();
+            
+            fetch(`/profile/${userId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        displayFullProfile(data.profile);
+                    }
+                })
+                .catch(error => console.error('Error loading profile:', error));
+        }
+
+        function displayFullProfile(profile) {
+            const modalHTML = `
+                <div class="profile-modal-overlay active" id="fullProfileModal" onclick="closeProfileModal(event)">
+                    <div class="full-profile-modal" onclick="event.stopPropagation()">
+                        <button class="profile-close-btn" onclick="closeProfileModal()">×</button>
+                        
+                        <div class="profile-header">
+                            <img src="${profile.profile_picture_url}" alt="${profile.username}" class="profile-avatar-large">
+                            <div class="profile-username">${profile.username}</div>
+                            <div class="profile-joined">Member since ${profile.joined_date}</div>
+                            ${profile.is_paid_user ? '<span class="profile-badge">PREMIUM</span>' : ''}
+                        </div>
+
+                        <div class="profile-section">
+                            <div class="profile-section-title">About</div>
+                            <div class="profile-bio">
+                                ${profile.bio ? 
+                                    `<div class="profile-bio-text">${profile.bio}</div>` : 
+                                    `<div class="profile-bio-empty">No bio yet</div>`
+                                }
+                            </div>
+                        </div>
+
+                        <div class="profile-section">
+                            <div class="profile-section-title">Stats</div>
+                            <div class="profile-stats">
+                                <div class="profile-stat">
+                                    <div class="profile-stat-value">${profile.stats.shared_codes}</div>
+                                    <div class="profile-stat-label">Shared Projects</div>
+                                </div>
+                                <div class="profile-stat">
+                                    <div class="profile-stat-value">${profile.stats.friends_count}</div>
+                                    <div class="profile-stat-label">Friends</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${profile.location || profile.website || profile.github_username || profile.twitter_username ? `
+                            <div class="profile-section">
+                                <div class="profile-section-title">Info</div>
+                                <div class="profile-info-grid">
+                                    ${profile.location ? `
+                                        <div class="profile-info-item">
+                                            <div class="profile-info-label">Location</div>
+                                            <div class="profile-info-value">${profile.location}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${profile.website ? `
+                                        <div class="profile-info-item">
+                                            <div class="profile-info-label">Website</div>
+                                            <div class="profile-info-value"><a href="${profile.website}" target="_blank">${profile.website}</a></div>
+                                        </div>
+                                    ` : ''}
+                                    ${profile.github_username ? `
+                                        <div class="profile-info-item">
+                                            <div class="profile-info-label">GitHub</div>
+                                            <div class="profile-info-value"><a href="https://github.com/${profile.github_username}" target="_blank">@${profile.github_username}</a></div>
+                                        </div>
+                                    ` : ''}
+                                    ${profile.twitter_username ? `
+                                        <div class="profile-info-item">
+                                            <div class="profile-info-label">Twitter</div>
+                                            <div class="profile-info-value"><a href="https://twitter.com/${profile.twitter_username}" target="_blank">@${profile.twitter_username}</a></div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="profile-actions">
+                            ${!profile.is_own_profile ? `
+                                <button class="profile-btn" onclick="sendMessage(${profile.user_id})">Send Message</button>
+                                ${profile.is_friend ? 
+                                    `<button class="profile-btn secondary" onclick="removeFriend(${profile.user_id})">Remove Friend</button>` :
+                                    `<button class="profile-btn secondary" onclick="sendFriendRequest('${profile.username}')">Add Friend</button>`
+                                }
+                            ` : `
+                                <button class="profile-btn" onclick="window.location.href='/accounts/'">Edit Profile</button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function closeProfileModal(event) {
+            if (event && event.target.classList.contains('mini-profile-card') || event && event.target.classList.contains('full-profile-modal')) {
+                return;
+            }
+            const modals = document.querySelectorAll('.profile-modal-overlay');
+            modals.forEach(modal => modal.remove());
+        }
+
+        function sendMessage(userId) {
+            closeProfileModal();
+            // Switch to DMs tab
+            switchTab('dms');
+            // Load messages for this user
+            loadMessages(userId);
+        }
     </script>
 </body>
 </html>

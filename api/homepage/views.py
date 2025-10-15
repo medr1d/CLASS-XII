@@ -1540,3 +1540,158 @@ def get_direct_messages(request, user_id):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
+
+# Profile Views
+@login_required
+def get_user_profile(request, user_id):
+    """Get user profile information"""
+    try:
+        user = User.objects.get(id=user_id)
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        
+        # Check if they're friends
+        from .models import Friendship
+        is_friend = Friendship.objects.filter(
+            models.Q(user1=request.user, user2=user) | 
+            models.Q(user1=user, user2=request.user),
+            status='accepted'
+        ).exists()
+        
+        # Get stats
+        from .models import SharedCode
+        shared_codes_count = SharedCode.objects.filter(user=user).count()
+        
+        profile_data = {
+            'user_id': user.id,
+            'username': user.username,
+            'email': user.email if is_friend or user == request.user else None,
+            'profile_picture_url': profile.get_profile_picture_url(),
+            'bio': profile.bio,
+            'location': profile.location,
+            'github_username': profile.github_username,
+            'twitter_username': profile.twitter_username,
+            'website': profile.website,
+            'theme': profile.theme,
+            'is_paid_user': profile.paidUser,
+            'joined_date': user.date_joined.strftime('%B %Y'),
+            'is_friend': is_friend,
+            'is_own_profile': user == request.user,
+            'stats': {
+                'shared_codes': shared_codes_count,
+                'friends_count': Friendship.objects.filter(
+                    models.Q(user1=user) | models.Q(user2=user),
+                    status='accepted'
+                ).count()
+            }
+        }
+        
+        return JsonResponse({
+            'status': 'success',
+            'profile': profile_data
+        })
+        
+    except User.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+def update_profile(request):
+    """Update user profile information"""
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+    
+    try:
+        data = json.loads(request.body)
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        
+        # Update fields
+        if 'bio' in data:
+            profile.bio = data['bio'][:500]  # Max 500 chars
+        if 'location' in data:
+            profile.location = data['location'][:100]
+        if 'github_username' in data:
+            profile.github_username = data['github_username'][:100]
+        if 'twitter_username' in data:
+            profile.twitter_username = data['twitter_username'][:100]
+        if 'website' in data:
+            profile.website = data['website'][:200]
+        
+        profile.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Profile updated successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+def upload_profile_picture(request):
+    """Upload profile picture to Vercel Blob"""
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+    
+    try:
+        import requests
+        import os
+        
+        if 'file' not in request.FILES:
+            return JsonResponse({'status': 'error', 'message': 'No file provided'}, status=400)
+        
+        file = request.FILES['file']
+        
+        # Validate file
+        if not file.content_type.startswith('image/'):
+            return JsonResponse({'status': 'error', 'message': 'File must be an image'}, status=400)
+        
+        # Max 5MB
+        if file.size > 5 * 1024 * 1024:
+            return JsonResponse({'status': 'error', 'message': 'File too large (max 5MB)'}, status=400)
+        
+        # Get Vercel Blob token
+        blob_token = os.getenv('BLOB_READ_WRITE_TOKEN')
+        if not blob_token:
+            return JsonResponse({'status': 'error', 'message': 'Blob storage not configured'}, status=500)
+        
+        # Upload to Vercel Blob
+        filename = f"profile_{request.user.id}_{timezone.now().timestamp()}.{file.name.split('.')[-1]}"
+        
+        # Vercel Blob API endpoint
+        blob_url = 'https://blob.vercel-storage.com/upload'
+        
+        headers = {
+            'Authorization': f'Bearer {blob_token}',
+        }
+        
+        files = {
+            'file': (filename, file.read(), file.content_type)
+        }
+        
+        response = requests.post(blob_url, headers=headers, files=files)
+        
+        if response.status_code == 200:
+            blob_data = response.json()
+            image_url = blob_data.get('url')
+            
+            # Update profile
+            profile, _ = UserProfile.objects.get_or_create(user=request.user)
+            profile.profile_picture_url = image_url
+            profile.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Profile picture uploaded',
+                'url': image_url
+            })
+        else:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Upload failed: {response.text}'
+            }, status=500)
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

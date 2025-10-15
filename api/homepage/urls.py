@@ -38,5 +38,9 @@ urlpatterns = [
     path('community/update-status/', views.update_status_message, name='update_status_message'),
     path('community/send-message/', views.send_direct_message, name='send_direct_message'),
     path('community/messages/<int:user_id>/', views.get_direct_messages, name='get_direct_messages'),
+    
+    # Profile features
+    path('profile/<int:user_id>/', views.get_user_profile, name='get_user_profile'),
+    path('profile/update/', views.update_profile, name='update_profile'),
+    path('profile/upload-picture/', views.upload_profile_picture, name='upload_profile_picture'),
 ]
-

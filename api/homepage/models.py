@@ -15,7 +15,16 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     theme = models.CharField(max_length=20, choices=THEME_CHOICES, default='default')
     paidUser = models.BooleanField(default=False)
-    dark_mode_plots = models.BooleanField(default=True)  # New: Dark mode for matplotlib plots
+    dark_mode_plots = models.BooleanField(default=True)
+    
+    # Profile information
+    profile_picture_url = models.URLField(max_length=500, blank=True, null=True)  # Vercel Blob URL
+    bio = models.TextField(max_length=500, blank=True, default='')
+    location = models.CharField(max_length=100, blank=True, default='')
+    github_username = models.CharField(max_length=100, blank=True, default='')
+    twitter_username = models.CharField(max_length=100, blank=True, default='')
+    website = models.URLField(max_length=200, blank=True, default='')
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -28,6 +37,13 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return f"{self.user.username}'s Profile"
+    
+    def get_profile_picture_url(self):
+        """Get profile picture URL or return default avatar"""
+        if self.profile_picture_url:
+            return self.profile_picture_url
+        # Default avatar using UI Avatars
+        return f"https://ui-avatars.com/api/?name={self.user.username}&background=ffffff&color=000000&size=200"
 
 class PythonCodeSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
