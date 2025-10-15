@@ -10,9 +10,6 @@
     <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
     <link rel="shortcut icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
     
-    <!-- Pixel Aesthetic CSS -->
-    <link rel="stylesheet" href="{% static 'homepage/pixel-aesthetic.css' %}">
-    
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-4GQ8NQ38P5"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -239,6 +236,73 @@
             animation: bootSequence 3s ease-in-out infinite;
             letter-spacing: 3px;
             text-transform: uppercase;
+        }
+
+        /* Loader Animation Styles */
+        .loader {
+            width: 64px;
+            height: 64px;
+            position: relative;
+            background: var(--bg-secondary);
+            border: 3px solid var(--secondary-color);
+            box-shadow: 
+                0 0 20px var(--secondary-color),
+                inset 0 0 20px rgba(0, 255, 255, 0.1);
+            animation: pixelSpin 1s linear infinite;
+        }
+
+        .loader::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border: 2px solid var(--primary-color);
+            animation: pixelSpin 2s linear infinite reverse;
+        }
+
+        .loader::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            background: var(--secondary-color);
+            box-shadow: 0 0 15px var(--secondary-color);
+            animation: pixelPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pixelSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pixelPulse {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0.5;
+            }
+        }
+
+        .pixel-loader-text {
+            font-size: 1.2em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--secondary-color);
+            text-shadow: 0 0 10px var(--secondary-color);
+            animation: loadingTextPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loadingTextPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
 

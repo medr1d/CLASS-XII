@@ -9,11 +9,22 @@
     <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     
-    <!-- Pixel Aesthetic CSS -->
-    <link rel="stylesheet" href="{% static 'homepage/pixel-aesthetic.css' %}">
-    
     <style>
-        /* Community-specific styles - leveraging pixel-aesthetic.css for common components */
+        :root {
+            --primary-bg: #000000;
+            --secondary-bg: #1a1a1a;
+            --tertiary-bg: #2a2a2a;
+            --accent-color: #ffffff;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --text-muted: #888888;
+            --border-color: #333333;
+            --hover-color: #2d2d2d;
+            --online-color: #ffffff;
+            --offline-color: #666666;
+            --shadow-light: rgba(255, 255, 255, 0.1);
+            --shadow-dark: rgba(0, 0, 0, 0.5);
+        }
         
         * {
             margin: 0;
@@ -30,9 +41,33 @@
             font-size: 12px;
             line-height: 1.6;
             position: relative;
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.1);
         }
 
-        /* Use pixel-aesthetic.css backgrounds */
+        /* Ambient Background Effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.015) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.01) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+            animation: ambientFloat 20s ease-in-out infinite;
+        }
+
+        @keyframes ambientFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+            33% { transform: translate(8px, -12px) scale(1.03); opacity: 0.8; }
+            66% { transform: translate(-6px, 8px) scale(0.97); opacity: 0.7; }
+        }
+
+        /* Grid Pattern Background */
         .background-grid {
             position: fixed;
             top: 0;
@@ -41,10 +76,15 @@
             height: 100%;
             z-index: 0;
             background-image: 
-                radial-gradient(circle at 25px 25px, rgba(255, 255, 255, 0.03) 1px, transparent 0),
-                radial-gradient(circle at 75px 75px, rgba(255, 255, 255, 0.02) 1px, transparent 0);
-            background-size: 100px 100px;
-            animation: matrixScroll 20s linear infinite;
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridScroll 30s linear infinite;
+        }
+
+        @keyframes gridScroll {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
         }
 
         /* Top Navigation */
@@ -59,7 +99,18 @@
             position: relative;
             z-index: 100;
             box-shadow: 0 4px 20px var(--shadow-dark);
-            animation: slideInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .top-nav::before {
@@ -73,13 +124,27 @@
             animation: shimmer 3s ease-in-out infinite;
         }
 
-        .nav-logo {
-            font-family: 'Press Start 2P', 'Courier New', monospace;
-            font-size: 14px;
-            color: var(--accent-color);
-            letter-spacing: 2px;
-            animation: textGlow 2s ease-in-out infinite;
+        @keyframes shimmer {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
         }
+
+        .nav-logo {
+            font-size: 18px;
+            color: var(--accent-color);
+            text-shadow: 
+                0 0 10px rgba(255, 255, 255, 0.3),
+                0 0 20px rgba(255, 255, 255, 0.2);
+            letter-spacing: 2px;
+            animation: textPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes textPulse {
+            0%, 100% { 
+                text-shadow: 
+                    0 0 10px rgba(255, 255, 255, 0.3),
+                    0 0 20px rgba(255, 255, 255, 0.2);
+            }
             50% { 
                 text-shadow: 
                     0 0 15px rgba(255, 255, 255, 0.5),
@@ -1068,17 +1133,105 @@
                 opacity: 1;
             }
         }
+        
+        /* Loading Screen */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-bg);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 64px;
+            height: 64px;
+            border: 2px solid var(--border-color);
+            background: var(--primary-bg);
+            position: relative;
+            animation: pixelSpin 1.5s linear infinite;
+            box-shadow: 
+                inset 4px 4px 0 rgba(255, 255, 255, 0.2),
+                inset -4px -4px 0 rgba(0, 0, 0, 0.5),
+                0 0 16px rgba(255, 255, 255, 0.3);
+        }
+
+        .loader::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 2px solid var(--accent-color);
+            animation: pixelSpin 1s linear infinite reverse;
+        }
+
+        .loader::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: var(--text-secondary);
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 8px currentColor;
+            animation: pixelPulse 0.8s ease-in-out infinite;
+        }
+
+        @keyframes pixelSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pixelPulse {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1); 
+                opacity: 1; 
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.5); 
+                opacity: 0.7; 
+            }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-size: 10px;
+            color: var(--accent-color);
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+            animation: loadingTextPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loadingTextPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
-    <!-- Loading Screen (Homepage Style) -->
-    <div class="loading-overlay pixel-fade-in" id="loadingOverlay">
+    <!-- Loading Screen -->
+    <div class="loading-overlay" id="loadingOverlay">
         <div class="loader"></div>
-        <div class="loading-text" style="margin-top: 20px; font-size: 10px; color: var(--accent-color); letter-spacing: 2px;">LOADING COMMUNITY...</div>
+        <div class="loading-text">LOADING COMMUNITY...</div>
     </div>
     
-    <div class="background-animation"></div>
-    <div class="pixel-background"></div>
+    <div class="background-grid"></div>
 
     <!-- Top Navigation -->
     <div class="top-nav">
@@ -1718,8 +1871,22 @@
             closeProfileModal();
             // Switch to DMs tab
             switchTab('dms');
-            // Load messages for this user
-            loadMessages(userId);
+            
+            // Find the friend in friendsData
+            const friend = friendsData.find(f => f.id === userId);
+            if (friend) {
+                openDM(friend.id, friend.username);
+            } else {
+                // If not in friendsData, fetch the profile to get username
+                fetch(`/profile/${userId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            openDM(userId, data.profile.username);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
         }
         
         // Hide loading screen after page loads
