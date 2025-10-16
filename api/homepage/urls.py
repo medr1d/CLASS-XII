@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from . import migrate_views
 from . import ide_views  # Import IDE views
+from . import server_views  # Import Server views
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -81,4 +82,20 @@ urlpatterns = [
     # Terminal session
     path('api/ide/projects/<uuid:project_id>/terminal/', ide_views.get_terminal_session, name='ide_get_terminal'),
     path('api/ide/projects/<uuid:project_id>/terminal/clear/', ide_views.clear_terminal, name='ide_clear_terminal'),
+    
+    # ==================== SERVER SYSTEM (Discord-like) ====================
+    
+    # Server management
+    path('api/servers/', server_views.list_user_servers, name='list_user_servers'),
+    path('api/servers/create/', server_views.create_server, name='create_server'),
+    path('api/servers/<uuid:server_id>/', server_views.get_server_details, name='get_server_details'),
+    path('api/servers/<uuid:server_id>/delete/', server_views.delete_server, name='delete_server'),
+    path('api/servers/<uuid:server_id>/leave/', server_views.leave_server, name='leave_server'),
+    path('api/servers/join/', server_views.join_server, name='join_server'),
+    path('api/servers/discover/', server_views.discover_servers, name='discover_servers'),
+    
+    # Channel management
+    path('api/servers/<uuid:server_id>/channels/create/', server_views.create_channel, name='create_channel'),
+    path('api/channels/<uuid:channel_id>/', server_views.get_channel_messages, name='get_channel_messages'),
+    path('api/channels/<uuid:channel_id>/send/', server_views.send_message, name='send_server_message'),
 ]

@@ -9,4 +9,7 @@ websocket_urlpatterns = [
     # Cloud IDE WebSocket routes (for paid users)
     re_path(r'ws/ide/terminal/(?P<project_id>[0-9a-f-]+)/$', ide_consumers.IDETerminalConsumer.as_asgi()),
     re_path(r'ws/ide/collaboration/(?P<project_id>[0-9a-f-]+)/$', ide_consumers.IDECollaborationConsumer.as_asgi()),
+    
+    # Server channel WebSocket (Discord-like messaging)
+    re_path(r'ws/server/channel/(?P<channel_id>[0-9a-f-]+)/$', consumers.ServerChannelConsumer.as_asgi()),
 ]

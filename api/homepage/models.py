@@ -542,4 +542,209 @@ class UserAchievement(models.Model):
         return f"{self.user.username} - {self.achievement.name}"
 
 
+# ============================================
+# SERVER SYSTEM (Discord-like)
+# ============================================
+
+class Server(models.Model):
+    """Discord-like servers for community collaboration"""
+    server_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    name = models.CharField(max_length=100)
+    description = models.TextField(max_length=500, blank=True, default='')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_servers')
+    icon_url = models.URLField(max_length=500, blank=True, null=True)  # Server icon
+    
+    # Settings
+    is_public = models.BooleanField(default=True)  # Public servers can be discovered
+    invite_code = models.CharField(max_length=20, unique=True, blank=True)  # For inviting users
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['owner']),
+            models.Index(fields=['invite_code']),
+            models.Index(fields=['is_public']),
+            models.Index(fields=['-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.name} (Owner: {self.owner.username})"
+    
+    def generate_invite_code(self):
+        """Generate a unique invite code"""
+        import random
+        import string
+        while True:
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            if not Server.objects.filter(invite_code=code).exists():
+                self.invite_code = code
+                self.save(update_fields=['invite_code'])
+                return code
+    
+    def get_member_count(self):
+        return self.members.count()
+    
+    def get_icon_url(self):
+        if self.icon_url:
+            return self.icon_url
+        # Default server icon
+        return f"https://ui-avatars.com/api/?name={self.name}&background=5865F2&color=ffffff&size=128"
+
+
+class ServerMember(models.Model):
+    """Members of a server with roles"""
+    ROLE_CHOICES = [
+        ('owner', 'Owner'),
+        ('admin', 'Admin'),
+        ('moderator', 'Moderator'),
+        ('member', 'Member'),
+    ]
+    
+    server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='members')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='server_memberships')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
+    nickname = models.CharField(max_length=50, blank=True, default='')  # Server-specific nickname
+    
+    # Permissions
+    can_manage_channels = models.BooleanField(default=False)
+    can_kick_members = models.BooleanField(default=False)
+    can_ban_members = models.BooleanField(default=False)
+    can_manage_messages = models.BooleanField(default=False)
+    is_muted = models.BooleanField(default=False)
+    
+    joined_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['server', 'user']
+        ordering = ['-joined_at']
+        indexes = [
+            models.Index(fields=['server', 'user']),
+            models.Index(fields=['server', 'role']),
+            models.Index(fields=['-joined_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} in {self.server.name} ({self.role})"
+    
+    def display_name(self):
+        return self.nickname if self.nickname else self.user.username
+
+
+class ServerChannel(models.Model):
+    """Text channels within servers"""
+    CHANNEL_TYPE_CHOICES = [
+        ('text', 'Text Channel'),
+        ('announcements', 'Announcements'),
+    ]
+    
+    channel_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='channels')
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=200, blank=True, default='')
+    channel_type = models.CharField(max_length=20, choices=CHANNEL_TYPE_CHOICES, default='text')
+    position = models.IntegerField(default=0)  # For ordering channels
+    
+    # Permissions
+    is_private = models.BooleanField(default=False)  # Only certain roles can see
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['position', 'created_at']
+        unique_together = ['server', 'name']
+        indexes = [
+            models.Index(fields=['server', 'position']),
+            models.Index(fields=['server', 'channel_type']),
+        ]
+    
+    def __str__(self):
+        return f"#{self.name} ({self.server.name})"
+    
+    def get_message_count(self):
+        return self.messages.count()
+
+
+class ServerMessage(models.Model):
+    """Messages sent in server channels"""
+    message_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    channel = models.ForeignKey(ServerChannel, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='server_messages')
+    content = models.TextField(max_length=2000)
+    
+    # Message features
+    is_pinned = models.BooleanField(default=False)
+    is_edited = models.BooleanField(default=False)
+    reply_to = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='replies')
+    
+    # Attachments (optional - for code snippets, files)
+    attachment_url = models.URLField(max_length=500, blank=True, null=True)
+    attachment_type = models.CharField(max_length=20, blank=True, default='')  # 'code', 'image', 'file'
+    
+    timestamp = models.DateTimeField(auto_now_add=True)
+    edited_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['timestamp']
+        indexes = [
+            models.Index(fields=['channel', 'timestamp']),
+            models.Index(fields=['sender']),
+            models.Index(fields=['is_pinned']),
+        ]
+    
+    def __str__(self):
+        return f"{self.sender.username} in {self.channel.name}: {self.content[:50]}"
+
+
+class ServerMessageReaction(models.Model):
+    """Reactions to server messages (like Discord reactions)"""
+    message = models.ForeignKey(ServerMessage, on_delete=models.CASCADE, related_name='reactions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    emoji = models.CharField(max_length=10)  # Emoji character or code
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['message', 'user', 'emoji']
+        indexes = [
+            models.Index(fields=['message', 'emoji']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} reacted {self.emoji} to message {self.message.message_id}"
+
+
+class ServerInvite(models.Model):
+    """Server invite links with tracking"""
+    invite_code = models.CharField(max_length=20, unique=True)
+    server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='invites')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    
+    max_uses = models.IntegerField(null=True, blank=True)  # None = unlimited
+    uses = models.IntegerField(default=0)
+    expires_at = models.DateTimeField(null=True, blank=True)  # None = never expires
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['invite_code']),
+            models.Index(fields=['server']),
+        ]
+    
+    def __str__(self):
+        return f"Invite {self.invite_code} for {self.server.name}"
+    
+    def is_valid(self):
+        """Check if invite is still valid"""
+        if self.max_uses and self.uses >= self.max_uses:
+            return False
+        if self.expires_at and timezone.now() > self.expires_at:
+            return False
+        return True
+
+
+
 

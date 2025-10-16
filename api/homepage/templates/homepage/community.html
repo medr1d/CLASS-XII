@@ -484,6 +484,237 @@
             text-overflow: ellipsis;
         }
 
+        /* Servers Tab */
+        .server-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+        }
+
+        .server-action-btn {
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .server-action-btn:hover {
+            background: var(--border-color);
+            color: #000000;
+        }
+
+        .server-list-item {
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .server-list-item:hover,
+        .server-list-item.active {
+            background: var(--border-color);
+            color: #000000;
+        }
+
+        .server-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .server-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .server-name {
+            font-size: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .server-meta {
+            font-size: 7px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .channel-list {
+            display: none;
+            padding: 10px 0;
+        }
+
+        .channel-item {
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 9px;
+            margin-bottom: 2px;
+        }
+
+        .channel-item:hover {
+            background: var(--hover-color);
+        }
+
+        .channel-item.active {
+            background: var(--border-color);
+            color: #000000;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            font-size: 16px;
+            border: none;
+            background: none;
+            color: var(--text-color);
+        }
+
+        .modal-body {
+            font-size: 9px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 8px;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px;
+            background: var(--bg-primary);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-checkbox {
+            margin-right: 8px;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            background: var(--bg-primary);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+
+        .modal-btn:hover {
+            background: var(--border-color);
+            color: #000000;
+        }
+
+        .modal-btn.primary {
+            background: var(--border-color);
+            color: #000000;
+        }
+
+        .discover-server-item {
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .discover-server-info {
+            flex: 1;
+        }
+
+        .discover-server-name {
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .discover-server-desc {
+            font-size: 8px;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+        }
+
+        .discover-server-meta {
+            font-size: 7px;
+            color: var(--text-secondary);
+        }
+
         /* Main Content Area */
         .main-content {
             flex: 1;
@@ -1310,6 +1541,7 @@
             <div class="sidebar-tabs">
                 <button class="sidebar-tab active" onclick="switchTab('friends')">FRIENDS</button>
                 <button class="sidebar-tab" onclick="switchTab('dms')">DMs</button>
+                <button class="sidebar-tab" onclick="switchTab('servers')">SERVERS</button>
             </div>
             <div class="sidebar-content">
                 <!-- Friends Tab Content -->
@@ -1350,6 +1582,18 @@
                 <!-- DMs Tab Content -->
                 <div id="dms-tab" class="tab-content" style="display: none;">
                     <div id="dmsList"></div>
+                </div>
+
+                <!-- Servers Tab Content -->
+                <div id="servers-tab" class="tab-content" style="display: none;">
+                    <div class="server-actions">
+                        <button class="server-action-btn" onclick="showCreateServerModal()">+ CREATE SERVER</button>
+                        <button class="server-action-btn" onclick="showJoinServerModal()">JOIN SERVER</button>
+                        <button class="server-action-btn" onclick="showDiscoverServersModal()">DISCOVER</button>
+                    </div>
+                    
+                    <div class="section-title">YOUR SERVERS</div>
+                    <div id="serversList"></div>
                 </div>
             </div>
         </div>
@@ -1417,13 +1661,17 @@
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.sidebar-tab:nth-child(${tab === 'friends' ? 1 : 2})`).classList.add('active');
+            const tabIndex = tab === 'friends' ? 1 : (tab === 'dms' ? 2 : 3);
+            document.querySelector(`.sidebar-tab:nth-child(${tabIndex})`).classList.add('active');
             
             document.getElementById('friends-tab').style.display = tab === 'friends' ? 'block' : 'none';
             document.getElementById('dms-tab').style.display = tab === 'dms' ? 'block' : 'none';
+            document.getElementById('servers-tab').style.display = tab === 'servers' ? 'block' : 'none';
 
             if (tab === 'dms') {
                 loadDMsList();
+            } else if (tab === 'servers') {
+                loadServers();
             }
         }
 
@@ -2296,6 +2544,422 @@
             }
         }
         
+        // ====== SERVER SYSTEM FUNCTIONS ======
+        let currentServer = null;
+        let currentChannel = null;
+        let serverWebSocket = null;
+
+        // Load user's servers
+        function loadServers() {
+            fetch('/api/servers/', {
+                headers: {'X-CSRFToken': csrfToken}
+            })
+            .then(response => response.json())
+            .then(data => {
+                const serversList = document.getElementById('serversList');
+                if (data.servers && data.servers.length > 0) {
+                    serversList.innerHTML = data.servers.map(server => `
+                        <div class="server-list-item" onclick="selectServer('${server.server_id}')">
+                            <div class="server-icon">${server.name.charAt(0).toUpperCase()}</div>
+                            <div class="server-info">
+                                <div class="server-name">${server.name}</div>
+                                <div class="server-meta">${server.member_count} members • ${server.channel_count} channels</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    serversList.innerHTML = '<div style="font-size: 8px; color: var(--text-muted); padding: 10px;">No servers yet. Create or join one!</div>';
+                }
+            })
+            .catch(error => console.error('Error loading servers:', error));
+        }
+
+        // Select a server and load its details
+        function selectServer(serverId) {
+            fetch(`/api/servers/${serverId}/`, {
+                headers: {'X-CSRFToken': csrfToken}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    currentServer = data;
+                    displayServerChannels(data);
+                    
+                    // Auto-select first channel
+                    if (data.channels && data.channels.length > 0) {
+                        selectChannel(data.channels[0].channel_id);
+                    }
+                }
+            })
+            .catch(error => console.error('Error loading server:', error));
+        }
+
+        // Display server channels in main content
+        function displayServerChannels(serverData) {
+            const contentTitle = document.getElementById('contentTitle');
+            contentTitle.innerHTML = `>>> ${serverData.server.name}`;
+            
+            const contentBody = document.querySelector('.content-body');
+            contentBody.innerHTML = `
+                <div style="padding: 20px;">
+                    <div style="display: flex; gap: 20px; height: calc(100vh - 200px);">
+                        <!-- Channels List -->
+                        <div style="width: 200px; border: 2px solid var(--border-color); padding: 10px; overflow-y: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <div style="font-size: 10px; font-weight: bold;">CHANNELS</div>
+                                ${serverData.permissions.can_manage_channels ? '<button onclick="showCreateChannelModal()" style="padding: 2px 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); cursor: pointer; font-size: 8px;">+</button>' : ''}
+                            </div>
+                            <div id="channelsList">
+                                ${serverData.channels.map(ch => `
+                                    <div class="channel-item" id="channel-${ch.channel_id}" onclick="selectChannel('${ch.channel_id}')">
+                                        ${ch.channel_type === 'announcements' ? '📢' : '#'} ${ch.name}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Messages Area -->
+                        <div style="flex: 1; display: flex; flex-direction: column; border: 2px solid var(--border-color);">
+                            <div style="padding: 10px; border-bottom: 2px solid var(--border-color); font-size: 10px; font-weight: bold;" id="currentChannelName">
+                                Select a channel
+                            </div>
+                            <div id="serverMessages" style="flex: 1; overflow-y: auto; padding: 10px;"></div>
+                            <div style="padding: 10px; border-top: 2px solid var(--border-color);">
+                                <input type="text" id="serverMessageInput" placeholder="Send message..." 
+                                    style="width: 100%; padding: 8px; background: var(--bg-primary); color: var(--text-color); border: 2px solid var(--border-color); font-family: 'Courier New', monospace; font-size: 9px;"
+                                    onkeypress="if(event.key === 'Enter') sendServerMessage()">
+                            </div>
+                        </div>
+                        
+                        <!-- Members List -->
+                        <div style="width: 180px; border: 2px solid var(--border-color); padding: 10px; overflow-y: auto;">
+                            <div style="font-size: 10px; font-weight: bold; margin-bottom: 10px;">MEMBERS (${serverData.members.length})</div>
+                            ${serverData.members.map(member => `
+                                <div style="padding: 5px; font-size: 8px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
+                                    <div style="width: 8px; height: 8px; background: ${member.is_online ? 'var(--online-color)' : 'var(--offline-color)'}; border-radius: 50%;"></div>
+                                    <span style="color: ${member.role === 'owner' ? '#ffaa00' : (member.role === 'admin' ? '#ff5555' : 'var(--text-color)')};">${member.nickname || member.username}</span>
+                                    ${member.role !== 'member' ? `<span style="font-size: 6px; color: var(--text-muted);">[${member.role}]</span>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Select and load a channel's messages
+        function selectChannel(channelId) {
+            currentChannel = channelId;
+            
+            // Update active channel UI
+            document.querySelectorAll('.channel-item').forEach(item => item.classList.remove('active'));
+            const channelEl = document.getElementById(`channel-${channelId}`);
+            if (channelEl) {
+                channelEl.classList.add('active');
+                document.getElementById('currentChannelName').textContent = channelEl.textContent.trim();
+            }
+            
+            // Load messages
+            loadChannelMessages(channelId);
+            
+            // Connect WebSocket
+            connectServerWebSocket(channelId);
+        }
+
+        // Load channel messages
+        function loadChannelMessages(channelId) {
+            fetch(`/api/channels/${channelId}/?limit=50`, {
+                headers: {'X-CSRFToken': csrfToken}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    displayServerMessages(data.messages);
+                }
+            })
+            .catch(error => console.error('Error loading messages:', error));
+        }
+
+        // Display server messages
+        function displayServerMessages(messages) {
+            const messagesContainer = document.getElementById('serverMessages');
+            messagesContainer.innerHTML = messages.map(msg => `
+                <div style="margin-bottom: 15px; padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <span style="font-size: 9px; font-weight: bold;">${msg.sender.username}</span>
+                        <span style="font-size: 7px; color: var(--text-muted);">${new Date(msg.timestamp).toLocaleString()}</span>
+                        ${msg.is_edited ? '<span style="font-size: 6px; color: var(--text-muted);">(edited)</span>' : ''}
+                    </div>
+                    ${msg.reply_to ? `<div style="font-size: 7px; color: var(--text-secondary); margin-bottom: 3px; padding-left: 8px; border-left: 2px solid var(--border-color);">
+                        Replying to ${msg.reply_to.sender_username}: ${msg.reply_to.content}
+                    </div>` : ''}
+                    <div style="font-size: 9px;">${msg.content}</div>
+                    ${msg.reactions && msg.reactions.length > 0 ? `
+                        <div style="margin-top: 5px; display: flex; gap: 5px;">
+                            ${msg.reactions.map(r => `<span style="font-size: 8px; background: var(--bg-secondary); padding: 2px 6px; border: 1px solid var(--border-color);">${r.emoji} ${r.count}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Send server message
+        function sendServerMessage() {
+            const input = document.getElementById('serverMessageInput');
+            const content = input.value.trim();
+            
+            if (!content || !currentChannel) return;
+            
+            fetch(`/api/channels/${currentChannel}/send/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ content })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    input.value = '';
+                } else {
+                    alert(data.message || 'Failed to send message');
+                }
+            })
+            .catch(error => console.error('Error sending message:', error));
+        }
+
+        // Connect to server WebSocket
+        function connectServerWebSocket(channelId) {
+            // Close existing connection
+            if (serverWebSocket) {
+                serverWebSocket.close();
+            }
+            
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            serverWebSocket = new WebSocket(`${protocol}//${window.location.host}/ws/server/channel/${channelId}/`);
+            
+            serverWebSocket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'new_message') {
+                    // Refresh messages
+                    loadChannelMessages(currentChannel);
+                } else if (data.type === 'typing') {
+                    // Show typing indicator
+                    console.log(`${data.username} is typing...`);
+                }
+            };
+            
+            serverWebSocket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        // Show create server modal
+        function showCreateServerModal() {
+            const modal = document.getElementById('createServerModal');
+            modal.classList.add('active');
+        }
+
+        // Hide create server modal
+        function hideCreateServerModal() {
+            const modal = document.getElementById('createServerModal');
+            modal.classList.remove('active');
+            document.getElementById('createServerForm').reset();
+        }
+
+        // Create server
+        function createServer() {
+            const form = document.getElementById('createServerForm');
+            const formData = new FormData(form);
+            
+            fetch('/api/servers/create/', {
+                method: 'POST',
+                headers: {'X-CSRFToken': csrfToken},
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    hideCreateServerModal();
+                    loadServers();
+                    alert('Server created successfully!');
+                } else {
+                    alert(data.message || 'Failed to create server');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating server');
+            });
+        }
+
+        // Show join server modal
+        function showJoinServerModal() {
+            const modal = document.getElementById('joinServerModal');
+            modal.classList.add('active');
+        }
+
+        // Hide join server modal
+        function hideJoinServerModal() {
+            const modal = document.getElementById('joinServerModal');
+            modal.classList.remove('active');
+            document.getElementById('joinServerInput').value = '';
+        }
+
+        // Join server
+        function joinServer() {
+            const inviteCode = document.getElementById('joinServerInput').value.trim();
+            
+            if (!inviteCode) {
+                alert('Please enter an invite code');
+                return;
+            }
+            
+            fetch('/api/servers/join/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ invite_code: inviteCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    hideJoinServerModal();
+                    loadServers();
+                    alert('Joined server successfully!');
+                } else {
+                    alert(data.message || 'Failed to join server');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error joining server');
+            });
+        }
+
+        // Show discover servers modal
+        function showDiscoverServersModal() {
+            const modal = document.getElementById('discoverServersModal');
+            modal.classList.add('active');
+            loadDiscoverServers();
+        }
+
+        // Hide discover servers modal
+        function hideDiscoverServersModal() {
+            const modal = document.getElementById('discoverServersModal');
+            modal.classList.remove('active');
+        }
+
+        // Load public servers
+        function loadDiscoverServers() {
+            fetch('/api/servers/discover/', {
+                headers: {'X-CSRFToken': csrfToken}
+            })
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('discoverServersList');
+                if (data.servers && data.servers.length > 0) {
+                    container.innerHTML = data.servers.map(server => `
+                        <div class="discover-server-item">
+                            <div class="discover-server-info">
+                                <div class="discover-server-name">${server.name}</div>
+                                <div class="discover-server-desc">${server.description || 'No description'}</div>
+                                <div class="discover-server-meta">${server.member_count} members</div>
+                            </div>
+                            <button class="modal-btn primary" onclick="joinServerByCode('${server.invite_code}')">JOIN</button>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div style="font-size: 8px; color: var(--text-muted); text-align: center; padding: 20px;">No public servers available</div>';
+                }
+            })
+            .catch(error => console.error('Error loading servers:', error));
+        }
+
+        // Join server by invite code
+        function joinServerByCode(inviteCode) {
+            fetch('/api/servers/join/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ invite_code: inviteCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    hideDiscoverServersModal();
+                    loadServers();
+                    alert('Joined server successfully!');
+                } else {
+                    alert(data.message || 'Failed to join server');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error joining server');
+            });
+        }
+
+        // Show create channel modal
+        function showCreateChannelModal() {
+            const modal = document.getElementById('createChannelModal');
+            modal.classList.add('active');
+        }
+
+        // Hide create channel modal
+        function hideCreateChannelModal() {
+            const modal = document.getElementById('createChannelModal');
+            modal.classList.remove('active');
+            document.getElementById('createChannelForm').reset();
+        }
+
+        // Create channel
+        function createChannel() {
+            const form = document.getElementById('createChannelForm');
+            const formData = {
+                name: form.channel_name.value.trim(),
+                description: form.channel_description.value.trim(),
+                channel_type: form.channel_type.value
+            };
+            
+            if (!formData.name) {
+                alert('Channel name is required');
+                return;
+            }
+            
+            fetch(`/api/servers/${currentServer.server.server_id}/channels/create/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    hideCreateChannelModal();
+                    selectServer(currentServer.server.server_id); // Refresh server view
+                    alert('Channel created successfully!');
+                } else {
+                    alert(data.message || 'Failed to create channel');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating channel');
+            });
+        }
+        
         // Hide loading screen after page loads
         window.addEventListener('load', () => {
             setTimeout(() => {
@@ -2307,5 +2971,109 @@
             }, 800);
         });
     </script>
+
+    <!-- Server Modals -->
+    <!-- Create Server Modal -->
+    <div id="createServerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>CREATE SERVER</span>
+                <button class="modal-close" onclick="hideCreateServerModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="createServerForm">
+                    <div class="form-group">
+                        <label class="form-label">SERVER NAME *</label>
+                        <input type="text" name="name" class="form-input" required maxlength="100" placeholder="My Awesome Server">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DESCRIPTION</label>
+                        <input type="text" name="description" class="form-input" maxlength="500" placeholder="A cool place to chat...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">SERVER ICON (Optional)</label>
+                        <input type="file" name="icon" accept="image/*" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            <input type="checkbox" name="is_public" class="form-checkbox">
+                            Make server public (discoverable)
+                        </label>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button type="button" class="modal-btn primary" onclick="createServer()">CREATE</button>
+                        <button type="button" class="modal-btn" onclick="hideCreateServerModal()">CANCEL</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Server Modal -->
+    <div id="joinServerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>JOIN SERVER</span>
+                <button class="modal-close" onclick="hideJoinServerModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">INVITE CODE</label>
+                    <input type="text" id="joinServerInput" class="form-input" placeholder="Enter invite code...">
+                </div>
+                <div style="margin-top: 20px;">
+                    <button class="modal-btn primary" onclick="joinServer()">JOIN</button>
+                    <button class="modal-btn" onclick="hideJoinServerModal()">CANCEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Discover Servers Modal -->
+    <div id="discoverServersModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>DISCOVER SERVERS</span>
+                <button class="modal-close" onclick="hideDiscoverServersModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="discoverServersList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Channel Modal -->
+    <div id="createChannelModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>CREATE CHANNEL</span>
+                <button class="modal-close" onclick="hideCreateChannelModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="createChannelForm">
+                    <div class="form-group">
+                        <label class="form-label">CHANNEL NAME *</label>
+                        <input type="text" name="channel_name" class="form-input" required maxlength="100" placeholder="general">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DESCRIPTION</label>
+                        <input type="text" name="channel_description" class="form-input" maxlength="500" placeholder="Channel description...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">CHANNEL TYPE</label>
+                        <select name="channel_type" class="form-input">
+                            <option value="text">Text Channel</option>
+                            <option value="announcements">Announcements</option>
+                        </select>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button type="button" class="modal-btn primary" onclick="createChannel()">CREATE</button>
+                        <button type="button" class="modal-btn" onclick="hideCreateChannelModal()">CANCEL</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

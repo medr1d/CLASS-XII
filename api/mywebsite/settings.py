@@ -93,8 +93,9 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 # Detect if running on Vercel (production) or locally
 IS_VERCEL = os.getenv('VERCEL', '0') == '1'
 
-if DATABASE_URL and DATABASE_URL.startswith('postgresql://'):
-    # Use PostgreSQL with appropriate SSL settings
+# For local development, always use SQLite unless explicitly using PostgreSQL
+if DATABASE_URL and DATABASE_URL.startswith('postgresql://') and IS_VERCEL:
+    # Use PostgreSQL with appropriate SSL settings (production only)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
