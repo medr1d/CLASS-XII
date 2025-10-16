@@ -54,6 +54,7 @@ urlpatterns = [
     
     # Project management
     path('api/ide/projects/create/', ide_views.create_project, name='ide_create_project'),
+    path('api/ide/projects/create-from-template/', ide_views.create_project_from_template, name='ide_create_from_template'),
     path('api/ide/projects/<uuid:project_id>/', ide_views.get_project, name='ide_get_project'),
     path('api/ide/projects/<uuid:project_id>/delete/', ide_views.delete_project, name='ide_delete_project'),
     

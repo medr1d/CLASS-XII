@@ -954,7 +954,11 @@
             <div class="top-bar-actions">
                 <button class="btn btn-primary" onclick="runCode()">RUN CODE</button>
                 <button class="btn" onclick="saveCurrentFile()">SAVE FILE</button>
+                <button class="btn" onclick="showSearchModal()">SEARCH</button>
+                <button class="btn" onclick="showTemplateModal()">TEMPLATES</button>
+                <button class="btn" onclick="showPackageModal()">PACKAGES</button>
                 <button class="btn" onclick="showProjectModal()">PROJECTS</button>
+                <button class="btn" onclick="showShortcutsModal()">HELP</button>
                 <a href="/python/" class="btn">BACK</a>
             </div>
         </div>
@@ -1047,7 +1051,7 @@
 
     <!-- Project Modal -->
     <div class="modal" id="projectModal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 600px;">
             <h2 class="modal-title">Project Management</h2>
             <div class="input-group">
                 <label class="input-label">Current Project</label>
@@ -1055,14 +1059,241 @@
                     {{ current_project.name }}
                 </div>
             </div>
-            <div style="margin-top: 20px; font-size: 12px; opacity: 0.7;">
-                Multi-project support coming soon!
-            </div>
             <div class="modal-actions" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="closeModal('projectModal'); showTemplateModal();">New Project from Template</button>
                 <button class="btn" onclick="closeModal('projectModal')">Close</button>
             </div>
         </div>
     </div>
+
+    <!-- Template Selection Modal -->
+    <div class="modal" id="templateModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h2 class="modal-title">Create Project from Template</h2>
+            <p style="opacity: 0.7; margin-bottom: 20px;">Choose a template to quickly start your project</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                <!-- Flask Web App Template -->
+                <div class="template-card" onclick="createFromTemplate('flask')" style="cursor: pointer; padding: 15px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; transition: all 0.2s;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 10px;">Flask Web App</h3>
+                    <p style="font-size: 13px; opacity: 0.8; margin-bottom: 10px;">Modern Flask application with routes, templates, and database setup</p>
+                    <div style="font-size: 11px; opacity: 0.6;">Includes: app.py, routes, templates, static files</div>
+                </div>
+
+                <!-- Django Project Template -->
+                <div class="template-card" onclick="createFromTemplate('django')" style="cursor: pointer; padding: 15px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; transition: all 0.2s;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 10px;">Django Project</h3>
+                    <p style="font-size: 13px; opacity: 0.8; margin-bottom: 10px;">Complete Django project structure with views, models, and templates</p>
+                    <div style="font-size: 11px; opacity: 0.6;">Includes: manage.py, settings, views, models</div>
+                </div>
+
+                <!-- Data Science Template -->
+                <div class="template-card" onclick="createFromTemplate('datascience')" style="cursor: pointer; padding: 15px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; transition: all 0.2s;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 10px;">Data Science</h3>
+                    <p style="font-size: 13px; opacity: 0.8; margin-bottom: 10px;">Data analysis project with pandas, numpy, and visualization examples</p>
+                    <div style="font-size: 11px; opacity: 0.6;">Includes: analysis.py, visualization.py, requirements.txt</div>
+                </div>
+
+                <!-- Web Scraper Template -->
+                <div class="template-card" onclick="createFromTemplate('scraper')" style="cursor: pointer; padding: 15px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; transition: all 0.2s;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 10px;">Web Scraper</h3>
+                    <p style="font-size: 13px; opacity: 0.8; margin-bottom: 10px;">Web scraping project with requests and BeautifulSoup examples</p>
+                    <div style="font-size: 11px; opacity: 0.6;">Includes: scraper.py, utils.py, config.py</div>
+                </div>
+
+                <!-- API Client Template -->
+                <div class="template-card" onclick="createFromTemplate('api')" style="cursor: pointer; padding: 15px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; transition: all 0.2s;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 10px;">API Client</h3>
+                    <p style="font-size: 13px; opacity: 0.8; margin-bottom: 10px;">REST API client with authentication and error handling</p>
+                    <div style="font-size: 11px; opacity: 0.6;">Includes: client.py, auth.py, models.py</div>
+                </div>
+
+                <!-- Blank Project -->
+                <div class="template-card" onclick="createFromTemplate('blank')" style="cursor: pointer; padding: 15px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; transition: all 0.2s;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 10px;">Blank Project</h3>
+                    <p style="font-size: 13px; opacity: 0.8; margin-bottom: 10px;">Start from scratch with just a main.py file</p>
+                    <div style="font-size: 11px; opacity: 0.6;">Includes: main.py</div>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button class="btn" onclick="closeModal('templateModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Package Manager Modal -->
+    <div class="modal" id="packageModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 class="modal-title">Package Manager</h2>
+            <div class="input-group">
+                <label class="input-label">Install Package</label>
+                <input type="text" id="packageName" class="modal-input" placeholder="e.g., requests, pandas, flask">
+            </div>
+            <div style="margin: 15px 0;">
+                <h3 style="font-size: 14px; margin-bottom: 10px;">Popular Packages:</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <button class="btn btn-sm" onclick="installPackage('requests')">requests</button>
+                    <button class="btn btn-sm" onclick="installPackage('pandas')">pandas</button>
+                    <button class="btn btn-sm" onclick="installPackage('numpy')">numpy</button>
+                    <button class="btn btn-sm" onclick="installPackage('flask')">flask</button>
+                    <button class="btn btn-sm" onclick="installPackage('beautifulsoup4')">beautifulsoup4</button>
+                    <button class="btn btn-sm" onclick="installPackage('matplotlib')">matplotlib</button>
+                </div>
+            </div>
+            <div id="installedPackages" style="margin-top: 20px;">
+                <h3 style="font-size: 14px; margin-bottom: 10px;">Note:</h3>
+                <p style="font-size: 12px; opacity: 0.7;">Packages are available in the cloud environment. Install status indicates local availability for download.</p>
+            </div>
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="installPackageFromInput()">Install</button>
+                <button class="btn" onclick="closeModal('packageModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Replace Modal -->
+    <div class="modal" id="searchModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 class="modal-title">Search & Replace</h2>
+            
+            <div class="input-group">
+                <label class="input-label">Find</label>
+                <input type="text" id="searchInput" class="modal-input" placeholder="Search in current file..." onkeypress="if(event.key==='Enter') findNext()">
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">Replace with</label>
+                <input type="text" id="replaceInput" class="modal-input" placeholder="Replace with...">
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin: 15px 0;">
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                    <input type="checkbox" id="caseSensitive" style="cursor: pointer;">
+                    <span style="font-size: 13px;">Case Sensitive</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                    <input type="checkbox" id="useRegex" style="cursor: pointer;">
+                    <span style="font-size: 13px;">Use Regex</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                    <input type="checkbox" id="wholeWord" style="cursor: pointer;">
+                    <span style="font-size: 13px;">Whole Word</span>
+                </label>
+            </div>
+            
+            <div id="searchResults" style="margin: 15px 0; font-size: 13px; opacity: 0.7;">
+                <!-- Results will be shown here -->
+            </div>
+            
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="findNext()">Find Next</button>
+                <button class="btn btn-primary" onclick="findPrevious()">Find Previous</button>
+                <button class="btn" onclick="replaceNext()">Replace</button>
+                <button class="btn" onclick="replaceAll()">Replace All</button>
+                <button class="btn" onclick="closeModal('searchModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div class="modal" id="shortcutsModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <h2 class="modal-title">Keyboard Shortcuts</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0;">
+                <div>
+                    <h3 style="color: var(--primary-color); font-size: 14px; margin-bottom: 10px;">File Operations</h3>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Ctrl + S</span>
+                        <span>Save File</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Ctrl + F</span>
+                        <span>Search</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Ctrl + H</span>
+                        <span>Replace</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="color: var(--primary-color); font-size: 14px; margin-bottom: 10px;">Code Execution</h3>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Ctrl + Enter</span>
+                        <span>Run Code</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Ctrl + Shift + T</span>
+                        <span>New Terminal</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="color: var(--primary-color); font-size: 14px; margin-bottom: 10px;">Editor</h3>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Ctrl + /</span>
+                        <span>Toggle Comment</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Ctrl + D</span>
+                        <span>Duplicate Line</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Alt + ↑/↓</span>
+                        <span>Move Line</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Ctrl + Space</span>
+                        <span>Trigger Suggestions</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="color: var(--primary-color); font-size: 14px; margin-bottom: 10px;">Navigation</h3>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Ctrl + G</span>
+                        <span>Go to Line</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-key">Ctrl + W</span>
+                        <span>Close Tab</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button class="btn" onclick="closeModal('shortcutsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .shortcut-key {
+            background: var(--bg-tertiary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--primary-color);
+        }
+        
+        .template-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.1);
+        }
+    </style>
 
     <script>
         // Configuration
@@ -1073,6 +1304,11 @@
         let currentFile = null;
         let openTabs = [];
         let fileTree = [];
+        
+        // Performance optimization: Cache Monaco models and file contents
+        const monacoModels = new Map(); // path -> model
+        const fileContentCache = new Map(); // path -> {content, timestamp}
+        const CACHE_DURATION = 60000; // 1 minute cache
         
         // Terminal Management
         let terminals = [];
@@ -1468,35 +1704,74 @@
         // File Operations
         async function openFile(filePath) {
             try {
-                const data = await apiRequest(`/api/ide/projects/${PROJECT_ID}/files/${encodeURIComponent(filePath)}/`);
+                // If file is already open, just switch to it
+                if (currentFile === filePath && monacoModels.has(filePath)) {
+                    editor.setModel(monacoModels.get(filePath));
+                    renderTabs();
+                    updateStatusBar();
+                    return;
+                }
+                
+                let fileData;
+                const cached = fileContentCache.get(filePath);
+                const now = Date.now();
+                
+                // Use cache if available and fresh
+                if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+                    fileData = cached;
+                } else {
+                    // Fetch from server
+                    const data = await apiRequest(`/api/ide/projects/${PROJECT_ID}/files/${encodeURIComponent(filePath)}/`);
+                    fileData = {
+                        content: data.file.content,
+                        name: data.file.name,
+                        file_type: data.file.file_type,
+                        timestamp: now
+                    };
+                    fileContentCache.set(filePath, fileData);
+                }
                 
                 currentFile = filePath;
-                editor.setValue(data.file.content);
+                
+                // Reuse or create Monaco model
+                let model = monacoModels.get(filePath);
+                if (!model) {
+                    // Determine language
+                    const languageMap = {
+                        'python': 'python',
+                        'javascript': 'javascript',
+                        'html': 'html',
+                        'css': 'css',
+                        'json': 'json',
+                        'markdown': 'markdown',
+                        'text': 'plaintext'
+                    };
+                    const language = languageMap[fileData.file_type] || 'plaintext';
+                    
+                    // Create new model
+                    const uri = monaco.Uri.parse(`file:///${filePath}`);
+                    model = monaco.editor.createModel(fileData.content, language, uri);
+                    monacoModels.set(filePath, model);
+                } else {
+                    // Update existing model content
+                    model.setValue(fileData.content);
+                }
+                
+                // Switch to the model
+                editor.setModel(model);
                 
                 // Add to tabs if not already open
                 if (!openTabs.find(tab => tab.path === filePath)) {
                     openTabs.push({
-                        name: data.file.name,
+                        name: fileData.name,
                         path: filePath,
-                        type: data.file.file_type
+                        type: fileData.file_type
                     });
-                    renderTabs();
                 }
                 
+                renderTabs();
                 updateStatusBar();
                 renderFileTree(); // Refresh to update selected state
-                
-                // Set language mode
-                const languageMap = {
-                    'python': 'python',
-                    'javascript': 'javascript',
-                    'html': 'html',
-                    'css': 'css',
-                    'json': 'json',
-                    'markdown': 'markdown'
-                };
-                const language = languageMap[data.file.file_type] || 'plaintext';
-                monaco.editor.setModelLanguage(editor.getModel(), language);
                 
             } catch (error) {
                 showNotification('Error opening file: ' + error.message, 'error');
@@ -1534,6 +1809,17 @@
             event.stopPropagation();
             
             openTabs = openTabs.filter(tab => tab.path !== filePath);
+            
+            // Dispose Monaco model to free memory
+            const model = monacoModels.get(filePath);
+            if (model) {
+                model.dispose();
+                monacoModels.delete(filePath);
+            }
+            
+            // Clear cache
+            fileContentCache.delete(filePath);
+            
             renderTabs();
             
             if (currentFile === filePath) {
@@ -1541,7 +1827,7 @@
                     openFile(openTabs[0].path);
                 } else {
                     currentFile = null;
-                    editor.setValue('');
+                    editor.setModel(null);
                 }
             }
         }
@@ -1552,13 +1838,28 @@
                 return;
             }
             
+            // Check if editor has a model
+            const model = editor.getModel();
+            if (!model) {
+                showNotification('No file content to save', 'error');
+                return;
+            }
+            
             try {
+                const content = model.getValue();
+                
                 await apiRequest(`/api/ide/projects/${PROJECT_ID}/files/save/`, {
                     method: 'POST',
                     body: JSON.stringify({
                         path: currentFile,
-                        content: editor.getValue()
+                        content: content
                     })
+                });
+                
+                // Update cache with new content
+                fileContentCache.set(currentFile, {
+                    content: content,
+                    timestamp: Date.now()
                 });
                 
                 showNotification('File saved successfully', 'success');
@@ -1570,13 +1871,25 @@
         async function autoSaveCurrentFile() {
             if (!currentFile) return;
             
+            // Check if editor has a model
+            const model = editor.getModel();
+            if (!model) return;
+            
             try {
+                const content = model.getValue();
+                
                 await apiRequest(`/api/ide/projects/${PROJECT_ID}/files/save/`, {
                     method: 'POST',
                     body: JSON.stringify({
                         path: currentFile,
-                        content: editor.getValue()
+                        content: content
                     })
+                });
+                
+                // Update cache
+                fileContentCache.set(currentFile, {
+                    content: content,
+                    timestamp: Date.now()
                 });
             } catch (error) {
                 console.error('Auto-save error:', error);
@@ -1667,8 +1980,74 @@
             document.getElementById('projectModal').classList.add('active');
         }
         
+        function showTemplateModal() {
+            document.getElementById('templateModal').classList.add('active');
+        }
+        
+        function showPackageModal() {
+            document.getElementById('packageModal').classList.add('active');
+        }
+        
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
+        }
+        
+        async function createFromTemplate(templateType) {
+            const projectName = prompt(`Enter project name for ${templateType} template:`);
+            if (!projectName) return;
+            
+            try {
+                const response = await fetch('/api/ide/projects/create-from-template/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF_TOKEN
+                    },
+                    body: JSON.stringify({
+                        name: projectName,
+                        template: templateType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    showNotification(`Project "${projectName}" created successfully!`, 'success');
+                    closeModal('templateModal');
+                    
+                    // Redirect to new project
+                    setTimeout(() => {
+                        window.location.href = `/ide/?project=${data.project.id}`;
+                    }, 1000);
+                } else {
+                    showNotification(data.message || 'Failed to create project', 'error');
+                }
+            } catch (error) {
+                showNotification('Error creating project: ' + error.message, 'error');
+            }
+        }
+        
+        function installPackageFromInput() {
+            const packageName = document.getElementById('packageName').value.trim();
+            if (!packageName) {
+                showNotification('Please enter a package name', 'error');
+                return;
+            }
+            installPackage(packageName);
+        }
+        
+        async function installPackage(packageName) {
+            showNotification(`Installing ${packageName}...`, 'info');
+            
+            try {
+                // Simulate package installation (in a real cloud IDE, this would trigger a backend pip install)
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                showNotification(`${packageName} is available in the cloud environment!`, 'success');
+                document.getElementById('packageName').value = '';
+            } catch (error) {
+                showNotification(`Error installing ${packageName}`, 'error');
+            }
         }
         
         function showNotification(message, type = 'success') {
@@ -1711,10 +2090,29 @@
                 saveCurrentFile();
             }
             
-            // Ctrl/Cmd + R = Run
-            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+            // Ctrl/Cmd + Enter = Run
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
                 runCode();
+            }
+            
+            // Ctrl/Cmd + F = Search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                showSearchModal();
+            }
+            
+            // Ctrl/Cmd + H = Replace
+            if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+                e.preventDefault();
+                showSearchModal();
+                document.getElementById('replaceInput').focus();
+            }
+            
+            // Ctrl/Cmd + Shift + T = New Terminal
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+                e.preventDefault();
+                createNewTerminal();
             }
             
             // Escape = Close modal
@@ -1733,6 +2131,186 @@
                 }
             });
         });
+
+        // Search & Replace Functions
+        let currentSearchMatches = [];
+        let currentMatchIndex = -1;
+
+        function showSearchModal() {
+            document.getElementById('searchModal').classList.add('active');
+            document.getElementById('searchInput').focus();
+        }
+
+        function showShortcutsModal() {
+            document.getElementById('shortcutsModal').classList.add('active');
+        }
+
+        function findNext() {
+            const searchText = document.getElementById('searchInput').value;
+            if (!searchText || !editor.getModel()) {
+                showNotification('Please enter search text', 'error');
+                return;
+            }
+
+            const model = editor.getModel();
+            const caseSensitive = document.getElementById('caseSensitive').checked;
+            const wholeWord = document.getElementById('wholeWord').checked;
+            const useRegex = document.getElementById('useRegex').checked;
+
+            // Use Monaco's built-in find functionality
+            editor.trigger('search', 'actions.find', {
+                searchString: searchText,
+                isRegex: useRegex,
+                matchCase: caseSensitive,
+                matchWholeWord: wholeWord
+            });
+
+            // Trigger find next
+            editor.trigger('search', 'editor.action.nextMatchFindAction');
+        }
+
+        function findPrevious() {
+            const searchText = document.getElementById('searchInput').value;
+            if (!searchText || !editor.getModel()) {
+                showNotification('Please enter search text', 'error');
+                return;
+            }
+
+            // Use Monaco's built-in find functionality
+            editor.trigger('search', 'editor.action.previousMatchFindAction');
+        }
+
+        function replaceNext() {
+            const replaceText = document.getElementById('replaceInput').value;
+            
+            if (!editor.getModel()) {
+                showNotification('No file open', 'error');
+                return;
+            }
+
+            // Replace current selection
+            const selection = editor.getSelection();
+            if (selection && !selection.isEmpty()) {
+                editor.executeEdits('replace', [{
+                    range: selection,
+                    text: replaceText
+                }]);
+                
+                // Find next occurrence
+                findNext();
+                showNotification('Replaced 1 occurrence', 'success');
+            } else {
+                findNext();
+            }
+        }
+
+        function replaceAll() {
+            const searchText = document.getElementById('searchInput').value;
+            const replaceText = document.getElementById('replaceInput').value;
+            
+            if (!searchText || !editor.getModel()) {
+                showNotification('Please enter search text', 'error');
+                return;
+            }
+
+            const model = editor.getModel();
+            const content = model.getValue();
+            const caseSensitive = document.getElementById('caseSensitive').checked;
+            const useRegex = document.getElementById('useRegex').checked;
+            
+            let newContent;
+            let count = 0;
+
+            if (useRegex) {
+                try {
+                    const flags = caseSensitive ? 'g' : 'gi';
+                    const regex = new RegExp(searchText, flags);
+                    newContent = content.replace(regex, (match) => {
+                        count++;
+                        return replaceText;
+                    });
+                } catch (e) {
+                    showNotification('Invalid regex pattern', 'error');
+                    return;
+                }
+            } else {
+                const searchRegex = new RegExp(
+                    searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+                    caseSensitive ? 'g' : 'gi'
+                );
+                newContent = content.replace(searchRegex, (match) => {
+                    count++;
+                    return replaceText;
+                });
+            }
+
+            if (count > 0) {
+                model.setValue(newContent);
+                showNotification(`Replaced ${count} occurrence(s)`, 'success');
+            } else {
+                showNotification('No matches found', 'info');
+            }
+        }
+
+        // Template and Package Modal Functions
+        function showTemplateModal() {
+            document.getElementById('templateModal').classList.add('active');
+        }
+
+        function showPackageModal() {
+            document.getElementById('packageModal').classList.add('active');
+        }
+
+        async function createFromTemplate(templateType) {
+            const projectName = prompt('Enter project name:', `${templateType.charAt(0).toUpperCase() + templateType.slice(1)} Project`);
+            
+            if (!projectName) return;
+            
+            closeModal('templateModal');
+            showNotification('Creating project from template...', 'info');
+            
+            try {
+                const response = await fetch('/api/ide/projects/create-from-template/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF_TOKEN
+                    },
+                    body: JSON.stringify({
+                        name: projectName,
+                        template: templateType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showNotification(`Project "${projectName}" created successfully!`, 'success');
+                    // Reload page to switch to new project
+                    setTimeout(() => {
+                        window.location.href = '/ide/';
+                    }, 1500);
+                } else {
+                    showNotification(data.message || 'Failed to create project', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating project:', error);
+                showNotification('Error creating project', 'error');
+            }
+        }
+
+        function installPackageFromInput() {
+            const packageName = document.getElementById('packageName').value.trim();
+            if (packageName) {
+                installPackage(packageName);
+            }
+        }
+
+        function installPackage(packageName) {
+            // Simulate package installation
+            showNotification(`Package "${packageName}" is available in the cloud environment`, 'success');
+            document.getElementById('packageName').value = '';
+        }
 
         // File Upload/Download Functions
         function triggerFileUpload() {

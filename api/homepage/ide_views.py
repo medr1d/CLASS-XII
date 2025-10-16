@@ -176,6 +176,492 @@ def create_project(request):
 
 
 @login_required
+@require_POST
+@rate_limit_per_user(max_requests=10, window=60)
+def create_project_from_template(request):
+    """Create a new project from a template"""
+    try:
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        template = data.get('template', 'blank')
+        
+        if not name:
+            return JsonResponse({'status': 'error', 'message': 'Project name required'}, status=400)
+        
+        # Check project limit
+        project_count = IDEProject.objects.filter(user=request.user, is_active=True).count()
+        if project_count >= 10:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Maximum 10 projects allowed. Delete a project first.'
+            }, status=400)
+        
+        # Create project
+        project = IDEProject.objects.create(
+            user=request.user,
+            name=name,
+            description=f'{template.capitalize()} project'
+        )
+        
+        # Create files based on template
+        templates = get_project_templates()
+        if template in templates:
+            for file_data in templates[template]:
+                IDEFile.objects.create(
+                    project=project,
+                    name=file_data['name'],
+                    path=file_data['path'],
+                    content=file_data['content'],
+                    file_type=file_data['type']
+                )
+        else:
+            # Default to blank template
+            IDEFile.objects.create(
+                project=project,
+                name='main.py',
+                path='main.py',
+                content='# New Python project\n\nprint("Hello, World!")\n',
+                file_type='python'
+            )
+        
+        return JsonResponse({
+            'status': 'success',
+            'project': {
+                'id': str(project.project_id),
+                'name': project.name,
+                'description': project.description,
+                'created_at': project.created_at.isoformat()
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+def get_project_templates():
+    """Return project templates with starter files"""
+    return {
+        'blank': [
+            {
+                'name': 'main.py',
+                'path': 'main.py',
+                'type': 'python',
+                'content': '''# Blank Python Project
+
+def main():
+    print("Hello, World!")
+
+if __name__ == "__main__":
+    main()
+'''
+            }
+        ],
+        'flask': [
+            {
+                'name': 'app.py',
+                'path': 'app.py',
+                'type': 'python',
+                'content': '''from flask import Flask, render_template, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/api/hello', methods=['GET', 'POST'])
+def hello_api():
+    if request.method == 'POST':
+        data = request.get_json()
+        name = data.get('name', 'World')
+    else:
+        name = request.args.get('name', 'World')
+    
+    return jsonify({'message': f'Hello, {name}!'})
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
+'''
+            },
+            {
+                'name': 'requirements.txt',
+                'path': 'requirements.txt',
+                'type': 'text',
+                'content': '''Flask==2.3.0
+'''
+            },
+            {
+                'name': 'README.md',
+                'path': 'README.md',
+                'type': 'markdown',
+                'content': '''# Flask Web Application
+
+## Setup
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+## Features
+- Basic routing
+- REST API endpoints
+- Template rendering
+
+Visit http://localhost:5000 after running the app.
+'''
+            }
+        ],
+        'django': [
+            {
+                'name': 'manage.py',
+                'path': 'manage.py',
+                'type': 'python',
+                'content': '''#!/usr/bin/env python
+"""Django's command-line utility for administrative tasks."""
+import os
+import sys
+
+def main():
+    """Run administrative tasks."""
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+    try:
+        from django.core.management import execute_from_command_line
+    except ImportError as exc:
+        raise ImportError(
+            "Couldn't import Django. Are you sure it's installed?"
+        ) from exc
+    execute_from_command_line(sys.argv)
+
+if __name__ == '__main__':
+    main()
+'''
+            },
+            {
+                'name': 'views.py',
+                'path': 'app/views.py',
+                'type': 'python',
+                'content': '''from django.shortcuts import render
+from django.http import JsonResponse
+
+def index(request):
+    return render(request, 'index.html')
+
+def api_hello(request):
+    return JsonResponse({'message': 'Hello from Django!'})
+'''
+            },
+            {
+                'name': 'models.py',
+                'path': 'app/models.py',
+                'type': 'python',
+                'content': '''from django.db import models
+
+class Item(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
+'''
+            },
+            {
+                'name': 'requirements.txt',
+                'path': 'requirements.txt',
+                'type': 'text',
+                'content': '''Django==4.2.0
+'''
+            }
+        ],
+        'datascience': [
+            {
+                'name': 'analysis.py',
+                'path': 'analysis.py',
+                'type': 'python',
+                'content': '''import pandas as pd
+import numpy as np
+
+# Data Analysis Script
+
+def load_data(filepath):
+    """Load data from CSV file"""
+    return pd.read_csv(filepath)
+
+def analyze_data(df):
+    """Perform basic data analysis"""
+    print("Dataset Shape:", df.shape)
+    print("\\nColumn Names:", df.columns.tolist())
+    print("\\nData Types:\\n", df.dtypes)
+    print("\\nBasic Statistics:\\n", df.describe())
+    print("\\nMissing Values:\\n", df.isnull().sum())
+    
+    return df
+
+def main():
+    # Example: Create sample data
+    data = {
+        'Name': ['Alice', 'Bob', 'Charlie', 'David'],
+        'Age': [25, 30, 35, 28],
+        'Score': [85, 92, 78, 88]
+    }
+    df = pd.DataFrame(data)
+    
+    print("Sample Data Analysis:")
+    analyze_data(df)
+    
+    # Calculate average score
+    avg_score = df['Score'].mean()
+    print(f"\\nAverage Score: {avg_score:.2f}")
+
+if __name__ == "__main__":
+    main()
+'''
+            },
+            {
+                'name': 'visualization.py',
+                'path': 'visualization.py',
+                'type': 'python',
+                'content': '''# Data Visualization Script
+# Note: matplotlib requires GUI which may not work in cloud IDE
+# Use this as a template for local development
+
+import pandas as pd
+import numpy as np
+
+def create_sample_data():
+    """Create sample data for visualization"""
+    np.random.seed(42)
+    dates = pd.date_range('2024-01-01', periods=100)
+    values = np.random.randn(100).cumsum()
+    
+    return pd.DataFrame({'Date': dates, 'Value': values})
+
+def print_data_summary(df):
+    """Print data summary instead of plotting"""
+    print("Data Summary for Visualization:")
+    print(df.describe())
+    print("\\nFirst 10 rows:")
+    print(df.head(10))
+
+if __name__ == "__main__":
+    df = create_sample_data()
+    print_data_summary(df)
+'''
+            },
+            {
+                'name': 'requirements.txt',
+                'path': 'requirements.txt',
+                'type': 'text',
+                'content': '''pandas==2.0.0
+numpy==1.24.0
+matplotlib==3.7.0
+'''
+            }
+        ],
+        'scraper': [
+            {
+                'name': 'scraper.py',
+                'path': 'scraper.py',
+                'type': 'python',
+                'content': '''import requests
+from bs4 import BeautifulSoup
+
+class WebScraper:
+    """Simple web scraper using requests and BeautifulSoup"""
+    
+    def __init__(self, base_url):
+        self.base_url = base_url
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        })
+    
+    def fetch_page(self, url):
+        """Fetch a web page"""
+        try:
+            response = self.session.get(url, timeout=10)
+            response.raise_for_status()
+            return response.text
+        except requests.RequestException as e:
+            print(f"Error fetching {url}: {e}")
+            return None
+    
+    def parse_html(self, html):
+        """Parse HTML content"""
+        return BeautifulSoup(html, 'html.parser')
+    
+    def extract_links(self, soup):
+        """Extract all links from page"""
+        links = []
+        for link in soup.find_all('a', href=True):
+            links.append(link['href'])
+        return links
+    
+    def extract_text(self, soup, tag='p'):
+        """Extract text from specific tags"""
+        texts = []
+        for element in soup.find_all(tag):
+            texts.append(element.get_text(strip=True))
+        return texts
+
+def main():
+    # Example usage
+    url = "https://example.com"
+    scraper = WebScraper(url)
+    
+    html = scraper.fetch_page(url)
+    if html:
+        soup = scraper.parse_html(html)
+        links = scraper.extract_links(soup)
+        texts = scraper.extract_text(soup)
+        
+        print(f"Found {len(links)} links")
+        print(f"Found {len(texts)} paragraphs")
+
+if __name__ == "__main__":
+    main()
+'''
+            },
+            {
+                'name': 'config.py',
+                'path': 'config.py',
+                'type': 'python',
+                'content': '''# Scraper Configuration
+
+# Request settings
+TIMEOUT = 10
+MAX_RETRIES = 3
+
+# Headers
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+]
+
+# Rate limiting
+REQUEST_DELAY = 1  # seconds between requests
+'''
+            },
+            {
+                'name': 'requirements.txt',
+                'path': 'requirements.txt',
+                'type': 'text',
+                'content': '''requests==2.31.0
+beautifulsoup4==4.12.0
+'''
+            }
+        ],
+        'api': [
+            {
+                'name': 'client.py',
+                'path': 'client.py',
+                'type': 'python',
+                'content': '''import requests
+from typing import Dict, Any, Optional
+
+class APIClient:
+    """REST API Client with authentication"""
+    
+    def __init__(self, base_url: str, api_key: Optional[str] = None):
+        self.base_url = base_url.rstrip('/')
+        self.api_key = api_key
+        self.session = requests.Session()
+        
+        if api_key:
+            self.session.headers.update({
+                'Authorization': f'Bearer {api_key}'
+            })
+    
+    def _make_request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
+        """Make HTTP request"""
+        url = f"{self.base_url}/{endpoint.lstrip('/')}"
+        
+        try:
+            response = self.session.request(method, url, **kwargs)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            print(f"Request error: {e}")
+            return {'error': str(e)}
+    
+    def get(self, endpoint: str, params: Optional[Dict] = None) -> Dict[str, Any]:
+        """GET request"""
+        return self._make_request('GET', endpoint, params=params)
+    
+    def post(self, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
+        """POST request"""
+        return self._make_request('POST', endpoint, json=data)
+    
+    def put(self, endpoint: str, data: Optional[Dict] = None) -> Dict[str, Any]:
+        """PUT request"""
+        return self._make_request('PUT', endpoint, json=data)
+    
+    def delete(self, endpoint: str) -> Dict[str, Any]:
+        """DELETE request"""
+        return self._make_request('DELETE', endpoint)
+
+def main():
+    # Example usage
+    client = APIClient('https://api.example.com')
+    
+    # GET request
+    data = client.get('/users')
+    print(data)
+    
+    # POST request
+    new_user = client.post('/users', data={'name': 'John Doe'})
+    print(new_user)
+
+if __name__ == "__main__":
+    main()
+'''
+            },
+            {
+                'name': 'models.py',
+                'path': 'models.py',
+                'type': 'python',
+                'content': '''from dataclasses import dataclass
+from typing import Optional
+from datetime import datetime
+
+@dataclass
+class User:
+    """User model"""
+    id: int
+    name: str
+    email: str
+    created_at: Optional[datetime] = None
+    
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Create User from dictionary"""
+        return cls(
+            id=data['id'],
+            name=data['name'],
+            email=data['email'],
+            created_at=data.get('created_at')
+        )
+
+@dataclass
+class APIResponse:
+    """API Response model"""
+    success: bool
+    data: Optional[dict] = None
+    error: Optional[str] = None
+'''
+            },
+            {
+                'name': 'requirements.txt',
+                'path': 'requirements.txt',
+                'type': 'text',
+                'content': '''requests==2.31.0
+'''
+            }
+        ]
+    }
+
+
+@login_required
 def get_project(request, project_id):
     """Get project details"""
     try:
