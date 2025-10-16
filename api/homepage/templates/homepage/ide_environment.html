@@ -2219,16 +2219,33 @@
         }
         
         async function installPackage(packageName) {
-            showNotification(`Installing ${packageName}...`, 'info');
+            if (!packageName || !packageName.trim()) {
+                showNotification('Please enter a package name', 'error');
+                return;
+            }
+            
+            showNotification(`Checking ${packageName}...`, 'info');
             
             try {
-                // Simulate package installation (in a real cloud IDE, this would trigger a backend pip install)
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                const response = await fetch(`/api/ide/projects/${PROJECT_ID}/packages/install/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF_TOKEN
+                    },
+                    body: JSON.stringify({ package_name: packageName })
+                });
                 
-                showNotification(`${packageName} is available in the cloud environment!`, 'success');
-                document.getElementById('packageName').value = '';
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showNotification(data.message || `${packageName} is available!`, 'success');
+                    document.getElementById('packageName').value = '';
+                } else {
+                    showNotification(data.message || `Package ${packageName} not found`, 'error');
+                }
             } catch (error) {
-                showNotification(`Error installing ${packageName}`, 'error');
+                showNotification(`Error checking ${packageName}: ${error.message}`, 'error');
             }
         }
         

@@ -815,11 +815,16 @@ def save_file(request, project_id):
         directory = None
         if len(path_parts) > 1:
             dir_path = '/'.join(path_parts[:-1])
-            directory, _ = IDEDirectory.objects.get_or_create(
-                project=project,
-                path=dir_path,
-                defaults={'name': path_parts[-2] if len(path_parts) > 1 else dir_path}
-            )
+            try:
+                directory, _ = IDEDirectory.objects.get_or_create(
+                    project=project,
+                    path=dir_path,
+                    defaults={'name': path_parts[-2] if len(path_parts) > 1 else dir_path}
+                )
+            except Exception as dir_error:
+                print(f"Directory creation error: {dir_error}")
+                # Continue without directory
+                pass
         
         # Create or update file
         file, created = IDEFile.objects.update_or_create(
@@ -1045,10 +1050,15 @@ import sys
 import io
 import base64
 
-# Configure matplotlib to use Agg backend (non-GUI)
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+# Configure matplotlib to use Agg backend (non-GUI) if available
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    _has_matplotlib = True
+except ImportError:
+    _has_matplotlib = False
+    plt = None
 
 # Store original stdout
 _original_stdout = sys.stdout
@@ -1058,23 +1068,24 @@ sys.stdout = _captured_output
 # Store plots
 _plot_images = []
 
-# Override plt.show() to capture plots
-_original_show = plt.show
-def _custom_show():
-    try:
-        import io
-        import base64
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png', bbox_inches='tight', dpi=100)
-        buf.seek(0)
-        img_base64 = base64.b64encode(buf.read()).decode('utf-8')
-        _plot_images.append(img_base64)
-        plt.clf()  # Clear figure for next plot
-    except Exception as e:
-        print(f"[PLOT ERROR]: {{e}}", file=sys.stderr)
-    _original_show()
+if _has_matplotlib:
+    # Override plt.show() to capture plots
+    _original_show = plt.show
+    def _custom_show():
+        try:
+            import io
+            import base64
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png', bbox_inches='tight', dpi=100)
+            buf.seek(0)
+            img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+            _plot_images.append(img_base64)
+            plt.clf()  # Clear figure for next plot
+        except Exception as e:
+            print(f"[PLOT ERROR]: {{e}}", file=sys.stderr)
+        _original_show()
 
-plt.show = _custom_show
+    plt.show = _custom_show
 
 try:
     # User code starts here
