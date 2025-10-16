@@ -1261,6 +1261,9 @@
         <div class="nav-links">
             <a href="/" class="nav-link">HOME</a>
             <a href="/python/" class="nav-link">PYTHON</a>
+            {% if user.userprofile.paidUser %}
+            <a href="/ide/" class="nav-link" style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.2) 0%, rgba(0, 136, 255, 0.2) 100%); border: 1px solid var(--secondary-color); font-weight: bold;">CLOUD IDE ⭐</a>
+            {% endif %}
             <button class="nav-link" onclick="openSettings()" style="background: none; cursor: pointer;">SETTINGS</button>
             <a href="/logout/" class="nav-link">LOGOUT</a>
         </div>

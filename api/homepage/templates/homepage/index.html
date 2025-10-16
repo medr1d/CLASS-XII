@@ -1198,12 +1198,20 @@
                         </a>
                     </li>
                     {% if user.is_authenticated %}
-                    <li class="menu-item">
-                        <a href="/community/" class="menu-link">
-                            <span class="menu-icon">CM</span>
-                            <span class="menu-text">Community</span>
-                        </a>
-                    </li>
+                        {% if user.userprofile.paidUser %}
+                        <li class="menu-item">
+                            <a href="/ide/" class="menu-link" style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 136, 255, 0.1) 100%); border-left: 3px solid var(--secondary-color);">
+                                <span class="menu-icon" style="background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">IDE</span>
+                                <span class="menu-text">Cloud IDE <span style="font-size: 10px; color: var(--secondary-color); font-weight: bold;">PRO</span></span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li class="menu-item">
+                            <a href="/community/" class="menu-link">
+                                <span class="menu-icon">CM</span>
+                                <span class="menu-text">Community</span>
+                            </a>
+                        </li>
                     {% endif %}
                 </ul>
             </div>
