@@ -334,6 +334,11 @@ def admin_panel_view(request):
         messages.error(request, 'Access denied. Admin privileges required.')
         return redirect('auth_app:account')
     
+    from homepage.models import PythonScript, UserProfile
+    from django.db.models import Count, Sum
+    import psutil
+    from datetime import timedelta
+    
     # Get filter parameters
     filter_type = request.GET.get('filter', 'all')  # all, paid, free, admin
     search_query = request.GET.get('search', '').strip()
@@ -363,10 +368,116 @@ def admin_panel_view(request):
     free_count = total_users - paid_count
     super_count = all_users.filter(is_superuser=True).count()
     
-    # Recent activity - last 7 days
-    from datetime import timedelta
+    # Recent activity - last 7 days and today
     week_ago = timezone.now() - timedelta(days=7)
+    today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
     new_users_week = User.objects.filter(date_joined__gte=week_ago).count()
+    new_users_today = User.objects.filter(date_joined__gte=today_start).count()
+    
+    # Premium statistics
+    premium_users = paid_count
+    premium_percentage = round((paid_count / total_users * 100) if total_users > 0 else 0, 1)
+    
+    # Active sessions (users logged in within last 30 minutes)
+    thirty_min_ago = timezone.now() - timedelta(minutes=30)
+    active_sessions = User.objects.filter(last_login__gte=thirty_min_ago).count() if hasattr(User, 'last_login') else 0
+    
+    # File statistics
+    try:
+        total_files = PythonScript.objects.count()
+        files_today = PythonScript.objects.filter(created_at__gte=today_start).count() if hasattr(PythonScript, 'created_at') else 0
+    except:
+        total_files = 0
+        files_today = 0
+    
+    # Server statistics
+    try:
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        memory_percent = memory.percent
+        memory_used_gb = round(memory.used / (1024**3), 2)
+        memory_total_gb = round(memory.total / (1024**3), 2)
+        disk = psutil.disk_usage('/')
+        disk_percent = disk.percent
+        disk_used_gb = round(disk.used / (1024**3), 2)
+        disk_total_gb = round(disk.total / (1024**3), 2)
+    except:
+        cpu_percent = 0
+        memory_percent = 0
+        memory_used_gb = 0
+        memory_total_gb = 0
+        disk_percent = 0
+        disk_used_gb = 0
+        disk_total_gb = 0
+    
+    # Server uptime
+    try:
+        import time
+        boot_time = psutil.boot_time()
+        uptime_seconds = time.time() - boot_time
+        uptime_days = int(uptime_seconds // 86400)
+        uptime_hours = int((uptime_seconds % 86400) // 3600)
+        uptime_minutes = int((uptime_seconds % 3600) // 60)
+        server_uptime = f"{uptime_days}d {uptime_hours}h {uptime_minutes}m"
+    except:
+        server_uptime = "Unknown"
+    
+    # Recent activities (last 10 user registrations)
+    recent_activities = []
+    recent_users = User.objects.order_by('-date_joined')[:10]
+    for user in recent_users:
+        time_ago = timezone.now() - user.date_joined
+        if time_ago.days > 0:
+            time_str = f"{time_ago.days} day{'s' if time_ago.days != 1 else ''} ago"
+        elif time_ago.seconds >= 3600:
+            hours = time_ago.seconds // 3600
+            time_str = f"{hours} hour{'s' if hours != 1 else ''} ago"
+        elif time_ago.seconds >= 60:
+            minutes = time_ago.seconds // 60
+            time_str = f"{minutes} minute{'s' if minutes != 1 else ''} ago"
+        else:
+            time_str = "Just now"
+        
+        recent_activities.append({
+            'user': user,
+            'description': f"{user.username} joined the platform",
+            'time': time_str,
+            'type': 'registration'
+        })
+    
+    # User registration data for chart (last 30 days)
+    registration_data = []
+    for i in range(30):
+        date = timezone.now() - timedelta(days=29-i)
+        date_start = date.replace(hour=0, minute=0, second=0, microsecond=0)
+        date_end = date_start + timedelta(days=1)
+        count = User.objects.filter(date_joined__gte=date_start, date_joined__lt=date_end).count()
+        registration_data.append({
+            'date': date.strftime('%b %d'),
+            'count': count
+        })
+    
+    # Get user file counts
+    users_with_files = []
+    user_files = []
+    try:
+        # Get all files for the files section
+        user_files = PythonScript.objects.select_related('user').order_by('-created_at')[:100]
+        
+        # Get file counts per user
+        for user in all_users[:100]:  # Limit to first 100 users for performance
+            file_count = PythonScript.objects.filter(user=user).count()
+            if file_count > 0:
+                users_with_files.append({
+                    'user': user,
+                    'file_count': file_count
+                })
+    except Exception as e:
+        print(f"Error loading user files: {e}")
+        pass
+    
+    # Calculate average files per user
+    avg_files_per_user = round(total_files / total_users, 1) if total_users > 0 else 0
     
     # Pagination
     page = request.GET.get('page', 1)
@@ -386,6 +497,25 @@ def admin_panel_view(request):
         'free_users_count': free_count,
         'superusers_count': super_count,
         'new_users_week': new_users_week,
+        'new_users_today': new_users_today,
+        'premium_users': premium_users,
+        'premium_percentage': premium_percentage,
+        'active_sessions': active_sessions,
+        'total_files': total_files,
+        'files_today': files_today,
+        'server_uptime': server_uptime,
+        'cpu_percent': cpu_percent,
+        'memory_percent': memory_percent,
+        'memory_used_gb': memory_used_gb,
+        'memory_total_gb': memory_total_gb,
+        'disk_percent': disk_percent,
+        'disk_used_gb': disk_used_gb,
+        'disk_total_gb': disk_total_gb,
+        'recent_activities': recent_activities,
+        'registration_data': registration_data,
+        'users_with_files': users_with_files,
+        'user_files': user_files,
+        'avg_files_per_user': avg_files_per_user,
         'filter_type': filter_type,
         'search_query': search_query,
         'paginator': paginator,

@@ -2766,51 +2766,53 @@
                         </div>
                         <div class="cell-input">
                             <textarea class="cell-textarea" placeholder="# Welcome to Notebook Mode!
-# This is a Jupyter-style notebook interface
-# Press Shift+Enter to run a cell
+# Write your Python code here
+# Press Shift+Enter to run
 
+import numpy as np
 import matplotlib.pyplot as plt
-import numpy as np
 
-# Create a simple plot
-x = np.linspace(0, 10, 100)
-y = np.sin(x)
-
-plt.figure(figsize=(8, 4))
-plt.plot(x, y, 'b-', linewidth=2)
-plt.title('Sine Wave')
-plt.xlabel('x')
-plt.ylabel('sin(x)')
-plt.grid(True, alpha=0.3)
-plt.show()">import matplotlib.pyplot as plt
-import numpy as np
-import sys
-
-print("Python Notebook Mode Active")
-print(f"Available: NumPy, Matplotlib, Pandas, SciPy, Scikit-learn, SymPy, NetworkX, Seaborn")
-print(f"Python {'.'.join(map(str, sys.version_info[:3]))} running in WebAssembly")
-
-x = np.linspace(0, 4*np.pi, 200)
-y1 = np.sin(x) 
-y2 = np.cos(x)
-
-plt.figure(figsize=(10, 6))
-plt.plot(x, y1, 'b-', linewidth=2, label='sin(x)', alpha=0.8)
-plt.plot(x, y2, 'r--', linewidth=2, label='cos(x)', alpha=0.8)
-plt.fill_between(x, y1, alpha=0.2, color='blue')
-plt.title('Trigonometric Functions Visualization', fontsize=14, fontweight='bold')
-plt.xlabel('x (radians)')
-plt.ylabel('f(x)')
-plt.legend()
-plt.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.show()</textarea>
+print('Hello from Python Notebook!')">import numpy as np
+print('Welcome to Python Notebook Mode!')
+print('Available packages: NumPy, Matplotlib, Pandas, SciPy, Scikit-learn')
+</textarea>
                         </div>
                         <div class="cell-output" id="output-1"></div>
                     </div>
+                </div>
+                
+                <button class="add-cell-btn" onclick="addNotebookCell('code')">
+                    + Add Cell
+                </button>
+                
+                <div class="notebook-stats">
+                    <div>Cells: <span id="cell-count">1</span></div>
+                    <div>Mode: Notebook</div>
+                </div>
+            </div>
+        </div>
 
-                    
-                    <div class="notebook-cell code-cell" data-cell-id="2" data-cell-type="code">
+        
+        <div class="file-viewers">
+            <div class="file-viewer">
+                <h3>text.txt</h3>
+                <div class="file-content" id="text-content">Loading from Pyodide...</div>
+            </div>
+
+            <div class="file-viewer">
+                <h3>tester.csv</h3>
+                <div class="file-content" id="csv-content">Loading from Pyodide...</div>
+            </div>
+
+            <div class="file-viewer">
+                <h3>binary.dat</h3>
+                <div class="file-content" id="binary-content">Loading from Pyodide...</div>
+                <div class="file-content binary-hex" id="binary-hex" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
                         <div class="cell-header">
                             <div class="cell-type">
                                 <span class="cell-execution-count">In [2]:</span>
@@ -3543,22 +3545,6 @@ print("⏰ Timeout: 20 seconds (returns empty string if no input)")</textarea>
                 <div class="file-content binary-hex" id="binary-hex" style="display: none;"></div>
             </div>
         </div>
-    </div>
-
-    <!-- Mobile Code Toolbar -->
-    <div class="mobile-toolbar" id="mobile-toolbar" style="display: none;">
-        <button onclick="insertText('def ')">def</button>
-        <button onclick="insertText('for ')">for</button>
-        <button onclick="insertText('if ')">if</button>
-        <button onclick="insertText('import ')">import</button>
-        <button onclick="insertText('print()')">print</button>
-        <button onclick="insertText('    ')">Tab</button>
-        <button onclick="insertText('[]')">[ ]</button>
-        <button onclick="insertText('()')">( )</button>
-        <button onclick="insertText('{}')">{ }</button>
-        <button onclick="insertText('\"\"')">" "</button>
-        <button onclick="insertText(':'  )">:</button>
-        <button onclick="insertText('=')">=</button>
     </div>
 
     <!-- History Modal -->
@@ -6506,11 +6492,17 @@ sys.stderr = _old_stderr
                 outputElement.innerHTML = output;
                 outputElement.style.color = stderr ? '#ff4444' : '#fff';
                 
+                // Save execution to history
+                saveExecutionToHistory(code, stdout || output, stderr, executionTime, !stderr);
+                
             } catch (error) {
                 const executionTime = (performance.now() - startTime).toFixed(2);
                 outputElement.innerHTML = `<span style="color: #ff4444;">JavaScript Error: ${error.message}</span>\n<span style="color: #666; font-size: 11px;">[TIME] Failed after ${executionTime}ms</span>`;
                 outputElement.style.color = '#ff4444';
                 outputElement.classList.add('has-output');
+                
+                // Save failed execution to history
+                saveExecutionToHistory(code, '', error.message, executionTime, false);
             }
         }
 
@@ -6540,7 +6532,7 @@ sys.stderr = _old_stderr
                         <div class="theme-preview" style="background: linear-gradient(135deg, #1a1d2e 0%, #ff4444 100%);"></div>
                         <div class="theme-info">
                             <div class="theme-name">Greydom</div>
-                            <div class="theme-desc">Dark Grey-Blue</div>
+                            <div class="theme-desc">Dark Grey & Red</div>
                         </div>
                         <div class="theme-check">✓</div>
                     </div>

@@ -1079,20 +1079,39 @@
                         <div class="stat-label">System Status</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">{{ uptime|default:"N/A" }}</div>
-                        <div class="stat-label">Uptime</div>
+                        <div class="stat-value">{{ server_uptime|default:"N/A" }}</div>
+                        <div class="stat-label">Server Uptime</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">{{ db_size|default:"N/A" }}</div>
-                        <div class="stat-label">Database Size</div>
+                        <div class="stat-value">{{ cpu_percent|default:0 }}%</div>
+                        <div class="stat-label">CPU Usage</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">{{ response_time|default:"N/A" }}</div>
-                        <div class="stat-label">Avg Response Time</div>
+                        <div class="stat-value">{{ memory_percent|default:0 }}%</div>
+                        <div class="stat-label">Memory Usage</div>
+                    </div>
+                </div>
+                
+                <div class="stats-grid" style="margin-top: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ memory_used_gb|default:0 }}GB / {{ memory_total_gb|default:0 }}GB</div>
+                        <div class="stat-label">RAM</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ disk_used_gb|default:0 }}GB / {{ disk_total_gb|default:0 }}GB</div>
+                        <div class="stat-label">Disk Space</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ disk_percent|default:0 }}%</div>
+                        <div class="stat-label">Disk Usage</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{ total_files|default:0 }}</div>
+                        <div class="stat-label">Total Scripts</div>
                     </div>
                 </div>
 
-                <div class="setting-card" style="background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); border: 2px solid #ffffff; padding: 25px;">
+                <div class="setting-card" style="background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); border: 2px solid #ffffff; padding: 25px; margin-top: 20px;">
                     <div class="setting-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <h3 style="font-size: 1.2rem; color: #ffffff;">System Maintenance</h3>
                     </div>
