@@ -2224,28 +2224,26 @@
                 return;
             }
             
-            showNotification(`Checking ${packageName}...`, 'info');
+            // List of pre-installed packages
+            const preInstalledPackages = [
+                'matplotlib', 'numpy', 'pandas', 'scipy', 'scikit-learn', 
+                'requests', 'beautifulsoup4', 'bs4', 'lxml', 'pillow', 
+                'django', 'psutil', 'json', 'csv', 'math', 'random', 
+                'datetime', 'os', 'sys', 're', 'time', 'itertools', 
+                'collections', 'functools', 'pathlib'
+            ];
             
-            try {
-                const response = await fetch(`/api/ide/projects/${PROJECT_ID}/packages/install/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': CSRF_TOKEN
-                    },
-                    body: JSON.stringify({ package_name: packageName })
-                });
-                
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    showNotification(data.message || `${packageName} is available!`, 'success');
-                    document.getElementById('packageName').value = '';
-                } else {
-                    showNotification(data.message || `Package ${packageName} not found`, 'error');
-                }
-            } catch (error) {
-                showNotification(`Error checking ${packageName}: ${error.message}`, 'error');
+            const packageLower = packageName.toLowerCase().trim();
+            
+            if (preInstalledPackages.includes(packageLower)) {
+                showNotification(`✓ ${packageName} is already available!`, 'success');
+                document.getElementById('packageName').value = '';
+            } else {
+                showNotification(
+                    `Package '${packageName}' is not available in this environment. ` +
+                    `Available: matplotlib, numpy, pandas, scipy, scikit-learn, requests, beautifulsoup4, lxml`,
+                    'error'
+                );
             }
         }
         

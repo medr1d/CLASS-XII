@@ -92,6 +92,7 @@ urlpatterns = [
     path('api/servers/', server_views.list_user_servers, name='list_user_servers'),
     path('api/servers/create/', server_views.create_server, name='create_server'),
     path('api/servers/<uuid:server_id>/', server_views.get_server_details, name='get_server_details'),
+    path('api/servers/<uuid:server_id>/update/', server_views.update_server_settings, name='update_server_settings'),
     path('api/servers/<uuid:server_id>/delete/', server_views.delete_server, name='delete_server'),
     path('api/servers/<uuid:server_id>/leave/', server_views.leave_server, name='leave_server'),
     path('api/servers/join/', server_views.join_server, name='join_server'),

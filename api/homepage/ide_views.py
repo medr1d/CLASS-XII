@@ -823,38 +823,50 @@ def save_file(request, project_id):
                 )
             except Exception as dir_error:
                 print(f"Directory creation error: {dir_error}")
-                # Continue without directory
-                pass
+                import traceback
+                print(traceback.format_exc())
+                # Continue with directory=None - file will be created at root level
         
         # Create or update file
-        file, created = IDEFile.objects.update_or_create(
-            project=project,
-            path=file_path,
-            defaults={
-                'name': filename,
-                'content': content,
-                'directory': directory
-            }
-        )
-        
-        return JsonResponse({
-            'status': 'success',
-            'message': f'File {"created" if created else "updated"} successfully',
-            'file': {
-                'name': file.name,
-                'path': file.path,
-                'size': file.size,
-                'updated_at': file.updated_at.isoformat()
-            }
-        })
+        try:
+            file, created = IDEFile.objects.update_or_create(
+                project=project,
+                path=file_path,
+                defaults={
+                    'name': filename,
+                    'content': content,
+                    'directory': directory
+                }
+            )
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'File {"created" if created else "updated"} successfully',
+                'file': {
+                    'name': file.name,
+                    'path': file.path,
+                    'size': file.size,
+                    'updated_at': file.updated_at.isoformat()
+                }
+            })
+        except Exception as file_error:
+            print(f"File creation/update error: {file_error}")
+            import traceback
+            print(traceback.format_exc())
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Failed to save file: {str(file_error)}'
+            }, status=500)
         
     except IDEProject.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Project not found'}, status=404)
+    except json.JSONDecodeError as e:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
     except Exception as e:
         import traceback
         print(f"Error in save_file: {str(e)}")
         print(traceback.format_exc())
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        return JsonResponse({'status': 'error', 'message': f'Server error: {str(e)}'}, status=500)
 
 
 @login_required

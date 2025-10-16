@@ -94,9 +94,40 @@ def create_server(request):
         # Handle icon upload (if provided)
         icon_url = None
         if icon_file:
-            # TODO: Upload to Vercel Blob storage like profile pictures
-            # For now, we'll skip icon uploads
-            pass
+            try:
+                import vercel_blob
+                import os
+                
+                # Validate file
+                if not icon_file.content_type.startswith('image/'):
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Icon must be an image file'
+                    }, status=400)
+                
+                # Max 2MB for server icons
+                if icon_file.size > 2 * 1024 * 1024:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Icon too large (max 2MB)'
+                    }, status=400)
+                
+                # Get Vercel Blob token
+                blob_token = os.getenv('BLOB_READ_WRITE_TOKEN')
+                if blob_token:
+                    # Upload to Vercel Blob
+                    filename = f"server_icon_{request.user.id}_{int(timezone.now().timestamp())}.{icon_file.name.split('.')[-1]}"
+                    file_content = icon_file.read()
+                    response = vercel_blob.put(filename, file_content, {})
+                    
+                    if response and 'url' in response:
+                        icon_url = response['url']
+                else:
+                    print("Warning: BLOB_READ_WRITE_TOKEN not configured, skipping icon upload")
+            except Exception as upload_error:
+                print(f"Icon upload error: {upload_error}")
+                # Continue without icon if upload fails
+                pass
         
         # Create server
         server = Server.objects.create(
@@ -602,4 +633,105 @@ def discover_servers(request):
         return JsonResponse({
             'success': False,
             'error': str(e)
+        }, status=500)
+
+
+@login_required
+@require_POST
+def update_server_settings(request, server_id):
+    """Update server settings (name, description, icon)"""
+    try:
+        server = get_object_or_404(Server, server_id=server_id)
+        
+        # Check if user is owner or admin
+        membership = get_object_or_404(ServerMember, server=server, user=request.user)
+        if membership.role not in ['owner', 'admin']:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Only owners and admins can update server settings'
+            }, status=403)
+        
+        # Handle both JSON and FormData
+        if request.content_type and 'application/json' in request.content_type:
+            data = json.loads(request.body)
+            name = data.get('name')
+            description = data.get('description')
+            is_public = data.get('is_public')
+            icon_file = None
+        else:
+            # FormData
+            name = request.POST.get('name')
+            description = request.POST.get('description')
+            is_public = request.POST.get('is_public') == 'true'
+            icon_file = request.FILES.get('icon')
+        
+        # Update fields if provided
+        if name:
+            name = name.strip()
+            if len(name) > 100:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Server name must be 100 characters or less'
+                }, status=400)
+            server.name = name
+        
+        if description is not None:
+            server.description = description.strip()
+        
+        if is_public is not None:
+            server.is_public = is_public
+        
+        # Handle icon upload
+        if icon_file:
+            try:
+                import vercel_blob
+                import os
+                
+                # Validate file
+                if not icon_file.content_type.startswith('image/'):
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Icon must be an image file'
+                    }, status=400)
+                
+                if icon_file.size > 2 * 1024 * 1024:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Icon too large (max 2MB)'
+                    }, status=400)
+                
+                blob_token = os.getenv('BLOB_READ_WRITE_TOKEN')
+                if blob_token:
+                    filename = f"server_icon_{server.id}_{int(timezone.now().timestamp())}.{icon_file.name.split('.')[-1]}"
+                    file_content = icon_file.read()
+                    response = vercel_blob.put(filename, file_content, {})
+                    
+                    if response and 'url' in response:
+                        server.icon_url = response['url']
+            except Exception as upload_error:
+                print(f"Icon upload error: {upload_error}")
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Failed to upload icon: {str(upload_error)}'
+                }, status=500)
+        
+        server.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Server settings updated successfully',
+            'server': {
+                'server_id': str(server.server_id),
+                'name': server.name,
+                'description': server.description,
+                'icon_url': server.get_icon_url(),
+                'is_public': server.is_public
+            }
+        })
+    except Exception as e:
+        import traceback
+        print(f"Error updating server: {traceback.format_exc()}")
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
         }, status=500)
