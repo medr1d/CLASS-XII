@@ -503,6 +503,10 @@
             gap: 5px;
         }
 
+        .status-online {
+            color: #00ff88;
+        }
+
         /* Scrollbars */
         ::-webkit-scrollbar {
             width: 10px;
@@ -746,22 +750,212 @@
                 z-index: 100;
             }
         }
+
+        /* Enhanced Context Menu Styles */
+        .file-context-menu {
+            position: fixed;
+            background: linear-gradient(145deg, var(--bg-secondary), var(--bg-tertiary));
+            border: 1px solid var(--secondary-color);
+            border-radius: 6px;
+            padding: 6px 0;
+            min-width: 200px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border-color);
+            z-index: 10002;
+            display: none;
+            backdrop-filter: blur(10px);
+            animation: contextMenuFadeIn 0.15s ease-out;
+        }
+
+        .file-context-menu.active {
+            display: block;
+        }
+
+        @keyframes contextMenuFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            color: var(--text-color);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .context-menu-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--secondary-color);
+            transform: scaleY(0);
+            transition: transform 0.2s;
+        }
+
+        .context-menu-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .context-menu-item:hover {
+            background: linear-gradient(90deg, var(--secondary-color)15, transparent);
+            color: var(--text-bright);
+            padding-left: 20px;
+        }
+
+        .context-menu-item .icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .context-menu-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 4px 0;
+        }
+
+        /* Improved File Tree Animations */
+        .tree-node {
+            animation: fadeInSlide 0.3s ease-out;
+            transform-origin: left;
+        }
+
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .tree-node:hover {
+            background: linear-gradient(90deg, var(--secondary-color)10, transparent);
+            transform: translateX(2px);
+        }
+
+        /* Button Hover Effects */
+        .btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* Tab Animations */
+        .editor-tab, .terminal-tab {
+            animation: tabSlideIn 0.3s ease-out;
+        }
+
+        @keyframes tabSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Pulse Animation for Active Elements */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .status-item.online {
+            animation: pulse 2s infinite;
+        }
+
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-bright);
+        }
+
+        /* Loading Spinner */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-indicator {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
     </style>
 </head>
 <body class="theme-{{ user_theme }}">
     <div class="ide-container">
         <!-- Top Bar -->
         <div class="top-bar">
-            <div class="logo">☰ CLOUD IDE</div>
+            <div class="logo">CLOUD IDE</div>
             <div class="project-selector">
                 <span class="project-name">{{ current_project.name }}</span>
             </div>
             <div class="top-bar-actions">
-                <button class="btn btn-primary" onclick="runCode()">▶ RUN</button>
-                <button class="btn" onclick="saveCurrentFile()">💾 SAVE</button>
-                <button class="btn" onclick="showNewFileModal()">+ NEW FILE</button>
-                <button class="btn" onclick="showProjectModal()">📁 PROJECT</button>
-                <a href="/python/" class="btn">← BACK</a>
+                <button class="btn btn-primary" onclick="runCode()">RUN CODE</button>
+                <button class="btn" onclick="saveCurrentFile()">SAVE FILE</button>
+                <button class="btn" onclick="showProjectModal()">PROJECTS</button>
+                <a href="/python/" class="btn">BACK</a>
             </div>
         </div>
 
@@ -770,9 +964,9 @@
             <div class="sidebar-header">
                 <span class="sidebar-title">FILES</span>
                 <div style="display: flex; gap: 5px;">
-                    <button class="btn btn-sm" onclick="triggerFileUpload()" title="Upload Files" style="padding: 4px 8px; font-size: 11px;">📤 UPLOAD</button>
-                    <button class="btn btn-sm" onclick="downloadProject()" title="Download Project as ZIP" style="padding: 4px 8px; font-size: 11px;">📥 ZIP</button>
-                    <button class="btn btn-sm" onclick="refreshFileTree()" title="Refresh File Tree" style="padding: 4px 8px; font-size: 11px;">↻</button>
+                    <button class="btn btn-sm" onclick="triggerFileUpload()" title="Upload Files" style="padding: 4px 8px; font-size: 11px;">UPLOAD</button>
+                    <button class="btn btn-sm" onclick="downloadProject()" title="Download Project as ZIP" style="padding: 4px 8px; font-size: 11px;">ZIP</button>
+                    <button class="btn btn-sm" onclick="refreshFileTree()" title="Refresh File Tree" style="padding: 4px 8px; font-size: 11px;">REFRESH</button>
                 </div>
             </div>
             <input type="file" id="fileUploadInput" multiple style="display: none;" onchange="handleFileUpload(event)">
@@ -811,11 +1005,11 @@
         <div class="status-bar">
             <div class="status-left">
                 <div class="status-item">
-                    <span>👤</span>
+                    <span>User:</span>
                     <span>{{ user.username }}</span>
                 </div>
                 <div class="status-item" id="statusFile">
-                    <span>📄</span>
+                    <span>File:</span>
                     <span>main.py</span>
                 </div>
                 <div class="status-item" id="statusEncoding">
@@ -830,7 +1024,7 @@
                     <span>Python</span>
                 </div>
                 <div class="status-item">
-                    <span>🟢 ONLINE</span>
+                    <span class="status-online">● ONLINE</span>
                 </div>
             </div>
         </div>
@@ -1229,8 +1423,10 @@
                 const nodeElement = document.createElement('div');
                 nodeElement.className = 'tree-node';
                 nodeElement.style.paddingLeft = (level * 20 + 10) + 'px';
+                nodeElement.dataset.path = node.path;
+                nodeElement.dataset.type = node.type;
                 
-                const icon = node.type === 'directory' ? '📁' : getFileIcon(node.file_type);
+                const icon = node.type === 'directory' ? '▶' : getFileIcon(node.file_type);
                 nodeElement.innerHTML = `
                     <span class="tree-node-icon">${icon}</span>
                     <span>${node.name}</span>
@@ -1242,9 +1438,10 @@
                 
                 if (node.type === 'file') {
                     nodeElement.onclick = () => openFile(node.path);
-                    // Add right-click context menu
-                    nodeElement.oncontextmenu = (e) => showContextMenu(e, node.path);
                 }
+                
+                // Add context menu for all nodes
+                nodeElement.oncontextmenu = (e) => showContextMenu(e, node.path, node.type);
                 
                 container.appendChild(nodeElement);
                 
@@ -1256,16 +1453,16 @@
         
         function getFileIcon(fileType) {
             const icons = {
-                'python': '🐍',
-                'text': '📄',
-                'json': '📋',
-                'csv': '📊',
-                'markdown': '📝',
-                'html': '🌐',
-                'css': '🎨',
-                'javascript': '⚡'
+                'python': '●',
+                'text': '▫',
+                'json': '{}',
+                'csv': '▤',
+                'markdown': 'M',
+                'html': '<>',
+                'css': '#',
+                'javascript': 'JS'
             };
-            return icons[fileType] || '📄';
+            return icons[fileType] || '▫';
         }
         
         // File Operations
@@ -1496,7 +1693,7 @@
             
             if (currentFile) {
                 const fileName = currentFile.split('/').pop();
-                document.getElementById('statusFile').innerHTML = `<span>📄</span><span>${fileName}</span>`;
+                document.getElementById('statusFile').innerHTML = `<span>File:</span><span>${fileName}</span>`;
             }
         }
         
@@ -1538,8 +1735,6 @@
         });
 
         // File Upload/Download Functions
-        let contextMenuTarget = null;
-
         function triggerFileUpload() {
             document.getElementById('fileUploadInput').click();
         }
@@ -1642,27 +1837,307 @@
         }
 
         // Context Menu Functions
-        function showContextMenu(event, filePath) {
+        let contextMenuTarget = null;
+        let contextMenuType = null;
+
+        function showContextMenu(event, filePath, type) {
             event.preventDefault();
+            event.stopPropagation();
+            
             contextMenuTarget = filePath;
+            contextMenuType = type;
             
             const menu = document.getElementById('contextMenu');
+            menu.innerHTML = ''; // Clear existing items
+            
+            // Build menu based on type
+            if (type === 'file') {
+                menu.innerHTML = `
+                    <div class="context-menu-item" onclick="copyFileContents()">
+                        <span>Copy Contents</span>
+                    </div>
+                    <div class="context-menu-item" onclick="renameItem()">
+                        <span>Rename</span>
+                    </div>
+                    <div class="context-menu-item" onclick="downloadFile()">
+                        <span>Download</span>
+                    </div>
+                    <div class="context-menu-divider"></div>
+                    <div class="context-menu-item" style="color: #ff4444;" onclick="deleteItem()">
+                        <span>Delete</span>
+                    </div>
+                `;
+            } else if (type === 'directory') {
+                menu.innerHTML = `
+                    <div class="context-menu-item" onclick="showNewFileDialog()">
+                        <span>New File</span>
+                    </div>
+                    <div class="context-menu-item" onclick="showNewFolderDialog()">
+                        <span>New Folder</span>
+                    </div>
+                    <div class="context-menu-divider"></div>
+                    <div class="context-menu-item" onclick="renameItem()">
+                        <span>Rename</span>
+                    </div>
+                    <div class="context-menu-item" style="color: #ff4444;" onclick="deleteItem()">
+                        <span>Delete</span>
+                    </div>
+                `;
+            }
+            
+            // Position menu at mouse coordinates
             menu.style.left = event.pageX + 'px';
             menu.style.top = event.pageY + 'px';
             menu.classList.add('active');
         }
 
         function closeContextMenu() {
-            document.getElementById('contextMenu').classList.remove('active');
+            const menu = document.getElementById('contextMenu');
+            menu.classList.remove('active');
             contextMenuTarget = null;
+            contextMenuType = null;
         }
 
         // Close context menu when clicking outside
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.context-menu')) {
+            if (!e.target.closest('.file-context-menu')) {
                 closeContextMenu();
             }
         });
+
+        // Add context menu to file tree empty space
+        document.addEventListener('DOMContentLoaded', () => {
+            const fileTree = document.getElementById('fileTree');
+            
+            fileTree.addEventListener('contextmenu', (e) => {
+                // Only show if clicking on empty space (the fileTree itself, not a child)
+                if (e.target === fileTree) {
+                    e.preventDefault();
+                    
+                    const menu = document.getElementById('contextMenu');
+                    menu.innerHTML = `
+                        <div class="context-menu-item" onclick="showNewFileDialog()">
+                            <span>New File</span>
+                        </div>
+                        <div class="context-menu-item" onclick="showNewFolderDialog()">
+                            <span>New Folder</span>
+                        </div>
+                    `;
+                    
+                    menu.style.left = e.pageX + 'px';
+                    menu.style.top = e.pageY + 'px';
+                    menu.classList.add('active');
+                    
+                    contextMenuTarget = null;
+                    contextMenuType = 'empty';
+                }
+            });
+        });
+
+        // Context Menu Actions
+        async function copyFileContents() {
+            closeContextMenu();
+            if (!contextMenuTarget) return;
+            
+            try {
+                const response = await fetch(`/api/ide/file/${currentProjectId}/?path=${encodeURIComponent(contextMenuTarget)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    await navigator.clipboard.writeText(data.content);
+                    showNotification('File contents copied to clipboard!', 'success');
+                } else {
+                    showNotification('Failed to copy file contents', 'error');
+                }
+            } catch (error) {
+                console.error('Error copying file:', error);
+                showNotification('Error copying file contents', 'error');
+            }
+        }
+
+        async function renameItem() {
+            closeContextMenu();
+            if (!contextMenuTarget) return;
+            
+            const currentName = contextMenuTarget.split('/').pop();
+            const newName = prompt(`Rename ${contextMenuType}:`, currentName);
+            
+            if (!newName || newName === currentName) return;
+            
+            try {
+                const response = await fetch(`/api/ide/rename/${currentProjectId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        old_path: contextMenuTarget,
+                        new_name: newName,
+                        type: contextMenuType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(`${contextMenuType} renamed successfully!`, 'success');
+                    await loadFileTree();
+                } else {
+                    showNotification(data.error || 'Failed to rename', 'error');
+                }
+            } catch (error) {
+                console.error('Error renaming:', error);
+                showNotification('Error renaming item', 'error');
+            }
+        }
+
+        async function deleteItem() {
+            closeContextMenu();
+            if (!contextMenuTarget) return;
+            
+            if (!confirm(`Are you sure you want to delete this ${contextMenuType}?`)) return;
+            
+            try {
+                const response = await fetch(`/api/ide/delete/${currentProjectId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        path: contextMenuTarget,
+                        type: contextMenuType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(`${contextMenuType} deleted successfully!`, 'success');
+                    await loadFileTree();
+                    
+                    // Close tab if it's the current file
+                    if (contextMenuType === 'file' && currentFile === contextMenuTarget) {
+                        closeTab(contextMenuTarget);
+                    }
+                } else {
+                    showNotification(data.error || 'Failed to delete', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting:', error);
+                showNotification('Error deleting item', 'error');
+            }
+        }
+
+        function showNewFileDialog() {
+            closeContextMenu();
+            const fileName = prompt('Enter file name (with extension):');
+            
+            if (!fileName) return;
+            
+            createNewFile(fileName);
+        }
+
+        function showNewFolderDialog() {
+            closeContextMenu();
+            const folderName = prompt('Enter folder name:');
+            
+            if (!folderName) return;
+            
+            createNewFolder(folderName);
+        }
+
+        async function createNewFile(fileName) {
+            try {
+                const basePath = contextMenuTarget || '';
+                const fullPath = basePath ? `${basePath}/${fileName}` : fileName;
+                
+                const response = await fetch(`/api/ide/file/${currentProjectId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        path: fullPath,
+                        content: ''
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('File created successfully!', 'success');
+                    await loadFileTree();
+                    openFile(fullPath);
+                } else {
+                    showNotification(data.error || 'Failed to create file', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating file:', error);
+                showNotification('Error creating file', 'error');
+            }
+        }
+
+        async function createNewFolder(folderName) {
+            try {
+                const basePath = contextMenuTarget || '';
+                const fullPath = basePath ? `${basePath}/${folderName}` : folderName;
+                
+                const response = await fetch(`/api/ide/directory/${currentProjectId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        path: fullPath
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Folder created successfully!', 'success');
+                    await loadFileTree();
+                } else {
+                    showNotification(data.error || 'Failed to create folder', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating folder:', error);
+                showNotification('Error creating folder', 'error');
+            }
+        }
+
+        async function downloadFile() {
+            closeContextMenu();
+            if (!contextMenuTarget) return;
+            
+            try {
+                const response = await fetch(`/api/ide/file/${currentProjectId}/?path=${encodeURIComponent(contextMenuTarget)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const blob = new Blob([data.content], { type: 'text/plain' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = contextMenuTarget.split('/').pop();
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    showNotification('File downloaded!', 'success');
+                } else {
+                    showNotification('Failed to download file', 'error');
+                }
+            } catch (error) {
+                console.error('Error downloading file:', error);
+                showNotification('Error downloading file', 'error');
+            }
+        }
 
         // Drag and Drop Support
         document.addEventListener('DOMContentLoaded', () => {
@@ -1692,17 +2167,8 @@
     </script>
 
     <!-- Context Menu -->
-    <div class="context-menu" id="contextMenu">
-        <div class="context-menu-item" onclick="downloadFile(contextMenuTarget)">
-            📥 Download
-        </div>
-        <div class="context-menu-item" onclick="renameFile(contextMenuTarget)">
-            ✏️ Rename
-        </div>
-        <div class="context-menu-divider"></div>
-        <div class="context-menu-item" style="color: #ff4444;" onclick="deleteFile(contextMenuTarget)">
-            🗑️ Delete
-        </div>
+    <div class="file-context-menu" id="contextMenu">
+        <!-- Context menu items will be dynamically populated -->
     </div>
 
 </body>
