@@ -2743,21 +2743,6 @@
             // Make messages container visible
             messagesContainer.style.display = 'flex';
         }
-                        <!-- Members List -->
-                        <div style="width: 180px; border: 2px solid var(--border-color); padding: 10px; overflow-y: auto;">
-                            <div style="font-size: 10px; font-weight: bold; margin-bottom: 10px;">MEMBERS (${serverData.members.length})</div>
-                            ${serverData.members.map(member => `
-                                <div style="padding: 5px; font-size: 8px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
-                                    <div style="width: 8px; height: 8px; background: ${member.is_online ? 'var(--online-color)' : 'var(--offline-color)'}; border-radius: 50%;"></div>
-                                    <span style="color: ${member.role === 'owner' ? '#ffaa00' : (member.role === 'admin' ? '#ff5555' : 'var(--text-color)')};">${member.nickname || member.username}</span>
-                                    ${member.role !== 'member' ? `<span style="font-size: 6px; color: var(--text-muted);">[${member.role}]</span>` : ''}
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
 
         // Select and load a channel's messages
         function selectChannel(channelId) {
