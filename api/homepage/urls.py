@@ -79,6 +79,9 @@ urlpatterns = [
     path('api/ide/projects/<uuid:project_id>/execute/', ide_views.execute_code, name='ide_execute_code'),
     path('api/ide/projects/<uuid:project_id>/history/', ide_views.get_execution_history, name='ide_execution_history'),
     
+    # Package management
+    path('api/ide/projects/<uuid:project_id>/packages/install/', ide_views.install_package, name='ide_install_package'),
+    
     # Terminal session
     path('api/ide/projects/<uuid:project_id>/terminal/', ide_views.get_terminal_session, name='ide_get_terminal'),
     path('api/ide/projects/<uuid:project_id>/terminal/clear/', ide_views.clear_terminal, name='ide_clear_terminal'),
