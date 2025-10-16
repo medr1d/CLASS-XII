@@ -98,8 +98,12 @@ urlpatterns = [
     path('api/servers/join/', server_views.join_server, name='join_server'),
     path('api/servers/discover/', server_views.discover_servers, name='discover_servers'),
     
+    # Server invites
+    path('api/servers/<uuid:server_id>/invites/', server_views.get_server_invites, name='get_server_invites'),
+    path('api/servers/<uuid:server_id>/invites/create/', server_views.create_invite, name='create_invite'),
+    path('api/servers/invites/join/', server_views.join_server_by_invite, name='join_server_by_invite'),
+    
     # Channel management
-    path('api/servers/<uuid:server_id>/channels/create/', server_views.create_channel, name='create_channel'),
     path('api/channels/<uuid:channel_id>/', server_views.get_channel_messages, name='get_channel_messages'),
     path('api/channels/<uuid:channel_id>/send/', server_views.send_message, name='send_server_message'),
 ]

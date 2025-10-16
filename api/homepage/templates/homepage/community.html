@@ -2679,7 +2679,12 @@
                 ? `<button onclick="showServerSettingsModal()" style="margin-left: 15px; padding: 4px 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); cursor: pointer; font-size: 8px;">⚙️ SETTINGS</button>`
                 : '';
             
-            contentTitle.innerHTML = `>>> ${serverData.server.name} ${settingsBtn}`;
+            // Add invite button for owners/admins
+            const inviteBtn = serverData.user_role === 'owner' || serverData.user_role === 'admin' 
+                ? `<button onclick="showInviteModal()" style="margin-left: 10px; padding: 4px 12px; background: var(--accent-color); border: 1px solid var(--border-color); cursor: pointer; font-size: 8px;">📨 INVITE</button>`
+                : '';
+            
+            contentTitle.innerHTML = `>>> ${serverData.server.name} ${settingsBtn}${inviteBtn}`;
             
             // Hide DM view, show server view
             const messagesContainer = document.getElementById('messagesContainer');
@@ -3159,6 +3164,189 @@
             });
         }
         
+        // ==================== INVITE FUNCTIONS ====================
+        
+        function showInviteModal() {
+            if (!currentServer) return;
+            
+            const modal = document.getElementById('inviteModal');
+            modal.style.display = 'block';
+            
+            // Hide invite link container initially
+            document.getElementById('inviteLinkContainer').style.display = 'none';
+            
+            // Load existing invites
+            loadActiveInvites();
+        }
+        
+        function hideInviteModal() {
+            const modal = document.getElementById('inviteModal');
+            modal.style.display = 'none';
+        }
+        
+        function generateInvite() {
+            if (!currentServer) return;
+            
+            const expiryHours = parseInt(document.getElementById('inviteExpiry').value) || null;
+            const maxUses = document.getElementById('inviteMaxUses').value;
+            
+            fetch(`/api/servers/${currentServer.server.server_id}/invites/create/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    expires_in_hours: expiryHours === 0 ? null : expiryHours,
+                    max_uses: maxUses ? parseInt(maxUses) : null
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show the invite link
+                    document.getElementById('inviteLinkContainer').style.display = 'block';
+                    document.getElementById('inviteLink').value = data.invite.full_url;
+                    
+                    // Show invite info
+                    const expiryText = data.invite.expires_at ? new Date(data.invite.expires_at).toLocaleString() : 'Never';
+                    const usesText = data.invite.max_uses ? `${data.invite.uses}/${data.invite.max_uses}` : `${data.invite.uses}/∞`;
+                    document.getElementById('inviteLinkInfo').textContent = `Expires: ${expiryText} | Uses: ${usesText}`;
+                    
+                    // Reload active invites list
+                    loadActiveInvites();
+                } else {
+                    alert(data.message || 'Failed to generate invite');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error generating invite');
+            });
+        }
+        
+        function copyInviteLink() {
+            const linkInput = document.getElementById('inviteLink');
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999); // For mobile
+            
+            navigator.clipboard.writeText(linkInput.value).then(() => {
+                alert('Invite link copied to clipboard!');
+            }).catch(() => {
+                // Fallback
+                document.execCommand('copy');
+                alert('Invite link copied to clipboard!');
+            });
+        }
+        
+        function loadActiveInvites() {
+            if (!currentServer) return;
+            
+            const container = document.getElementById('activeInvitesList');
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 10px;">Loading...</div>';
+            
+            fetch(`/api/servers/${currentServer.server.server_id}/invites/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.invites.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 10px;">No active invites</div>';
+                    } else {
+                        container.innerHTML = data.invites.map(invite => {
+                            const expiryText = invite.expires_at ? new Date(invite.expires_at).toLocaleString() : 'Never';
+                            const usesText = invite.max_uses ? `${invite.uses}/${invite.max_uses}` : `${invite.uses}/∞`;
+                            const validBadge = invite.is_valid 
+                                ? '<span style="color: #00ff00; font-size: 8px;">✓ ACTIVE</span>'
+                                : '<span style="color: #ff5555; font-size: 8px;">✗ EXPIRED</span>';
+                            
+                            return `
+                                <div style="padding: 12px; margin-bottom: 10px; background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 4px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-family: 'Courier New', monospace; font-size: 10px; color: var(--text-color);">${invite.code}</span>
+                                        ${validBadge}
+                                    </div>
+                                    <div style="font-size: 9px; color: var(--text-muted); margin-bottom: 4px;">
+                                        Created by: ${invite.created_by}
+                                    </div>
+                                    <div style="font-size: 9px; color: var(--text-muted); margin-bottom: 4px;">
+                                        Uses: ${usesText} | Expires: ${expiryText}
+                                    </div>
+                                    <button onclick="copyInviteCode('${invite.full_url}')" class="modal-btn" style="padding: 4px 10px; font-size: 8px; margin-top: 5px;">COPY LINK</button>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                } else {
+                    container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-color); font-size: 10px;">Failed to load invites</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-color); font-size: 10px;">Error loading invites</div>';
+            });
+        }
+        
+        function copyInviteCode(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Invite link copied to clipboard!');
+            }).catch(() => {
+                // Fallback
+                const tempInput = document.createElement('input');
+                tempInput.value = url;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                alert('Invite link copied to clipboard!');
+            });
+        }
+        
+        // Check for invite code in URL on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const inviteCode = urlParams.get('invite');
+            
+            if (inviteCode) {
+                // Auto-join server from invite
+                fetch('/api/servers/invites/join/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        invite_code: inviteCode
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.already_member) {
+                            alert(`You're already a member of this server!`);
+                        } else {
+                            alert(data.message);
+                        }
+                        // Remove invite param from URL
+                        window.history.replaceState({}, document.title, '/community/');
+                        // Reload servers and select the joined one
+                        loadServers().then(() => {
+                            if (data.server && data.server.server_id) {
+                                selectServer(data.server.server_id);
+                            }
+                        });
+                    } else {
+                        alert(data.message || 'Failed to join server');
+                        window.history.replaceState({}, document.title, '/community/');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error joining server');
+                    window.history.replaceState({}, document.title, '/community/');
+                });
+            }
+        });
+        
         // Hide loading screen after page loads
         window.addEventListener('load', () => {
             setTimeout(() => {
@@ -3336,6 +3524,67 @@
                         <button type="button" class="modal-btn" onclick="hideServerSettingsModal()">CANCEL</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Modal -->
+    <div id="inviteModal" class="modal" style="display: none;">
+        <div class="modal-overlay" onclick="hideInviteModal()">
+            <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 500px;">
+                <h2 style="margin-bottom: 20px; color: var(--text-color);">INVITE PEOPLE</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; color: var(--text-color); font-size: 12px;">Generate New Invite Link</label>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 5px;">Expires After</label>
+                            <select id="inviteExpiry" style="width: 100%; padding: 8px; background: var(--bg-primary); color: var(--text-color); border: 2px solid var(--border-color); font-family: 'Courier New', monospace; font-size: 10px;">
+                                <option value="1">1 Hour</option>
+                                <option value="6">6 Hours</option>
+                                <option value="12">12 Hours</option>
+                                <option value="24" selected>24 Hours</option>
+                                <option value="168">7 Days</option>
+                                <option value="0">Never</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 5px;">Max Uses</label>
+                            <select id="inviteMaxUses" style="width: 100%; padding: 8px; background: var(--bg-primary); color: var(--text-color); border: 2px solid var(--border-color); font-family: 'Courier New', monospace; font-size: 10px;">
+                                <option value="">Unlimited</option>
+                                <option value="1">1 Use</option>
+                                <option value="5">5 Uses</option>
+                                <option value="10">10 Uses</option>
+                                <option value="25">25 Uses</option>
+                                <option value="50">50 Uses</option>
+                                <option value="100">100 Uses</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="modal-btn primary" onclick="generateInvite()" style="width: 100%;">GENERATE INVITE LINK</button>
+                </div>
+                
+                <div id="inviteLinkContainer" style="display: none; margin-bottom: 20px; padding: 15px; background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 4px;">
+                    <label style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 5px;">INVITE LINK</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="inviteLink" readonly style="flex: 1; padding: 8px; background: var(--bg-primary); color: var(--text-color); border: 2px solid var(--border-color); font-family: 'Courier New', monospace; font-size: 9px;">
+                        <button type="button" class="modal-btn" onclick="copyInviteLink()" style="padding: 8px 16px;">COPY</button>
+                    </div>
+                    <div id="inviteLinkInfo" style="font-size: 9px; color: var(--text-muted); margin-top: 8px;"></div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; color: var(--text-color); font-size: 12px;">Active Invites</label>
+                    <div id="activeInvitesList" style="max-height: 200px; overflow-y: auto;">
+                        <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 10px;">Loading...</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button type="button" class="modal-btn" onclick="hideInviteModal()">CLOSE</button>
+                </div>
             </div>
         </div>
     </div>

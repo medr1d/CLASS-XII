@@ -735,3 +735,166 @@ def update_server_settings(request, server_id):
             'status': 'error',
             'message': str(e)
         }, status=500)
+
+
+@require_POST
+@login_required
+def create_invite(request, server_id):
+    """Create an invite link for a server"""
+    try:
+        server = get_object_or_404(Server, server_id=server_id)
+        
+        # Check if user is a member
+        membership = ServerMember.objects.filter(server=server, user=request.user).first()
+        if not membership:
+            return JsonResponse({'success': False, 'message': 'Not a member of this server'}, status=403)
+        
+        # Check permissions (only owner, admin, or members with permission can invite)
+        if membership.role not in ['owner', 'admin']:
+            return JsonResponse({'success': False, 'message': 'No permission to create invites'}, status=403)
+        
+        data = json.loads(request.body)
+        max_uses = data.get('max_uses')  # None = unlimited
+        expires_in_hours = data.get('expires_in_hours', 24)  # Default 24 hours
+        
+        # Generate unique invite code
+        import random
+        import string
+        invite_code = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+        
+        # Calculate expiry
+        expires_at = None
+        if expires_in_hours:
+            from datetime import timedelta
+            expires_at = timezone.now() + timedelta(hours=expires_in_hours)
+        
+        # Create invite
+        invite = ServerInvite.objects.create(
+            invite_code=invite_code,
+            server=server,
+            created_by=request.user,
+            max_uses=max_uses,
+            expires_at=expires_at
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'invite': {
+                'code': invite.invite_code,
+                'url': f'/community/?invite={invite.invite_code}',
+                'full_url': request.build_absolute_uri(f'/community/?invite={invite.invite_code}'),
+                'max_uses': invite.max_uses,
+                'uses': invite.uses,
+                'expires_at': invite.expires_at.isoformat() if invite.expires_at else None,
+                'created_at': invite.created_at.isoformat()
+            }
+        })
+    except Exception as e:
+        import traceback
+        print(f"Error creating invite: {traceback.format_exc()}")
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@require_GET
+@login_required
+def get_server_invites(request, server_id):
+    """Get all active invites for a server"""
+    try:
+        server = get_object_or_404(Server, server_id=server_id)
+        
+        # Check if user is a member
+        membership = ServerMember.objects.filter(server=server, user=request.user).first()
+        if not membership:
+            return JsonResponse({'success': False, 'message': 'Not a member of this server'}, status=403)
+        
+        # Only owner and admin can view invites
+        if membership.role not in ['owner', 'admin']:
+            return JsonResponse({'success': False, 'message': 'No permission to view invites'}, status=403)
+        
+        invites = ServerInvite.objects.filter(server=server).select_related('created_by').order_by('-created_at')
+        
+        invite_list = []
+        for invite in invites:
+            invite_list.append({
+                'code': invite.invite_code,
+                'url': f'/community/?invite={invite.invite_code}',
+                'full_url': request.build_absolute_uri(f'/community/?invite={invite.invite_code}'),
+                'max_uses': invite.max_uses,
+                'uses': invite.uses,
+                'expires_at': invite.expires_at.isoformat() if invite.expires_at else None,
+                'is_valid': invite.is_valid(),
+                'created_by': invite.created_by.username,
+                'created_at': invite.created_at.isoformat()
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'invites': invite_list
+        })
+    except Exception as e:
+        import traceback
+        print(f"Error getting invites: {traceback.format_exc()}")
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@require_POST
+@login_required
+def join_server_by_invite(request):
+    """Join a server using an invite code"""
+    try:
+        data = json.loads(request.body)
+        invite_code = data.get('invite_code')
+        
+        if not invite_code:
+            return JsonResponse({'success': False, 'message': 'Invite code required'}, status=400)
+        
+        # Get invite
+        invite = ServerInvite.objects.filter(invite_code=invite_code).select_related('server').first()
+        if not invite:
+            return JsonResponse({'success': False, 'message': 'Invalid invite code'}, status=404)
+        
+        # Check if valid
+        if not invite.is_valid():
+            return JsonResponse({'success': False, 'message': 'Invite has expired or reached max uses'}, status=400)
+        
+        server = invite.server
+        
+        # Check if already a member
+        existing = ServerMember.objects.filter(server=server, user=request.user).first()
+        if existing:
+            return JsonResponse({
+                'success': True,
+                'message': 'Already a member',
+                'server_id': str(server.server_id),
+                'already_member': True
+            })
+        
+        # Join server
+        ServerMember.objects.create(
+            server=server,
+            user=request.user,
+            role='member'
+        )
+        
+        # Increment uses
+        invite.uses += 1
+        invite.save()
+        
+        # Update server member count
+        server.updated_at = timezone.now()
+        server.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully joined {server.name}',
+            'server': {
+                'server_id': str(server.server_id),
+                'name': server.name,
+                'description': server.description,
+                'icon_url': server.get_icon_url()
+            }
+        })
+    except Exception as e:
+        import traceback
+        print(f"Error joining server: {traceback.format_exc()}")
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
