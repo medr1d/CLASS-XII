@@ -48,13 +48,15 @@ def list_user_servers(request):
             })
         
         return JsonResponse({
-            'success': True,
+            'status': 'success',
             'servers': server_list
         })
     except Exception as e:
+        import traceback
+        print(f"Error listing servers: {traceback.format_exc()}")
         return JsonResponse({
-            'success': False,
-            'error': str(e)
+            'status': 'error',
+            'message': str(e)
         }, status=500)
 
 
@@ -67,34 +69,41 @@ def create_server(request):
         profile = UserProfile.objects.get(user=request.user)
         if not profile.paidUser:
             return JsonResponse({
-                'success': False,
-                'error': 'Only premium users can create servers. Please upgrade your account.'
+                'status': 'error',
+                'message': 'Only premium users can create servers. Please upgrade your account.'
             }, status=403)
         
-        data = json.loads(request.body)
-        name = data.get('name', '').strip()
-        description = data.get('description', '').strip()
-        icon_url = data.get('icon_url', '').strip()
-        is_public = data.get('is_public', True)
+        # Handle FormData (for file uploads)
+        name = request.POST.get('name', '').strip()
+        description = request.POST.get('description', '').strip()
+        is_public = request.POST.get('is_public') == 'on'  # Checkbox value
+        icon_file = request.FILES.get('icon')  # File upload
         
         if not name:
             return JsonResponse({
-                'success': False,
-                'error': 'Server name is required'
+                'status': 'error',
+                'message': 'Server name is required'
             }, status=400)
         
         if len(name) > 100:
             return JsonResponse({
-                'success': False,
-                'error': 'Server name must be 100 characters or less'
+                'status': 'error',
+                'message': 'Server name must be 100 characters or less'
             }, status=400)
+        
+        # Handle icon upload (if provided)
+        icon_url = None
+        if icon_file:
+            # TODO: Upload to Vercel Blob storage like profile pictures
+            # For now, we'll skip icon uploads
+            pass
         
         # Create server
         server = Server.objects.create(
             name=name,
             description=description,
             owner=request.user,
-            icon_url=icon_url if icon_url else None,
+            icon_url=icon_url,
             is_public=is_public
         )
         
@@ -130,7 +139,8 @@ def create_server(request):
         )
         
         return JsonResponse({
-            'success': True,
+            'status': 'success',
+            'message': 'Server created successfully',
             'server': {
                 'server_id': str(server.server_id),
                 'name': server.name,
@@ -142,13 +152,15 @@ def create_server(request):
         })
     except UserProfile.DoesNotExist:
         return JsonResponse({
-            'success': False,
-            'error': 'User profile not found'
+            'status': 'error',
+            'message': 'User profile not found'
         }, status=404)
     except Exception as e:
+        import traceback
+        print(f"Error creating server: {traceback.format_exc()}")
         return JsonResponse({
-            'success': False,
-            'error': str(e)
+            'status': 'error',
+            'message': str(e)
         }, status=500)
 
 

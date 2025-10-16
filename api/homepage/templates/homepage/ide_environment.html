@@ -2989,7 +2989,7 @@
                 const basePath = contextMenuTarget || '';
                 const fullPath = basePath ? `${basePath}/${folderName}` : folderName;
                 
-                const response = await fetch(`/api/ide/directory/${PROJECT_ID}/`, {
+                const response = await fetch(`/api/ide/projects/${PROJECT_ID}/directories/create/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

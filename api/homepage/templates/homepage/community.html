@@ -663,6 +663,29 @@
             margin-right: 8px;
         }
 
+        /* Custom File Upload */
+        .custom-file-upload {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            font-size: 10px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            color: var(--text-color);
+        }
+
+        .custom-file-upload:hover {
+            background: var(--border-color);
+            color: #000000;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
         .modal-btn {
             padding: 8px 16px;
             background: var(--bg-primary);
@@ -1891,13 +1914,6 @@
             
             container.innerHTML = '';
 
-            const container = document.getElementById('messagesContainer');
-            const previousScrollHeight = container.scrollHeight;
-            const previousScrollTop = container.scrollTop;
-            const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
-            
-            container.innerHTML = '';
-
             if (messages.length === 0) {
                 container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💬</div><div class="empty-state-text">No messages yet. Start the conversation!</div></div>';
                 return;
@@ -2809,6 +2825,26 @@
             const modal = document.getElementById('createServerModal');
             modal.classList.remove('active');
             document.getElementById('createServerForm').reset();
+            // Reset preview
+            document.getElementById('iconPreview').innerHTML = '<span>📷</span>';
+            document.getElementById('iconFileName').textContent = 'No file chosen';
+        }
+
+        // Preview server icon
+        function previewServerIcon(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('iconFileName').textContent = file.name;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('iconPreview').innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('iconPreview').innerHTML = '<span>📷</span>';
+                document.getElementById('iconFileName').textContent = 'No file chosen';
+            }
         }
 
         // Create server
@@ -3022,7 +3058,7 @@
     <!-- Server Modals -->
     <!-- Create Server Modal -->
     <div id="createServerModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 700px; width: 90%;">
             <div class="modal-header">
                 <span>CREATE SERVER</span>
                 <button class="modal-close" onclick="hideCreateServerModal()">×</button>
@@ -3031,25 +3067,36 @@
                 <form id="createServerForm">
                     <div class="form-group">
                         <label class="form-label">SERVER NAME *</label>
-                        <input type="text" name="name" class="form-input" required maxlength="100" placeholder="My Awesome Server">
+                        <input type="text" name="name" class="form-input" required maxlength="100" placeholder="My Awesome Server" style="font-size: 12px; padding: 12px;">
                     </div>
                     <div class="form-group">
                         <label class="form-label">DESCRIPTION</label>
-                        <input type="text" name="description" class="form-input" maxlength="500" placeholder="A cool place to chat...">
+                        <textarea name="description" class="form-input" maxlength="500" placeholder="A cool place to chat..." style="font-size: 12px; padding: 12px; min-height: 80px; resize: vertical;"></textarea>
                     </div>
                     <div class="form-group">
                         <label class="form-label">SERVER ICON (Optional)</label>
-                        <input type="file" name="icon" accept="image/*" class="form-input">
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <div id="iconPreview" style="width: 80px; height: 80px; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; background: var(--bg-tertiary); font-size: 32px; color: var(--text-muted);">
+                                <span>📷</span>
+                            </div>
+                            <div style="flex: 1;">
+                                <label for="iconUpload" class="custom-file-upload" style="display: inline-block; padding: 10px 20px; background: var(--bg-secondary); border: 2px solid var(--border-color); cursor: pointer; font-size: 10px; transition: all 0.3s;">
+                                    CHOOSE FILE
+                                </label>
+                                <input type="file" id="iconUpload" name="icon" accept="image/*" style="display: none;" onchange="previewServerIcon(event)">
+                                <div id="iconFileName" style="font-size: 9px; color: var(--text-muted); margin-top: 8px;">No file chosen</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">
-                            <input type="checkbox" name="is_public" class="form-checkbox">
-                            Make server public (discoverable)
+                        <label class="form-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" name="is_public" class="form-checkbox" style="width: 18px; height: 18px;">
+                            <span>Make server public (discoverable by everyone)</span>
                         </label>
                     </div>
-                    <div style="margin-top: 20px;">
-                        <button type="button" class="modal-btn primary" onclick="createServer()">CREATE</button>
+                    <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
                         <button type="button" class="modal-btn" onclick="hideCreateServerModal()">CANCEL</button>
+                        <button type="button" class="modal-btn primary" onclick="createServer()">CREATE SERVER</button>
                     </div>
                 </form>
             </div>
