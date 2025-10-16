@@ -613,3 +613,119 @@ def clear_terminal(request, project_id):
         
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+# ==================== FILE UPLOAD/DOWNLOAD ====================
+
+@login_required
+@require_POST
+def upload_files(request, project_id):
+    """Upload multiple files to project"""
+    try:
+        project = get_object_or_404(IDEProject, project_id=project_id, user=request.user)
+        
+        files = request.FILES.getlist('files')
+        if not files:
+            return JsonResponse({'status': 'error', 'message': 'No files uploaded'}, status=400)
+        
+        uploaded_files = []
+        for file in files:
+            # Create file in database
+            ide_file = IDEFile.objects.create(
+                project=project,
+                name=file.name,
+                path=file.name,
+                file_type=get_file_type_from_extension(file.name),
+                content=file.read().decode('utf-8', errors='ignore')  # Read file content
+            )
+            uploaded_files.append(ide_file.name)
+        
+        # Update project last accessed time
+        project.last_accessed = timezone.now()
+        project.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Uploaded {len(uploaded_files)} file(s)',
+            'files': uploaded_files
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+def download_project(request, project_id):
+    """Download entire project as ZIP"""
+    try:
+        import zipfile
+        from django.http import HttpResponse
+        import io
+        
+        project = get_object_or_404(IDEProject, project_id=project_id, user=request.user)
+        
+        # Create ZIP in memory
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            # Add all files to ZIP
+            files = IDEFile.objects.filter(project=project)
+            for file in files:
+                zip_file.writestr(file.path, file.content or '')
+        
+        # Prepare response
+        zip_buffer.seek(0)
+        response = HttpResponse(zip_buffer.getvalue(), content_type='application/zip')
+        response['Content-Disposition'] = f'attachment; filename="{project.name.replace(" ", "_")}.zip"'
+        
+        return response
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def download_file(request, project_id):
+    """Download a single file"""
+    try:
+        from django.http import HttpResponse
+        
+        project = get_object_or_404(IDEProject, project_id=project_id, user=request.user)
+        
+        data = json.loads(request.body)
+        file_path = data.get('file_path')
+        
+        if not file_path:
+            return JsonResponse({'status': 'error', 'message': 'File path required'}, status=400)
+        
+        file = get_object_or_404(IDEFile, project=project, path=file_path)
+        
+        # Prepare response
+        response = HttpResponse(file.content or '', content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename="{file.name}"'
+        
+        return response
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+def get_file_type_from_extension(filename):
+    """Determine file type from extension"""
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    
+    file_types = {
+        'py': 'python',
+        'txt': 'text',
+        'md': 'markdown',
+        'json': 'json',
+        'csv': 'csv',
+        'html': 'html',
+        'css': 'css',
+        'js': 'javascript',
+        'xml': 'xml',
+        'yml': 'yaml',
+        'yaml': 'yaml',
+    }
+    
+    return file_types.get(ext, 'text')

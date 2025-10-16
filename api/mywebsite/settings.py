@@ -89,7 +89,11 @@ CHANNEL_LAYERS = {
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 
+# Detect if running on Vercel (production) or locally
+IS_VERCEL = os.getenv('VERCEL', '0') == '1'
+
 if DATABASE_URL and DATABASE_URL.startswith('postgresql://'):
+    # Use PostgreSQL with appropriate SSL settings
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -99,11 +103,13 @@ if DATABASE_URL and DATABASE_URL.startswith('postgresql://'):
             'HOST': os.getenv('DB_HOST', 'localhost'),
             'PORT': os.getenv('DB_PORT', '5432'),
             'OPTIONS': {
-                'sslmode': 'disable',  # Changed from 'require' to 'disable' for local development
+                # Require SSL on Vercel/production, disable for local PostgreSQL
+                'sslmode': 'require' if IS_VERCEL else 'disable',
             },
         }
     }
 else:
+    # Use SQLite for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',

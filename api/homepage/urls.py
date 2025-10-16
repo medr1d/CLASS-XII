@@ -64,6 +64,11 @@ urlpatterns = [
     path('api/ide/projects/<uuid:project_id>/files/delete/', ide_views.delete_file, name='ide_delete_file'),
     path('api/ide/projects/<uuid:project_id>/directories/create/', ide_views.create_directory, name='ide_create_directory'),
     
+    # File upload/download
+    path('api/ide/projects/<uuid:project_id>/upload/', ide_views.upload_files, name='ide_upload_files'),
+    path('api/ide/projects/<uuid:project_id>/download/', ide_views.download_project, name='ide_download_project'),
+    path('api/ide/projects/<uuid:project_id>/file/download/', ide_views.download_file, name='ide_download_file'),
+    
     # Code execution
     path('api/ide/projects/<uuid:project_id>/execute/', ide_views.execute_code, name='ide_execute_code'),
     path('api/ide/projects/<uuid:project_id>/history/', ide_views.get_execution_history, name='ide_execution_history'),

@@ -332,6 +332,52 @@
             align-items: center;
         }
 
+        .terminal-tabs {
+            display: flex;
+            gap: 5px;
+            flex: 1;
+            overflow-x: auto;
+        }
+
+        .terminal-tab {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            padding: 6px 12px;
+            font-size: 11px;
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .terminal-tab:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-bright);
+        }
+
+        .terminal-tab.active {
+            background: var(--bg-primary);
+            color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            font-weight: bold;
+        }
+
+        .terminal-tab-close {
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0 4px;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .terminal-tab-close:hover {
+            color: #ff4444;
+        }
+
         .terminal-title {
             font-size: 12px;
             color: var(--text-bright);
@@ -343,8 +389,23 @@
             gap: 10px;
         }
 
-        .terminal-output {
+        .btn-sm {
+            padding: 4px 10px !important;
+            font-size: 10px !important;
+        }
+
+        .terminal-container {
             flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .terminal-output {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background: var(--bg-primary);
             color: var(--text-color);
             padding: 15px;
@@ -354,6 +415,44 @@
             overflow-y: auto;
             white-space: pre-wrap;
             text-shadow: 0 0 1px var(--text-color);
+            display: none;
+            cursor: text;
+            user-select: text;
+        }
+
+        .terminal-output.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-output-content {
+            flex: 1;
+            overflow-y: auto;
+            user-select: text;
+        }
+
+        .terminal-input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+        }
+
+        .terminal-input-prompt {
+            color: var(--secondary-color);
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
         }
 
         .terminal-output::-webkit-scrollbar {
@@ -474,6 +573,45 @@
         .context-menu-item:hover {
             background: var(--secondary-color);
             color: var(--text-bright);
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 5px 0;
+            min-width: 180px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            z-index: 10001;
+            display: none;
+        }
+
+        .context-menu.active {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 8px 15px;
+            cursor: pointer;
+            color: var(--text-color);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+
+        .context-menu-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-bright);
+        }
+
+        .context-menu-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 5px 0;
         }
 
         /* Modal */
@@ -631,8 +769,13 @@
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <span class="sidebar-title">FILES</span>
-                <button class="btn" onclick="refreshFileTree()" style="padding: 4px 8px; font-size: 11px;">↻</button>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-sm" onclick="triggerFileUpload()" title="Upload Files" style="padding: 4px 8px; font-size: 11px;">📤 UPLOAD</button>
+                    <button class="btn btn-sm" onclick="downloadProject()" title="Download Project as ZIP" style="padding: 4px 8px; font-size: 11px;">📥 ZIP</button>
+                    <button class="btn btn-sm" onclick="refreshFileTree()" title="Refresh File Tree" style="padding: 4px 8px; font-size: 11px;">↻</button>
+                </div>
             </div>
+            <input type="file" id="fileUploadInput" multiple style="display: none;" onchange="handleFileUpload(event)">
             <div class="file-tree" id="fileTree">
                 <!-- Files will be populated by JavaScript -->
             </div>
@@ -649,15 +792,18 @@
         <!-- Terminal Area -->
         <div class="terminal-area">
             <div class="terminal-header">
-                <span class="terminal-title">TERMINAL OUTPUT</span>
+                <div class="terminal-tabs" id="terminalTabs">
+                    <!-- Terminal tabs will be populated by JavaScript -->
+                </div>
                 <div class="terminal-actions">
-                    <button class="btn" onclick="clearTerminal()" style="padding: 4px 10px; font-size: 11px;">CLEAR</button>
+                    <button class="btn btn-sm" onclick="createNewTerminal()" title="New Terminal">
+                        <span style="font-size: 14px;">+</span> NEW
+                    </button>
+                    <button class="btn btn-sm" onclick="clearActiveTerminal()" title="Clear Terminal">CLEAR</button>
                 </div>
             </div>
-            <div class="terminal-output" id="terminalOutput">
-                <div class="terminal-prompt">$ Cloud IDE Terminal</div>
-                <div>Ready to execute code...</div>
-                <div style="opacity: 0.6; margin-top: 10px;">Press "RUN" to execute your Python code.</div>
+            <div class="terminal-container">
+                <!-- Terminal outputs will be populated by JavaScript -->
             </div>
         </div>
 
@@ -733,6 +879,252 @@
         let currentFile = null;
         let openTabs = [];
         let fileTree = [];
+        
+        // Terminal Management
+        let terminals = [];
+        let activeTerminalId = null;
+        let terminalCounter = 0;
+        
+        // Initialize first terminal
+        document.addEventListener('DOMContentLoaded', function() {
+            createNewTerminal();
+        });
+        
+        function createNewTerminal() {
+            terminalCounter++;
+            const terminalId = `terminal-${terminalCounter}`;
+            
+            const terminal = {
+                id: terminalId,
+                name: `Terminal ${terminalCounter}`,
+                history: [],
+                commandHistory: [],
+                historyIndex: -1
+            };
+            
+            terminals.push(terminal);
+            
+            // Create terminal tab
+            const tabsContainer = document.getElementById('terminalTabs');
+            const tab = document.createElement('div');
+            tab.className = 'terminal-tab';
+            tab.dataset.terminalId = terminalId;
+            tab.innerHTML = `
+                <span class="terminal-tab-name">${terminal.name}</span>
+                ${terminals.length > 1 ? `<span class="terminal-tab-close" onclick="closeTerminal(event, '${terminalId}')">×</span>` : ''}
+            `;
+            tab.onclick = (e) => {
+                if (!e.target.classList.contains('terminal-tab-close')) {
+                    switchTerminal(terminalId);
+                }
+            };
+            tabsContainer.appendChild(tab);
+            
+            // Create terminal output
+            const container = document.querySelector('.terminal-container');
+            const output = document.createElement('div');
+            output.className = 'terminal-output';
+            output.id = terminalId;
+            output.innerHTML = `
+                <div class="terminal-output-content">
+                    <div class="terminal-prompt">$ Cloud IDE Terminal ${terminalCounter}</div>
+                    <div>Ready to execute code...</div>
+                    <div style="opacity: 0.6; margin-top: 10px;">Press "RUN" to execute your Python code or type commands.</div>
+                    <div style="opacity: 0.6;">Use Ctrl+C to copy, Ctrl+V to paste. Use Up/Down arrows for command history.</div>
+                </div>
+                <div class="terminal-input-line">
+                    <span class="terminal-input-prompt">$</span>
+                    <input type="text" class="terminal-input" placeholder="Type a command..." data-terminal-id="${terminalId}">
+                </div>
+            `;
+            container.appendChild(output);
+            
+            // Add keyboard event listeners for command history
+            const input = output.querySelector('.terminal-input');
+            input.addEventListener('keydown', handleTerminalInput);
+            input.addEventListener('paste', (e) => {
+                // Allow default paste behavior
+                setTimeout(() => {
+                    appendToTerminal(`$ ${input.value}`);
+                }, 10);
+            });
+            
+            // Switch to new terminal
+            switchTerminal(terminalId);
+            
+            return terminalId;
+        }
+        
+        function handleTerminalInput(event) {
+            const input = event.target;
+            const terminalId = input.dataset.terminalId;
+            const terminal = terminals.find(t => t.id === terminalId);
+            
+            if (!terminal) return;
+            
+            // Handle Enter key - execute command
+            if (event.key === 'Enter') {
+                const command = input.value.trim();
+                if (command) {
+                    // Add to command history
+                    terminal.commandHistory.push(command);
+                    terminal.historyIndex = terminal.commandHistory.length;
+                    
+                    // Display command
+                    appendToTerminal(`$ ${command}`);
+                    
+                    // Process command (you can add more commands here)
+                    processTerminalCommand(command, terminalId);
+                    
+                    input.value = '';
+                }
+                event.preventDefault();
+            }
+            // Handle Up arrow - previous command
+            else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (terminal.commandHistory.length > 0 && terminal.historyIndex > 0) {
+                    terminal.historyIndex--;
+                    input.value = terminal.commandHistory[terminal.historyIndex];
+                }
+            }
+            // Handle Down arrow - next command
+            else if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                if (terminal.historyIndex < terminal.commandHistory.length - 1) {
+                    terminal.historyIndex++;
+                    input.value = terminal.commandHistory[terminal.historyIndex];
+                } else {
+                    terminal.historyIndex = terminal.commandHistory.length;
+                    input.value = '';
+                }
+            }
+        }
+        
+        function processTerminalCommand(command, terminalId) {
+            const oldActiveTerminal = activeTerminalId;
+            switchTerminal(terminalId);
+            
+            const lowerCommand = command.toLowerCase();
+            
+            // Built-in commands
+            if (lowerCommand === 'clear' || lowerCommand === 'cls') {
+                clearActiveTerminal();
+            } else if (lowerCommand === 'help') {
+                appendToTerminal('Available commands:');
+                appendToTerminal('  clear/cls  - Clear the terminal');
+                appendToTerminal('  help       - Show this help message');
+                appendToTerminal('  history    - Show command history');
+                appendToTerminal('  run        - Run the current file');
+                appendToTerminal('  pwd        - Show current project');
+                appendToTerminal('\nNote: This is a simulated terminal. Python code runs via the RUN button.');
+            } else if (lowerCommand === 'history') {
+                const terminal = terminals.find(t => t.id === terminalId);
+                if (terminal && terminal.commandHistory.length > 0) {
+                    appendToTerminal('Command history:');
+                    terminal.commandHistory.forEach((cmd, idx) => {
+                        appendToTerminal(`  ${idx + 1}  ${cmd}`);
+                    });
+                } else {
+                    appendToTerminal('No command history');
+                }
+            } else if (lowerCommand === 'run') {
+                runCode();
+            } else if (lowerCommand === 'pwd') {
+                appendToTerminal(`Current project: ${PROJECT_ID}`);
+            } else {
+                appendToTerminal(`Command not recognized: ${command}`);
+                appendToTerminal('Type "help" for available commands.');
+            }
+            
+            if (oldActiveTerminal !== terminalId) {
+                switchTerminal(oldActiveTerminal);
+            }
+        }
+        
+        function switchTerminal(terminalId) {
+            activeTerminalId = terminalId;
+            
+            // Update tab styles
+            document.querySelectorAll('.terminal-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.terminalId === terminalId);
+            });
+            
+            // Update output visibility
+            document.querySelectorAll('.terminal-output').forEach(output => {
+                output.classList.toggle('active', output.id === terminalId);
+            });
+        }
+        
+        function closeTerminal(event, terminalId) {
+            event.stopPropagation();
+            
+            if (terminals.length === 1) {
+                showNotification('Cannot close the last terminal', 'warning');
+                return;
+            }
+            
+            // Remove terminal from array
+            const index = terminals.findIndex(t => t.id === terminalId);
+            if (index !== -1) {
+                terminals.splice(index, 1);
+            }
+            
+            // Remove tab and output
+            const tab = document.querySelector(`[data-terminal-id="${terminalId}"]`);
+            const output = document.getElementById(terminalId);
+            
+            if (tab) tab.remove();
+            if (output) output.remove();
+            
+            // Switch to another terminal if this was active
+            if (activeTerminalId === terminalId) {
+                switchTerminal(terminals[0].id);
+            }
+        }
+        
+        function clearActiveTerminal() {
+            if (!activeTerminalId) return;
+            
+            const output = document.getElementById(activeTerminalId);
+            if (output) {
+                const terminal = terminals.find(t => t.id === activeTerminalId);
+                const content = output.querySelector('.terminal-output-content');
+                if (content) {
+                    content.innerHTML = `
+                        <div class="terminal-prompt">$ Terminal cleared</div>
+                        <div>Ready for new output...</div>
+                    `;
+                }
+                if (terminal) {
+                    terminal.history = [];
+                }
+            }
+        }
+        
+        function appendToTerminal(text, isError = false) {
+            if (!activeTerminalId) return;
+            
+            const output = document.getElementById(activeTerminalId);
+            if (output) {
+                const content = output.querySelector('.terminal-output-content');
+                if (content) {
+                    const line = document.createElement('div');
+                    line.textContent = text;
+                    if (isError) {
+                        line.style.color = '#ff4444';
+                    }
+                    content.appendChild(line);
+                    content.scrollTop = content.scrollHeight;
+                    
+                    // Add to terminal history
+                    const terminal = terminals.find(t => t.id === activeTerminalId);
+                    if (terminal) {
+                        terminal.history.push({ text, isError, timestamp: new Date() });
+                    }
+                }
+            }
+        }
         
         // Initialize Monaco Editor
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
@@ -850,6 +1242,8 @@
                 
                 if (node.type === 'file') {
                     nodeElement.onclick = () => openFile(node.path);
+                    // Add right-click context menu
+                    nodeElement.oncontextmenu = (e) => showContextMenu(e, node.path);
                 }
                 
                 container.appendChild(nodeElement);
@@ -1033,8 +1427,8 @@
                 return;
             }
             
-            const terminal = document.getElementById('terminalOutput');
-            terminal.innerHTML = '<div class="terminal-prompt">$ Running code...</div>';
+            clearActiveTerminal();
+            appendToTerminal('$ Running code...');
             
             try {
                 const data = await apiRequest(`/api/ide/projects/${PROJECT_ID}/execute/`, {
@@ -1046,19 +1440,18 @@
                     })
                 });
                 
-                let output = '<div class="terminal-prompt">$ Execution completed</div>\n';
+                appendToTerminal('$ Execution completed\n');
                 
                 if (data.output) {
-                    output += '<div>' + escapeHtml(data.output) + '</div>\n';
+                    appendToTerminal(data.output);
                 }
                 
                 if (data.error) {
-                    output += '<div class="error">' + escapeHtml(data.error) + '</div>\n';
+                    appendToTerminal(data.error, true);
                 }
                 
-                output += `<div style="opacity: 0.6; margin-top: 10px;">Execution time: ${data.execution_time.toFixed(2)}ms</div>`;
-                
-                terminal.innerHTML = output;
+                appendToTerminal(`\nExecution time: ${data.execution_time.toFixed(2)}ms`, false);
+                appendToTerminal(`Return code: ${data.return_code}`, false);
                 
                 if (data.return_code === 0 && !data.error) {
                     showNotification('Code executed successfully', 'success');
@@ -1067,18 +1460,9 @@
                 }
                 
             } catch (error) {
-                terminal.innerHTML = '<div class="error">Error: ' + escapeHtml(error.message) + '</div>';
+                appendToTerminal('Error: ' + error.message, true);
                 showNotification('Execution error: ' + error.message, 'error');
             }
-        }
-        
-        function clearTerminal() {
-            const terminal = document.getElementById('terminalOutput');
-            terminal.innerHTML = `
-                <div class="terminal-prompt">$ Cloud IDE Terminal</div>
-                <div>Terminal cleared.</div>
-                <div style="opacity: 0.6; margin-top: 10px;">Ready for next execution.</div>
-            `;
         }
         
         // UI Functions
@@ -1152,6 +1536,174 @@
                 }
             });
         });
+
+        // File Upload/Download Functions
+        let contextMenuTarget = null;
+
+        function triggerFileUpload() {
+            document.getElementById('fileUploadInput').click();
+        }
+
+        async function handleFileUpload(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            const formData = new FormData();
+            for (let file of files) {
+                formData.append('files', file);
+            }
+
+            try {
+                const response = await fetch(`/api/ide/projects/${PROJECT_ID}/upload/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': CSRF_TOKEN
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification(`Uploaded ${files.length} file(s) successfully`, 'success');
+                    loadFileTree();
+                } else {
+                    showNotification(data.message || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                showNotification('Upload error: ' + error.message, 'error');
+            }
+
+            // Reset input
+            event.target.value = '';
+        }
+
+        async function downloadProject() {
+            try {
+                showNotification('Preparing download...', 'info');
+                const response = await fetch(`/api/ide/projects/${PROJECT_ID}/download/`, {
+                    headers: {
+                        'X-CSRFToken': CSRF_TOKEN
+                    }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `project-${PROJECT_ID}.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    showNotification('Project downloaded successfully', 'success');
+                } else {
+                    const data = await response.json();
+                    showNotification(data.message || 'Download failed', 'error');
+                }
+            } catch (error) {
+                showNotification('Download error: ' + error.message, 'error');
+            }
+        }
+
+        async function downloadFile(filePath) {
+            if (!filePath) return;
+
+            try {
+                const response = await fetch(`/api/ide/projects/${PROJECT_ID}/file/download/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': CSRF_TOKEN
+                    },
+                    body: JSON.stringify({ file_path: filePath })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filePath.split('/').pop();
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    showNotification('File downloaded', 'success');
+                } else {
+                    const data = await response.json();
+                    showNotification(data.message || 'Download failed', 'error');
+                }
+            } catch (error) {
+                showNotification('Download error: ' + error.message, 'error');
+            }
+            closeContextMenu();
+        }
+
+        // Context Menu Functions
+        function showContextMenu(event, filePath) {
+            event.preventDefault();
+            contextMenuTarget = filePath;
+            
+            const menu = document.getElementById('contextMenu');
+            menu.style.left = event.pageX + 'px';
+            menu.style.top = event.pageY + 'px';
+            menu.classList.add('active');
+        }
+
+        function closeContextMenu() {
+            document.getElementById('contextMenu').classList.remove('active');
+            contextMenuTarget = null;
+        }
+
+        // Close context menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.context-menu')) {
+                closeContextMenu();
+            }
+        });
+
+        // Drag and Drop Support
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.querySelector('.sidebar');
+            
+            sidebar.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                sidebar.style.background = 'rgba(0, 255, 136, 0.1)';
+            });
+
+            sidebar.addEventListener('dragleave', () => {
+                sidebar.style.background = '';
+            });
+
+            sidebar.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                sidebar.style.background = '';
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const input = document.getElementById('fileUploadInput');
+                    input.files = files;
+                    await handleFileUpload({ target: input });
+                }
+            });
+        });
     </script>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" onclick="downloadFile(contextMenuTarget)">
+            📥 Download
+        </div>
+        <div class="context-menu-item" onclick="renameFile(contextMenuTarget)">
+            ✏️ Rename
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" style="color: #ff4444;" onclick="deleteFile(contextMenuTarget)">
+            🗑️ Delete
+        </div>
+    </div>
+
 </body>
 </html>
