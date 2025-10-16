@@ -13,40 +13,55 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         body {
-            font-family: 'Press Start 2P', cursive;
+            font-family: 'Courier New', 'Consolas', monospace;
             background: #000000;
             color: #ffffff;
             min-height: 100vh;
             overflow-x: hidden;
-            background-image: 
-                repeating-linear-gradient(0deg, transparent, transparent 7px, rgba(255, 255, 255, 0.03) 7px, rgba(255, 255, 255, 0.03) 8px),
-                repeating-linear-gradient(90deg, transparent, transparent 7px, rgba(255, 255, 255, 0.03) 7px, rgba(255, 255, 255, 0.03) 8px);
-            background-size: 8px 8px;
-            animation: pixelDrift 25s linear infinite;
+            font-size: 12px;
+            line-height: 1.6;
         }
 
-        @keyframes pixelDrift {
-            0% { background-position: 0 0; }
-            100% { background-position: 8px 8px; }
+        /* Subtle Grid Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(255, 255, 255, 0.03) 2px,
+                    rgba(255, 255, 255, 0.03) 4px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(255, 255, 255, 0.03) 2px,
+                    rgba(255, 255, 255, 0.03) 4px
+                );
+            pointer-events: none;
+            z-index: 0;
         }
 
         /* Header Bar */
         .header-bar {
-            background: #000000;
-            border-bottom: 4px solid #ffffff;
-            border-image: repeating-linear-gradient(90deg, #ffffff 0, #ffffff 4px, transparent 4px, transparent 8px) 4;
+            background: #0a0a0a;
+            border-bottom: 2px solid #ffffff;
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
@@ -54,7 +69,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 4px 0 #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         }
 
         .header-left {
@@ -64,28 +79,21 @@
         }
 
         .logo {
-            font-size: 1rem;
+            font-size: 14px;
             font-weight: bold;
             color: #ffffff;
-            text-shadow: 2px 2px 0 #000000, 4px 4px 0 #ffffff;
-            animation: pixelGlow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes pixelGlow {
-            0% { text-shadow: 2px 2px 0 #000000, 4px 4px 0 #ffffff; }
-            100% { text-shadow: 2px 2px 0 #000000, 4px 4px 0 #cccccc; }
+            letter-spacing: 2px;
         }
 
         .admin-badge {
-            padding: 8px 12px;
-            background: #ffffff;
-            color: #000000;
-            font-size: 0.5rem;
-            font-weight: bold;
-            border: 3px solid #000000;
-            box-shadow: 2px 2px 0 #000000;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            padding: 6px 12px;
+            background: #1a1a1a;
+            color: #4caf50;
+            font-size: 10px;
+            font-weight: normal;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
         }
 
         .header-actions {
@@ -95,59 +103,54 @@
         }
 
         .btn {
-            padding: 8px 16px;
-            background: #000000;
+            padding: 10px 20px;
+            background: #1a1a1a;
             color: #ffffff;
-            border: 3px solid #ffffff;
+            border: 1px solid #ffffff;
+            border-radius: 4px;
             cursor: pointer;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 0.6rem;
-            transition: all 0.2s ease;
+            font-family: 'Courier New', 'Consolas', monospace;
+            font-size: 11px;
+            transition: all 0.2s;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            position: relative;
-            text-transform: uppercase;
-            box-shadow: 3px 3px 0 #ffffff;
+            letter-spacing: 0.5px;
         }
 
         .btn:hover {
-            background: #ffffff;
-            color: #000000;
-            transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0 #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
         }
 
         .btn:active {
-            transform: translate(3px, 3px);
-            box-shadow: none;
+            transform: translateY(0);
         }
 
         .btn-danger {
-            border-color: #ffffff;
-            color: #ffffff;
-            background: #000000;
-            box-shadow: 3px 3px 0 #ffffff;
+            border-color: #ff4444;
+            color: #ff4444;
         }
 
         .btn-danger:hover {
-            background: #ffffff;
-            color: #000000;
-            transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0 #ffffff;
+            background: rgba(255, 68, 68, 0.1);
+            box-shadow: 0 2px 10px rgba(255, 68, 68, 0.3);
         }
 
         /* Main Layout */
         .main-container {
             display: flex;
             min-height: calc(100vh - 70px);
+            position: relative;
+            z-index: 1;
         }
 
         /* Sidebar */
         .sidebar {
             width: 280px;
-            background: #000000;
+            background: #0a0a0a;
             border-right: 4px solid #ffffff;
             border-image: repeating-linear-gradient(0deg, #ffffff 0, #ffffff 4px, transparent 4px, transparent 8px) 4;
             padding: 30px 20px;
@@ -175,37 +178,36 @@
         }
 
         .nav-item {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
 
         .nav-link {
             display: block;
             padding: 12px 15px;
-            color: #cccccc;
+            color: #e0e0e0;
             text-decoration: none;
-            border: 2px solid transparent;
-            transition: all 0.2s ease;
-            font-size: 0.6rem;
+            border: 1px solid #ffffff;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 11px;
             margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             position: relative;
-            background: #000000;
+            background: #1a1a1a;
         }
 
         .nav-link:hover {
-            background: #ffffff;
-            color: #000000;
-            border: 2px solid #000000;
-            box-shadow: 2px 2px 0 #000000;
-            transform: translate(-1px, -1px);
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            transform: translateX(5px);
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
         }
 
         .nav-link.active {
-            background: #ffffff;
-            color: #000000;
-            border: 2px solid #000000;
-            box-shadow: 3px 3px 0 #000000;
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            border-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
         }
 
         /* Content Area */
@@ -213,8 +215,6 @@
             flex: 1;
             padding: 30px;
             background: #000000;
-            background-image: 
-                repeating-linear-gradient(45deg, transparent, transparent 14px, rgba(255, 255, 255, 0.02) 14px, rgba(255, 255, 255, 0.02) 16px);
         }
 
         .content-section {

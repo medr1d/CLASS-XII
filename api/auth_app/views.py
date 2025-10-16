@@ -236,7 +236,7 @@ def account_view(request):
     except TwoFactorAuth.DoesNotExist:
         two_factor = TwoFactorAuth(user=request.user, is_enabled=False)
     
-    return render(request, 'auth_app/account_pixel.html', {
+    return render(request, 'auth_app/account.html', {
         'user': request.user,
         'two_factor': two_factor
     })

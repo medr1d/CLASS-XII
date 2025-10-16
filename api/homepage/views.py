@@ -459,6 +459,46 @@ def load_user_data(request):
 
 
 @login_required
+@require_POST
+def delete_file(request):
+    """Delete a user's file from the database"""
+    try:
+        data = json.loads(request.body)
+        filename = data.get('filename', '')
+        
+        if not filename:
+            return JsonResponse({'status': 'error', 'message': 'No filename provided'}, status=400)
+        
+        user = request.user
+        deleted_count = 0
+        
+        # Try to delete from PythonCodeSession
+        deleted_sessions = PythonCodeSession.objects.filter(user=user, filename=filename).delete()
+        deleted_count += deleted_sessions[0]
+        
+        # Try to delete from UserFiles
+        deleted_files = UserFiles.objects.filter(user=user, filename=filename, is_system_file=False).delete()
+        deleted_count += deleted_files[0]
+        
+        if deleted_count > 0:
+            print(f"✅ Deleted file '{filename}' for user {user.username}")
+            return JsonResponse({
+                'status': 'success',
+                'message': f'File {filename} deleted successfully',
+                'deleted_count': deleted_count
+            })
+        else:
+            return JsonResponse({
+                'status': 'warning',
+                'message': f'File {filename} not found in database'
+            })
+            
+    except Exception as e:
+        print(f"❌ Error deleting file: {str(e)}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
 @rate_limit_per_user(max_requests=100, window=60)
 def save_execution_history(request):
     """Save code execution history"""

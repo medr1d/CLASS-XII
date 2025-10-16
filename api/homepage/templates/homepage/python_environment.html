@@ -880,11 +880,14 @@
             padding: 0;
             border-bottom: 1px solid var(--border-color);
             position: relative;
+            z-index: 1;
+            min-height: 0;
         }
 
         .editor-container {
             position: relative;
             height: calc(100% - 50px);
+            max-height: calc(100% - 50px);
             overflow: hidden;
             border: 1px solid var(--border-color);
             border-radius: 3px;
@@ -1310,6 +1313,8 @@
             flex-direction: column;
             position: relative;
             overflow: hidden;
+            z-index: 2;
+            flex-shrink: 0;
         }
 
         .terminal-section::before {
@@ -1696,7 +1701,7 @@
             z-index: 1000;
             width: 95%;
             height: 85%;
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 30px var(--shadow-color);
         }
 
         .focus-mode .editor-section textarea {
@@ -1792,7 +1797,7 @@
 
         .notebook-cell.selected {
             border-color: var(--secondary-color);
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+            box-shadow: 0 0 10px var(--shadow-color);
         }
 
         /* Custom Ace Editor Green-on-Black Theme Override */
@@ -2663,7 +2668,7 @@
             
             <div class="file-controls">
                 <input type="text" id="filename-input" class="file-input" placeholder="script_name" maxlength="50">
-                <button onclick="saveScript()" class="file-button">Save Script to Browser</button>
+                <button onclick="saveScript()" class="file-button">Save Script</button>
                 <button onclick="deleteScript()" class="file-button">Delete Script</button>
                 <button onclick="newScript()" class="file-button">New Script</button>
             </div>
@@ -2675,8 +2680,8 @@
             <div style="margin-top: 20px; padding: 10px; background: #222; border-radius: 3px; font-size: 11px;">
                 <strong>File Access Rules:</strong><br>
                 • Only text.txt, tester.csv, binary.dat can be accessed<br>
-                • All scripts run in browser (client-side)<br>
-                • Scripts saved to browser storage only
+                • All scripts run in browse<br>
+                • Maximum of 50 scripts can be made by free users.
             </div>
         </div>
 
@@ -3830,6 +3835,29 @@ print(data.groupby('category').describe())`;
             }
         }
 
+        async function deleteFromDatabase(filename) {
+            try {
+                const response = await fetch('/python/delete-file/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ filename: filename })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    console.log('✅ File deleted from database:', filename);
+                } else {
+                    console.warn('⚠️ Failed to delete from database:', result);
+                }
+            } catch (error) {
+                console.error('❌ Error deleting from database:', error);
+            }
+        }
+
         async function loadUserData() {
             try {
                 const response = await fetch('/load_user_data');
@@ -4506,6 +4534,10 @@ except Exception as e:
                 
                 if (deleted) {
                     updateStatus(`File '${selectedScript}' deleted`, 'success');
+                    
+                    // Delete from database
+                    deleteFromDatabase(selectedScript);
+                    
                     loadScriptList();
                     selectedScript = '';
                     
