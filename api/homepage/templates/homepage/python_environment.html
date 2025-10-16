@@ -7077,35 +7077,32 @@ sys.stderr = _old_stderr
         
         /* Resize Handles */
         .resize-handle {
-            position: absolute;
+            position: fixed;
             background: var(--text-bright);
             opacity: 0;
             transition: opacity 0.3s ease, background 0.3s ease;
-            z-index: 9998;
+            z-index: 9999;
+            pointer-events: all;
         }
         
         body.panel-edit-mode .resize-handle {
-            opacity: 0.3;
+            opacity: 0.5;
         }
         
         .resize-handle:hover,
         .resize-handle.dragging {
-            opacity: 0.8;
+            opacity: 1;
             background: var(--secondary-color);
         }
         
         .resize-handle-vertical {
             width: 4px;
-            height: 100%;
             cursor: ew-resize;
-            top: 0;
         }
         
         .resize-handle-horizontal {
-            width: 100%;
             height: 4px;
             cursor: ns-resize;
-            left: 0;
         }
         
         /* Highlight panels in edit mode */
@@ -7419,12 +7416,13 @@ print(f"Matplotlib theme updated to {'dark' if ${darkMode ? 'True' : 'False'} el
 
             const panelEditBtn = document.querySelector('.panel-edit-btn');
             const exitEditBtn = document.querySelector('.exit-edit-btn');
-            const mainContainer = document.querySelector('.main-container');
-            const leftPanel = document.querySelector('.left-panel');
-            const middleColumn = document.querySelector('.middle-column');
-            const rightPanel = document.querySelector('.right-panel');
-            const editorContainer = document.querySelector('.editor-container');
-            const executorContainer = document.querySelector('.executor-container');
+            const exitEditContainer = document.getElementById('panel-edit-exit');
+            const mainContainer = document.querySelector('.container');
+            const leftPanel = document.querySelector('.file-manager');
+            const middleColumn = document.querySelector('.main-area');
+            const rightPanel = document.querySelector('.file-viewers');
+            const editorContainer = document.querySelector('.editor-section');
+            const executorContainer = document.querySelector('.terminal-section');
 
             // Default layout values
             const defaults = {
@@ -7485,21 +7483,27 @@ print(f"Matplotlib theme updated to {'dark' if ${darkMode ? 'True' : 'False'} el
                 resizeHandles = [];
 
                 // Vertical handle between left panel and middle column
-                if (leftPanel && middleColumn) {
+                if (leftPanel && mainContainer) {
                     const handle1 = document.createElement('div');
                     handle1.className = 'resize-handle resize-handle-vertical';
                     handle1.dataset.position = 'left-middle';
-                    leftPanel.parentNode.insertBefore(handle1, middleColumn);
+                    handle1.style.position = 'fixed';
+                    handle1.style.zIndex = '9999';
+                    document.body.appendChild(handle1);
                     resizeHandles.push({ element: handle1, type: 'vertical', position: 'left-middle' });
+                    updateHandlePosition(handle1, leftPanel, 'right');
                 }
 
                 // Vertical handle between middle column and right panel
-                if (middleColumn && rightPanel) {
+                if (rightPanel && mainContainer) {
                     const handle2 = document.createElement('div');
                     handle2.className = 'resize-handle resize-handle-vertical';
                     handle2.dataset.position = 'middle-right';
-                    middleColumn.parentNode.insertBefore(handle2, rightPanel);
+                    handle2.style.position = 'fixed';
+                    handle2.style.zIndex = '9999';
+                    document.body.appendChild(handle2);
                     resizeHandles.push({ element: handle2, type: 'vertical', position: 'middle-right' });
+                    updateHandlePosition(handle2, rightPanel, 'left');
                 }
 
                 // Horizontal handle between editor and executor
@@ -7507,13 +7511,50 @@ print(f"Matplotlib theme updated to {'dark' if ${darkMode ? 'True' : 'False'} el
                     const handle3 = document.createElement('div');
                     handle3.className = 'resize-handle resize-handle-horizontal';
                     handle3.dataset.position = 'editor-executor';
-                    editorContainer.parentNode.insertBefore(handle3, executorContainer);
+                    handle3.style.position = 'fixed';
+                    handle3.style.zIndex = '9999';
+                    document.body.appendChild(handle3);
                     resizeHandles.push({ element: handle3, type: 'horizontal', position: 'editor-executor' });
+                    updateHandlePosition(handle3, editorContainer, 'bottom');
                 }
 
                 // Attach event listeners
                 resizeHandles.forEach(({ element, type, position }) => {
                     element.addEventListener('mousedown', (e) => startResize(e, type, position));
+                });
+            }
+
+            // Update handle position based on panel bounds
+            function updateHandlePosition(handle, panel, edge) {
+                const rect = panel.getBoundingClientRect();
+                if (edge === 'right') {
+                    handle.style.left = (rect.right - 2) + 'px';
+                    handle.style.top = rect.top + 'px';
+                    handle.style.height = rect.height + 'px';
+                    handle.style.width = '4px';
+                } else if (edge === 'left') {
+                    handle.style.left = (rect.left - 2) + 'px';
+                    handle.style.top = rect.top + 'px';
+                    handle.style.height = rect.height + 'px';
+                    handle.style.width = '4px';
+                } else if (edge === 'bottom') {
+                    handle.style.left = rect.left + 'px';
+                    handle.style.top = (rect.bottom - 2) + 'px';
+                    handle.style.width = rect.width + 'px';
+                    handle.style.height = '4px';
+                }
+            }
+
+            // Update handle positions on scroll/resize
+            function updateAllHandlePositions() {
+                resizeHandles.forEach(({ element, position }) => {
+                    if (position === 'left-middle' && leftPanel) {
+                        updateHandlePosition(element, leftPanel, 'right');
+                    } else if (position === 'middle-right' && rightPanel) {
+                        updateHandlePosition(element, rightPanel, 'left');
+                    } else if (position === 'editor-executor' && editorContainer) {
+                        updateHandlePosition(element, editorContainer, 'bottom');
+                    }
                 });
             }
 
@@ -7556,31 +7597,31 @@ print(f"Matplotlib theme updated to {'dark' if ${darkMode ? 'True' : 'False'} el
                     if (position === 'left-middle') {
                         // Resize left panel
                         const newLeftWidth = Math.max(200, Math.min(600, startSizes.leftWidth + deltaX));
-                        const newMiddleWidth = startSizes.middleWidth - deltaX;
                         
-                        if (newMiddleWidth > 400 && mainContainer) {
+                        if (newLeftWidth > 200 && mainContainer) {
                             mainContainer.style.gridTemplateColumns = 
                                 `${newLeftWidth}px 1fr ${startSizes.rightWidth}px`;
+                            updateAllHandlePositions();
                         }
                     } else if (position === 'middle-right') {
                         // Resize right panel
                         const newRightWidth = Math.max(200, Math.min(600, startSizes.rightWidth - deltaX));
                         
-                        if (mainContainer) {
+                        if (newRightWidth > 200 && mainContainer) {
                             mainContainer.style.gridTemplateColumns = 
                                 `${startSizes.leftWidth}px 1fr ${newRightWidth}px`;
+                            updateAllHandlePositions();
                         }
                     }
                 } else if (type === 'horizontal') {
                     const deltaY = e.clientY - startY;
-                    const totalHeight = startSizes.editorHeight + startSizes.executorHeight;
                     
-                    const newEditorHeight = Math.max(150, Math.min(totalHeight - 150, startSizes.editorHeight + deltaY));
-                    const newExecutorHeight = totalHeight - newEditorHeight;
+                    // For vertical sections, we need to adjust heights
+                    const newEditorHeight = Math.max(150, startSizes.editorHeight + deltaY);
 
-                    if (editorContainer && executorContainer) {
-                        editorContainer.style.height = `${newEditorHeight}px`;
-                        executorContainer.style.height = `${newExecutorHeight}px`;
+                    if (editorContainer) {
+                        editorContainer.style.flex = `0 0 ${newEditorHeight}px`;
+                        updateAllHandlePositions();
                     }
 
                     // Trigger Ace Editor resize
@@ -7607,7 +7648,7 @@ print(f"Matplotlib theme updated to {'dark' if ${darkMode ? 'True' : 'False'} el
                     // Enter edit mode
                     document.body.classList.add('panel-edit-mode');
                     createResizeHandles();
-                    if (exitEditBtn) exitEditBtn.style.display = 'flex';
+                    if (exitEditContainer) exitEditContainer.style.display = 'block';
                     if (panelEditBtn) {
                         panelEditBtn.innerHTML = `
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -7620,12 +7661,16 @@ print(f"Matplotlib theme updated to {'dark' if ${darkMode ? 'True' : 'False'} el
                         `;
                     }
                     updateStatus('Panel edit mode enabled. Drag borders to resize.', 'info');
+                    
+                    // Add window resize listener to update handle positions
+                    window.addEventListener('resize', updateAllHandlePositions);
+                    window.addEventListener('scroll', updateAllHandlePositions);
                 } else {
                     // Exit edit mode
                     document.body.classList.remove('panel-edit-mode');
                     resizeHandles.forEach(h => h.element.remove());
                     resizeHandles = [];
-                    if (exitEditBtn) exitEditBtn.style.display = 'none';
+                    if (exitEditContainer) exitEditContainer.style.display = 'none';
                     if (panelEditBtn) {
                         panelEditBtn.innerHTML = `
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -7637,6 +7682,11 @@ print(f"Matplotlib theme updated to {'dark' if ${darkMode ? 'True' : 'False'} el
                             Panel Edit Mode
                         `;
                     }
+                    
+                    // Remove event listeners
+                    window.removeEventListener('resize', updateAllHandlePositions);
+                    window.removeEventListener('scroll', updateAllHandlePositions);
+                    
                     updateStatus('Panel edit mode disabled', 'info');
                 }
             }
