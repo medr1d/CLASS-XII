@@ -7,6 +7,39 @@ import gzip
 import io
 
 
+class BotRequestFilterMiddleware:
+    """
+    Silently reject bot requests for sensitive files like .env
+    This prevents 404 errors from cluttering logs
+    """
+    # List of paths that bots commonly scan for
+    BOT_PATHS = [
+        '/.env',
+        '/.git',
+        '/.aws',
+        '/wp-admin',
+        '/wp-login.php',
+        '/admin.php',
+        '/config.php',
+        '/.htaccess',
+        '/phpinfo.php',
+        '/backup.sql',
+        '/.well-known',
+    ]
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Check if path starts with any bot path
+        for bot_path in self.BOT_PATHS:
+            if request.path.startswith(bot_path):
+                # Return 404 without logging
+                return HttpResponse(status=404)
+        
+        return self.get_response(request)
+
+
 class StaticFileCacheMiddleware:
     """
     Add cache headers to static files and enable better caching

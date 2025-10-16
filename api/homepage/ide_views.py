@@ -1017,13 +1017,14 @@ def create_directory(request, project_id):
 def execute_code(request, project_id):
     """
     Execute Python code in a sandboxed environment
-    Uses subprocess with resource limits
+    Uses subprocess with resource limits and supports input()
     """
     try:
         data = json.loads(request.body)
         code = data.get('code', '')
         file_path = data.get('file_path', 'untitled.py')
         timeout = min(int(data.get('timeout', 10)), 30)  # Max 30 seconds
+        user_inputs = data.get('inputs', [])  # List of user inputs for input() calls
         
         if not code.strip():
             return JsonResponse({
@@ -1042,11 +1043,18 @@ def execute_code(request, project_id):
             import time
             start_time = time.time()
             
+            # Prepare stdin if user inputs are provided
+            stdin_input = None
+            if user_inputs:
+                # Join inputs with newlines for each input() call
+                stdin_input = '\n'.join(user_inputs) + '\n'
+            
             # Execute with resource limits
             process = subprocess.Popen(
                 ['python', temp_file_path],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                stdin=subprocess.PIPE if stdin_input else None,
                 text=True,
                 # Resource limits (Unix-like systems)
                 preexec_fn=lambda: (
@@ -1055,7 +1063,7 @@ def execute_code(request, project_id):
             )
             
             try:
-                stdout, stderr = process.communicate(timeout=timeout)
+                stdout, stderr = process.communicate(input=stdin_input, timeout=timeout)
                 execution_time = (time.time() - start_time) * 1000  # Convert to ms
                 
                 # Log execution

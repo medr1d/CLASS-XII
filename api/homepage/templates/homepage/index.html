@@ -1198,7 +1198,7 @@
                         </a>
                     </li>
                     {% if user.is_authenticated %}
-                        {% if user.userprofile.paidUser %}
+                        {% if user.profile.paidUser %}
                         <li class="menu-item">
                             <a href="/ide/" class="menu-link" style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 136, 255, 0.1) 100%); border-left: 3px solid var(--secondary-color);">
                                 <span class="menu-icon" style="background: linear-gradient(135deg, #00ff88 0%, #0088ff 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold;">IDE</span>

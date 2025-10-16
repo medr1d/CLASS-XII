@@ -5420,6 +5420,14 @@ sys.stderr = sys.__stderr__
             if (!shareModal) {
                 console.log('Creating share modal...');
                 createShareModal();
+                // After creating, show it
+                if (shareModal) {
+                    console.log('Modal created, showing now');
+                    shareModal.style.display = 'flex';
+                } else {
+                    console.error('Failed to create modal!');
+                }
+                return;
             }
             
             if (shareModal.style.display === 'flex') {

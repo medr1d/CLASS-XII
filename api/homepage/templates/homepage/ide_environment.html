@@ -1974,6 +1974,22 @@
                 return;
             }
             
+            // Scan for input() calls in the code
+            const inputCalls = scanForInputCalls(code);
+            let userInputs = [];
+            
+            // If input() calls found, prompt user for inputs
+            if (inputCalls.length > 0) {
+                appendToTerminal('$ Code requires input(). Prompting for inputs...\n');
+                userInputs = await promptForInputs(inputCalls);
+                
+                if (userInputs === null) {
+                    // User cancelled
+                    showNotification('Code execution cancelled', 'info');
+                    return;
+                }
+            }
+            
             clearActiveTerminal();
             appendToTerminal('$ Running code...');
             
@@ -1983,7 +1999,8 @@
                     body: JSON.stringify({
                         code: code,
                         file_path: currentFile || 'untitled.py',
-                        timeout: 10
+                        timeout: 10,
+                        inputs: userInputs
                     })
                 });
                 
@@ -2009,6 +2026,91 @@
             } catch (error) {
                 appendToTerminal('Error: ' + error.message, true);
                 showNotification('Execution error: ' + error.message, 'error');
+            }
+        }
+        
+        function scanForInputCalls(code) {
+            // Simple regex to find input() calls with prompts
+            const inputRegex = /input\s*\(\s*['"](.*?)['"]\s*\)/g;
+            const inputs = [];
+            let match;
+            
+            while ((match = inputRegex.exec(code)) !== null) {
+                inputs.push(match[1] || 'Enter input:');
+            }
+            
+            // Also check for input() without prompt
+            const simpleInputRegex = /input\s*\(\s*\)/g;
+            const simpleMatches = code.match(simpleInputRegex);
+            if (simpleMatches) {
+                for (let i = 0; i < simpleMatches.length; i++) {
+                    inputs.push('Enter input:');
+                }
+            }
+            
+            return inputs;
+        }
+        
+        async function promptForInputs(prompts) {
+            return new Promise((resolve) => {
+                // Create modal for input collection
+                const modalHtml = `
+                    <div id="input-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 10000; display: flex; justify-content: center; align-items: center;">
+                        <div style="background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 8px; width: 90%; max-width: 600px; padding: 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);">
+                            <h3 style="margin: 0 0 20px 0; color: var(--text-bright);">Code Requires Input</h3>
+                            <p style="margin-bottom: 20px; color: var(--text-secondary);">Your code calls input() ${prompts.length} time(s). Please provide the inputs below:</p>
+                            <div id="input-fields-container" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+                                ${prompts.map((prompt, index) => `
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display: block; margin-bottom: 5px; color: var(--text-bright); font-size: 14px;">${index + 1}. ${prompt}</label>
+                                        <input type="text" id="user-input-${index}" class="input-field" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); font-family: inherit;" placeholder="Enter value...">
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                                <button onclick="cancelInputModal()" style="padding: 10px 20px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; font-family: inherit;">CANCEL</button>
+                                <button onclick="submitInputs()" style="padding: 10px 20px; background: var(--primary-color); border: none; border-radius: 4px; color: #000; font-weight: bold; cursor: pointer; font-family: inherit;">RUN WITH INPUTS</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                // Focus first input
+                setTimeout(() => {
+                    document.getElementById('user-input-0')?.focus();
+                }, 100);
+                
+                // Store resolve function globally so button can call it
+                window.resolveInputPrompt = resolve;
+            });
+        }
+        
+        function cancelInputModal() {
+            document.getElementById('input-modal')?.remove();
+            if (window.resolveInputPrompt) {
+                window.resolveInputPrompt(null);
+                delete window.resolveInputPrompt;
+            }
+        }
+        
+        function submitInputs() {
+            const inputs = [];
+            let index = 0;
+            
+            while (true) {
+                const input = document.getElementById(`user-input-${index}`);
+                if (!input) break;
+                inputs.push(input.value);
+                index++;
+            }
+            
+            document.getElementById('input-modal')?.remove();
+            
+            if (window.resolveInputPrompt) {
+                window.resolveInputPrompt(inputs);
+                delete window.resolveInputPrompt;
             }
         }
         
@@ -2714,20 +2816,97 @@
 
         function showNewFileDialog() {
             closeContextMenu();
-            const fileName = prompt('Enter file name (with extension):');
-            
-            if (!fileName) return;
-            
-            createNewFile(fileName);
+            showInlineInput('file');
         }
 
         function showNewFolderDialog() {
             closeContextMenu();
-            const folderName = prompt('Enter folder name:');
+            showInlineInput('folder');
+        }
+        
+        function showInlineInput(type) {
+            // Remove any existing inline input
+            const existing = document.querySelector('.inline-input-container');
+            if (existing) existing.remove();
             
-            if (!folderName) return;
+            // Determine where to insert the input
+            const basePath = contextMenuTarget || '';
+            const container = document.getElementById('fileTree');
             
-            createNewFolder(folderName);
+            // Calculate indentation level
+            let level = 0;
+            if (basePath) {
+                level = basePath.split('/').length;
+            }
+            
+            // Create inline input element
+            const inputContainer = document.createElement('div');
+            inputContainer.className = 'inline-input-container tree-node';
+            inputContainer.style.paddingLeft = (level * 20 + 10) + 'px';
+            inputContainer.style.background = 'var(--bg-secondary)';
+            inputContainer.style.borderLeft = '2px solid var(--primary-color)';
+            
+            const icon = type === 'folder' ? '▶' : '●';
+            inputContainer.innerHTML = `
+                <span class="tree-node-icon">${icon}</span>
+                <input type="text" id="inline-name-input" 
+                       style="background: transparent; border: none; color: var(--text-primary); outline: none; font-family: inherit; flex: 1; padding: 2px;" 
+                       placeholder="${type === 'folder' ? 'Folder name' : 'File name'}"
+                       autocomplete="off">
+            `;
+            
+            // Insert at the correct position
+            if (basePath && type === 'folder') {
+                // Insert after the parent folder
+                const parentNode = container.querySelector(`[data-path="${basePath}"]`);
+                if (parentNode && parentNode.nextSibling) {
+                    parentNode.parentNode.insertBefore(inputContainer, parentNode.nextSibling);
+                } else if (parentNode) {
+                    parentNode.parentNode.appendChild(inputContainer);
+                } else {
+                    container.insertBefore(inputContainer, container.firstChild);
+                }
+            } else {
+                // Insert at the top for root level items
+                container.insertBefore(inputContainer, container.firstChild);
+            }
+            
+            const input = document.getElementById('inline-name-input');
+            input.focus();
+            
+            // Handle input submission
+            input.addEventListener('keydown', async (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const name = input.value.trim();
+                    
+                    if (!name) {
+                        inputContainer.remove();
+                        return;
+                    }
+                    
+                    // Validate name
+                    if (name.includes('/') || name.includes('\\')) {
+                        showNotification('Invalid name: cannot contain / or \\', 'error');
+                        return;
+                    }
+                    
+                    inputContainer.remove();
+                    
+                    if (type === 'file') {
+                        await createNewFile(name);
+                    } else {
+                        await createNewFolder(name);
+                    }
+                } else if (e.key === 'Escape') {
+                    inputContainer.remove();
+                }
+            });
+            
+            // Remove on blur
+            input.addEventListener('blur', () => {
+                setTimeout(() => inputContainer.remove(), 200);
+            });
         }
 
         async function createNewFile(fileName) {
@@ -2735,7 +2914,7 @@
                 const basePath = contextMenuTarget || '';
                 const fullPath = basePath ? `${basePath}/${fileName}` : fileName;
                 
-                const response = await fetch(`/api/ide/file/${currentProjectId}/`, {
+                const response = await fetch(`/api/ide/file/${PROJECT_ID}/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2767,7 +2946,7 @@
                 const basePath = contextMenuTarget || '';
                 const fullPath = basePath ? `${basePath}/${folderName}` : folderName;
                 
-                const response = await fetch(`/api/ide/directory/${currentProjectId}/`, {
+                const response = await fetch(`/api/ide/directory/${PROJECT_ID}/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
