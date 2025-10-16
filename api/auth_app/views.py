@@ -334,10 +334,16 @@ def admin_panel_view(request):
         messages.error(request, 'Access denied. Admin privileges required.')
         return redirect('auth_app:account')
     
-    from homepage.models import PythonScript, UserProfile
+    from homepage.models import PythonCodeSession, UserFiles, UserProfile
     from django.db.models import Count, Sum
-    import psutil
     from datetime import timedelta
+    
+    # Try to import psutil for system stats (optional)
+    try:
+        import psutil
+        psutil_available = True
+    except ImportError:
+        psutil_available = False
     
     # Get filter parameters
     filter_type = request.GET.get('filter', 'all')  # all, paid, free, admin
@@ -382,26 +388,50 @@ def admin_panel_view(request):
     thirty_min_ago = timezone.now() - timedelta(minutes=30)
     active_sessions = User.objects.filter(last_login__gte=thirty_min_ago).count() if hasattr(User, 'last_login') else 0
     
-    # File statistics
+    # File statistics - try both PythonCodeSession and UserFiles
     try:
-        total_files = PythonScript.objects.count()
-        files_today = PythonScript.objects.filter(created_at__gte=today_start).count() if hasattr(PythonScript, 'created_at') else 0
-    except:
+        total_files = PythonCodeSession.objects.count() + UserFiles.objects.count()
+        files_today = (
+            PythonCodeSession.objects.filter(created_at__gte=today_start).count() +
+            UserFiles.objects.filter(created_at__gte=today_start).count()
+        )
+    except Exception as e:
+        print(f"Error counting files: {e}")
         total_files = 0
         files_today = 0
     
     # Server statistics
-    try:
-        cpu_percent = psutil.cpu_percent(interval=1)
-        memory = psutil.virtual_memory()
-        memory_percent = memory.percent
-        memory_used_gb = round(memory.used / (1024**3), 2)
-        memory_total_gb = round(memory.total / (1024**3), 2)
-        disk = psutil.disk_usage('/')
-        disk_percent = disk.percent
-        disk_used_gb = round(disk.used / (1024**3), 2)
-        disk_total_gb = round(disk.total / (1024**3), 2)
-    except:
+    if psutil_available:
+        try:
+            cpu_percent = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            memory_percent = memory.percent
+            memory_used_gb = round(memory.used / (1024**3), 2)
+            memory_total_gb = round(memory.total / (1024**3), 2)
+            disk = psutil.disk_usage('/')
+            disk_percent = disk.percent
+            disk_used_gb = round(disk.used / (1024**3), 2)
+            disk_total_gb = round(disk.total / (1024**3), 2)
+            
+            # Server uptime
+            import time
+            boot_time = psutil.boot_time()
+            uptime_seconds = time.time() - boot_time
+            uptime_days = int(uptime_seconds // 86400)
+            uptime_hours = int((uptime_seconds % 86400) // 3600)
+            uptime_minutes = int((uptime_seconds % 3600) // 60)
+            server_uptime = f"{uptime_days}d {uptime_hours}h {uptime_minutes}m"
+        except Exception as e:
+            print(f"Error getting system stats: {e}")
+            cpu_percent = 0
+            memory_percent = 0
+            memory_used_gb = 0
+            memory_total_gb = 0
+            disk_percent = 0
+            disk_used_gb = 0
+            disk_total_gb = 0
+            server_uptime = "Unknown"
+    else:
         cpu_percent = 0
         memory_percent = 0
         memory_used_gb = 0
@@ -409,18 +439,7 @@ def admin_panel_view(request):
         disk_percent = 0
         disk_used_gb = 0
         disk_total_gb = 0
-    
-    # Server uptime
-    try:
-        import time
-        boot_time = psutil.boot_time()
-        uptime_seconds = time.time() - boot_time
-        uptime_days = int(uptime_seconds // 86400)
-        uptime_hours = int((uptime_seconds % 86400) // 3600)
-        uptime_minutes = int((uptime_seconds % 3600) // 60)
-        server_uptime = f"{uptime_days}d {uptime_hours}h {uptime_minutes}m"
-    except:
-        server_uptime = "Unknown"
+        server_uptime = "N/A (psutil not installed)"
     
     # Recent activities (last 10 user registrations)
     recent_activities = []
@@ -457,16 +476,17 @@ def admin_panel_view(request):
             'count': count
         })
     
-    # Get user file counts
+    # Get user file counts and files list
     users_with_files = []
     user_files = []
     try:
-        # Get all files for the files section
-        user_files = PythonScript.objects.select_related('user').order_by('-created_at')[:100]
+        # Get all code sessions for the files section (most recent 100)
+        code_sessions = PythonCodeSession.objects.select_related('user').order_by('-updated_at')[:100]
+        user_files = list(code_sessions)
         
         # Get file counts per user
         for user in all_users[:100]:  # Limit to first 100 users for performance
-            file_count = PythonScript.objects.filter(user=user).count()
+            file_count = PythonCodeSession.objects.filter(user=user).count()
             if file_count > 0:
                 users_with_files.append({
                     'user': user,
@@ -474,7 +494,6 @@ def admin_panel_view(request):
                 })
     except Exception as e:
         print(f"Error loading user files: {e}")
-        pass
     
     # Calculate average files per user
     avg_files_per_user = round(total_files / total_users, 1) if total_users > 0 else 0
