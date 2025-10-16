@@ -230,6 +230,8 @@ def login_view(request):
 def account_view(request):
     from .models import TwoFactorAuth
     from homepage.achievements import get_user_achievements
+    from homepage.models import UserFiles, IDEFile, IDEProject
+    from django.utils import timezone
     
     # Get or create 2FA object for template context
     try:
@@ -240,10 +242,31 @@ def account_view(request):
     # Get user achievements
     achievements = get_user_achievements(request.user)
     
+    # Calculate analytics
+    # Count Python environment files
+    user_files_count = UserFiles.objects.filter(user=request.user).count()
+    
+    # Count IDE files (for paid users)
+    ide_files_count = IDEFile.objects.filter(project__user=request.user).count()
+    total_files = user_files_count + ide_files_count
+    
+    # Calculate days since joined
+    days_since_joined = (timezone.now() - request.user.date_joined).days
+    
+    # Get user profile
+    try:
+        from homepage.models import UserProfile
+        user_profile = UserProfile.objects.get(user=request.user)
+    except:
+        user_profile = None
+    
     return render(request, 'auth_app/account.html', {
         'user': request.user,
         'two_factor': two_factor,
-        'achievements': achievements
+        'achievements': achievements,
+        'user_files_count': total_files,
+        'days_since_joined': days_since_joined,
+        'user_profile': user_profile
     })
 
 @login_required

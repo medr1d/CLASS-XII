@@ -1,7 +1,7 @@
 """
 Views for Cloud IDE functionality for paid users
 """
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST, require_http_methods
@@ -31,14 +31,19 @@ def ide_environment(request):
     """Main IDE environment view for paid users"""
     user = request.user
     
-    # Get user theme
-    user_theme = 'default'
+    # Get user profile and check if paid user
     try:
         profile = UserProfile.objects.get(user=user)
         user_theme = profile.theme
     except UserProfile.DoesNotExist:
         profile = UserProfile.objects.create(user=user)
         user_theme = 'default'
+    
+    # Check if user has paid access
+    if not profile.paidUser:
+        from django.contrib import messages
+        messages.error(request, 'Cloud IDE is only available for premium users. Please upgrade your account.')
+        return redirect('homepage:python_environment')  # Redirect to free environment
     
     # Get or create default project
     project, created = IDEProject.objects.get_or_create(
@@ -866,6 +871,86 @@ def delete_file(request, project_id):
         
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def rename_file(request, project_id):
+    """Rename a file or directory"""
+    try:
+        data = json.loads(request.body)
+        old_path = data.get('old_path', '').strip()
+        new_name = data.get('new_name', '').strip()
+        item_type = data.get('type', 'file')  # 'file' or 'directory'
+        
+        if not old_path or not new_name:
+            return JsonResponse({'success': False, 'error': 'Path and new name required'}, status=400)
+        
+        # Validate new name (no slashes, no special chars)
+        if '/' in new_name or '\\' in new_name:
+            return JsonResponse({'success': False, 'error': 'Invalid name: cannot contain slashes'}, status=400)
+        
+        project = get_object_or_404(IDEProject, project_id=project_id, user=request.user)
+        
+        # Calculate new path
+        path_parts = old_path.split('/')
+        path_parts[-1] = new_name
+        new_path = '/'.join(path_parts)
+        
+        if item_type == 'file':
+            # Rename file
+            file_obj = get_object_or_404(IDEFile, project=project, path=old_path)
+            
+            # Check if new path already exists
+            if IDEFile.objects.filter(project=project, path=new_path).exists():
+                return JsonResponse({'success': False, 'error': 'A file with this name already exists'}, status=400)
+            
+            file_obj.name = new_name
+            file_obj.path = new_path
+            file_obj.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'File renamed to "{new_name}"',
+                'new_path': new_path
+            })
+        else:
+            # Rename directory
+            dir_obj = get_object_or_404(IDEDirectory, project=project, path=old_path)
+            
+            # Check if new path already exists
+            if IDEDirectory.objects.filter(project=project, path=new_path).exists():
+                return JsonResponse({'success': False, 'error': 'A directory with this name already exists'}, status=400)
+            
+            # Update directory and all children
+            old_path_prefix = old_path + '/'
+            new_path_prefix = new_path + '/'
+            
+            # Update all child directories
+            child_dirs = IDEDirectory.objects.filter(project=project, path__startswith=old_path_prefix)
+            for child_dir in child_dirs:
+                child_dir.path = child_dir.path.replace(old_path_prefix, new_path_prefix, 1)
+                child_dir.save()
+            
+            # Update all files in this directory and subdirectories
+            child_files = IDEFile.objects.filter(project=project, path__startswith=old_path_prefix)
+            for child_file in child_files:
+                child_file.path = child_file.path.replace(old_path_prefix, new_path_prefix, 1)
+                child_file.save()
+            
+            # Update the directory itself
+            dir_obj.name = new_name
+            dir_obj.path = new_path
+            dir_obj.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Directory renamed to "{new_name}"',
+                'new_path': new_path
+            })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @login_required

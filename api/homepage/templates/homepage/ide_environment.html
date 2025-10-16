@@ -2585,17 +2585,20 @@
             const fileTree = document.getElementById('fileTree');
             
             fileTree.addEventListener('contextmenu', (e) => {
-                // Only show if clicking on empty space (the fileTree itself, not a child)
-                if (e.target === fileTree) {
+                // Show context menu on empty space (not on file/folder nodes)
+                // Check if the click is on fileTree or its direct children that aren't file nodes
+                const isFileNode = e.target.closest('.file-node');
+                
+                if (!isFileNode) {
                     e.preventDefault();
                     
                     const menu = document.getElementById('contextMenu');
                     menu.innerHTML = `
                         <div class="context-menu-item" onclick="showNewFileDialog()">
-                            <span>New File</span>
+                            <span>📄 New File</span>
                         </div>
                         <div class="context-menu-item" onclick="showNewFolderDialog()">
-                            <span>New Folder</span>
+                            <span>📁 New Folder</span>
                         </div>
                     `;
                     
@@ -2640,7 +2643,7 @@
             if (!newName || newName === currentName) return;
             
             try {
-                const response = await fetch(`/api/ide/rename/${currentProjectId}/`, {
+                const response = await fetch(`/api/ide/projects/${currentProjectId}/files/rename/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2658,6 +2661,10 @@
                 if (data.success) {
                     showNotification(`${contextMenuType} renamed successfully!`, 'success');
                     await loadFileTree();
+                    // If the renamed item was open, close it and open with new name
+                    if (currentFile === contextMenuTarget) {
+                        await openFile(data.new_path);
+                    }
                 } else {
                     showNotification(data.error || 'Failed to rename', 'error');
                 }

@@ -5416,13 +5416,17 @@ sys.stderr = sys.__stderr__
         let shareModal = null;
 
         function toggleShareModal() {
+            console.log('toggleShareModal called');
             if (!shareModal) {
+                console.log('Creating share modal...');
                 createShareModal();
             }
             
             if (shareModal.style.display === 'flex') {
+                console.log('Hiding modal');
                 shareModal.style.display = 'none';
             } else {
+                console.log('Showing modal');
                 shareModal.style.display = 'flex';
             }
         }
@@ -5594,6 +5598,7 @@ sys.stderr = sys.__stderr__
         }
 
         async function shareCode() {
+            console.log('shareCode function called');
             const resultDiv = document.getElementById('share-result');
             const title = document.getElementById('share-title').value.trim();
             const description = document.getElementById('share-description').value.trim();
@@ -5601,6 +5606,8 @@ sys.stderr = sys.__stderr__
             const expiryDays = 7; // Fixed to 7 days
             const shareType = document.querySelector('input[name="share-type"]:checked').value;
             const selectedFile = document.getElementById('share-file-select').value;
+            
+            console.log('Share data:', { title, description, isPublic, shareType, selectedFile });
             
             if (!title) {
                 resultDiv.innerHTML = '<div style="padding: 10px; background: #ff4444; color: white; border-radius: 4px;">Please enter a title</div>';

@@ -66,6 +66,7 @@ urlpatterns = [
     path('api/ide/projects/<uuid:project_id>/files/<path:file_path>/', ide_views.get_file_content, name='ide_get_file'),
     path('api/ide/projects/<uuid:project_id>/files/save/', ide_views.save_file, name='ide_save_file'),
     path('api/ide/projects/<uuid:project_id>/files/delete/', ide_views.delete_file, name='ide_delete_file'),
+    path('api/ide/projects/<uuid:project_id>/files/rename/', ide_views.rename_file, name='ide_rename_file'),
     path('api/ide/projects/<uuid:project_id>/directories/create/', ide_views.create_directory, name='ide_create_directory'),
     
     # File upload/download
