@@ -1261,6 +1261,7 @@
         <div class="nav-links">
             <a href="/" class="nav-link">HOME</a>
             <a href="/python/" class="nav-link">PYTHON</a>
+            <button class="nav-link" onclick="openSettings()" style="background: none; cursor: pointer;">SETTINGS</button>
             <a href="/logout/" class="nav-link">LOGOUT</a>
         </div>
     </div>
@@ -1346,6 +1347,31 @@
 
     <script>
         const csrfToken = '{{ csrf_token }}';
+        
+        // Helper function to get CSRF cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Current user data
+        const currentUser = {
+            username: '{{ user.username }}',
+            profile_picture_url: '{{ user.userprofile.profile_picture.url|default:"/static/images/default-avatar.png" }}',
+            status: '{{ user.userprofile.status_message|default:"" }}',
+            bio: '{{ user.userprofile.bio|default:"" }}'
+        };
+        
         let currentTab = 'friends';
         let currentChatUser = null;
         let friendsData = {{ friends_json|safe }};
@@ -2010,6 +2036,178 @@
             // Remove both overlay modals and popup modals
             const modals = document.querySelectorAll('.profile-modal-overlay, .mini-profile-popup');
             modals.forEach(modal => modal.remove());
+        }
+
+        // Settings Modal Functions
+        function openSettings() {
+            const modalHTML = `
+                <div class="profile-modal-overlay active" id="settingsModal" onclick="closeSettings(event)">
+                    <div class="full-profile-modal" onclick="event.stopPropagation()" style="max-width: 600px;">
+                        <button class="profile-close-btn" onclick="closeSettings()">×</button>
+                        
+                        <div class="profile-header">
+                            <div class="profile-username" style="font-size: 1.5rem;">SETTINGS</div>
+                            <div class="profile-joined">Update your profile information</div>
+                        </div>
+
+                        <form id="settingsForm" enctype="multipart/form-data" onsubmit="saveSettings(event)">
+                            <div class="profile-section">
+                                <div class="profile-section-title">Profile Picture</div>
+                                <div style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
+                                    <img id="profilePicturePreview" 
+                                         src="${currentUser.profile_picture_url || '/static/images/default-avatar.png'}" 
+                                         alt="Profile Picture" 
+                                         style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
+                                    <input type="file" 
+                                           id="profilePictureInput" 
+                                           name="profile_picture" 
+                                           accept="image/*"
+                                           onchange="previewProfilePicture(event)"
+                                           style="padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--primary-color); border-radius: 4px; color: var(--text-color); width: 100%;">
+                                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Max 5MB. JPG, PNG, or GIF.</div>
+                                </div>
+                            </div>
+
+                            <div class="profile-section">
+                                <div class="profile-section-title">Status</div>
+                                <input type="text" 
+                                       id="statusInput" 
+                                       name="status" 
+                                       maxlength="50" 
+                                       value="${currentUser.status || ''}"
+                                       placeholder="What's on your mind?"
+                                       style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--primary-color); border-radius: 4px; color: var(--text-color); font-family: 'Courier New', monospace;">
+                                <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 5px;">
+                                    <span id="statusCharCount">0</span>/50 characters
+                                </div>
+                            </div>
+
+                            <div class="profile-section">
+                                <div class="profile-section-title">Bio</div>
+                                <textarea id="bioInput" 
+                                          name="bio" 
+                                          maxlength="200" 
+                                          rows="4"
+                                          placeholder="Tell us about yourself..."
+                                          style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--primary-color); border-radius: 4px; color: var(--text-color); font-family: 'Courier New', monospace; resize: vertical;">${currentUser.bio || ''}</textarea>
+                                <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 5px;">
+                                    <span id="bioCharCount">0</span>/200 characters
+                                </div>
+                            </div>
+
+                            <div class="profile-actions" style="margin-top: 20px;">
+                                <button type="submit" class="profile-btn" id="saveSettingsBtn">
+                                    SAVE CHANGES
+                                </button>
+                                <button type="button" class="profile-btn secondary" onclick="closeSettings()">
+                                    CANCEL
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Initialize character counters
+            updateCharCount('statusInput', 'statusCharCount');
+            updateCharCount('bioInput', 'bioCharCount');
+            
+            // Add event listeners for character counting
+            document.getElementById('statusInput').addEventListener('input', () => {
+                updateCharCount('statusInput', 'statusCharCount');
+            });
+            document.getElementById('bioInput').addEventListener('input', () => {
+                updateCharCount('bioInput', 'bioCharCount');
+            });
+        }
+
+        function closeSettings(event) {
+            if (event && event.target.classList.contains('full-profile-modal')) {
+                return;
+            }
+            const modal = document.getElementById('settingsModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function previewProfilePicture(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Check file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB');
+                    event.target.value = '';
+                    return;
+                }
+                
+                // Preview the image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profilePicturePreview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateCharCount(inputId, countId) {
+            const input = document.getElementById(inputId);
+            const count = document.getElementById(countId);
+            if (input && count) {
+                count.textContent = input.value.length;
+            }
+        }
+
+        function saveSettings(event) {
+            event.preventDefault();
+            
+            const saveBtn = document.getElementById('saveSettingsBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'SAVING...';
+            
+            const formData = new FormData(document.getElementById('settingsForm'));
+            
+            fetch('/community/update-settings/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update currentUser object
+                    if (data.profile_picture_url) {
+                        currentUser.profile_picture_url = data.profile_picture_url;
+                    }
+                    if (data.status !== undefined) {
+                        currentUser.status = data.status;
+                    }
+                    if (data.bio !== undefined) {
+                        currentUser.bio = data.bio;
+                    }
+                    
+                    // Show success message
+                    alert('Settings saved successfully!');
+                    closeSettings();
+                    
+                    // Reload page to reflect changes
+                    location.reload();
+                } else {
+                    alert('Error saving settings: ' + (data.message || 'Unknown error'));
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'SAVE CHANGES';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving settings. Please try again.');
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'SAVE CHANGES';
+            });
         }
 
         function openChatFromProfile(userId) {

@@ -37,6 +37,7 @@ urlpatterns = [
     path('community/remove-friend/', views.remove_friend, name='remove_friend'),
     path('community/friends/', views.get_friends_list, name='get_friends_list'),
     path('community/update-status/', views.update_status_message, name='update_status_message'),
+    path('community/update-settings/', views.update_community_settings, name='update_community_settings'),
     path('community/send-message/', views.send_direct_message, name='send_direct_message'),
     path('community/messages/<int:user_id>/', views.get_direct_messages, name='get_direct_messages'),
     

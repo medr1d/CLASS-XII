@@ -1601,3 +1601,71 @@ def upload_profile_picture(request):
         error_details = traceback.format_exc()
         print(f"Profile picture upload error: {error_details}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+def update_community_settings(request):
+    """Update user profile settings from community page"""
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
+    
+    try:
+        from .models import UserProfile, UserStatus
+        import vercel_blob
+        
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        user_status, _ = UserStatus.objects.get_or_create(user=request.user)
+        
+        response_data = {'status': 'success'}
+        
+        # Handle profile picture upload
+        profile_picture = request.FILES.get('profile_picture')
+        if profile_picture:
+            # Validate file
+            if not profile_picture.content_type.startswith('image/'):
+                return JsonResponse({'status': 'error', 'message': 'File must be an image'}, status=400)
+            
+            # Max 5MB
+            if profile_picture.size > 5 * 1024 * 1024:
+                return JsonResponse({'status': 'error', 'message': 'File too large (max 5MB)'}, status=400)
+            
+            # Get Vercel Blob token
+            blob_token = os.getenv('BLOB_READ_WRITE_TOKEN')
+            if not blob_token:
+                return JsonResponse({'status': 'error', 'message': 'Blob storage not configured'}, status=500)
+            
+            # Upload to Vercel Blob
+            filename = f"profile_{request.user.id}_{int(timezone.now().timestamp())}.{profile_picture.name.split('.')[-1]}"
+            file_content = profile_picture.read()
+            
+            blob_response = vercel_blob.put(filename, file_content, {})
+            
+            if blob_response and 'url' in blob_response:
+                profile.profile_picture_url = blob_response['url']
+                response_data['profile_picture_url'] = blob_response['url']
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Upload failed'}, status=500)
+        
+        # Handle status message
+        status = request.POST.get('status', '').strip()
+        if status is not None:
+            user_status.status_message = status[:50]  # Limit to 50 chars
+            user_status.save()
+            response_data['status'] = status[:50]
+        
+        # Handle bio
+        bio = request.POST.get('bio', '').strip()
+        if bio is not None:
+            profile.bio = bio[:200]  # Limit to 200 chars
+            response_data['bio'] = bio[:200]
+        
+        # Save profile changes
+        profile.save()
+        
+        return JsonResponse(response_data)
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Settings update error: {error_details}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
