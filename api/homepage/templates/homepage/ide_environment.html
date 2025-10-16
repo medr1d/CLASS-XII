@@ -2052,8 +2052,14 @@
                         img.style.margin = '10px 0';
                         img.style.border = '2px solid var(--border-color)';
                         img.style.borderRadius = '4px';
-                        const terminalOutput = document.querySelector(`#${activeTerminal} .terminal-output`);
-                        terminalOutput.appendChild(img);
+                        img.style.display = 'block';
+                        
+                        // Append to active terminal or default terminal
+                        const terminalId = activeTerminalId || 'terminal-main';
+                        const terminalOutput = document.querySelector(`#${terminalId} .terminal-output`);
+                        if (terminalOutput) {
+                            terminalOutput.appendChild(img);
+                        }
                     });
                 }
                 

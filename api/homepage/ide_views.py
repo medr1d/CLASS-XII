@@ -1061,6 +1061,11 @@ def execute_code(request, project_id):
 import sys
 import io
 import base64
+import os
+import tempfile
+
+# Set matplotlib config directory to temp to avoid read-only filesystem errors
+os.environ['MPLCONFIGDIR'] = tempfile.gettempdir()
 
 # Configure matplotlib to use Agg backend (non-GUI) if available
 try:
