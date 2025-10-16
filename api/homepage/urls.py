@@ -47,6 +47,9 @@ urlpatterns = [
     path('profile/update/', views.update_profile, name='update_profile'),
     path('profile/upload-picture/', views.upload_profile_picture, name='upload_profile_picture'),
     
+    # Achievement features
+    path('toggle-achievement-display/', views.toggle_achievement_display, name='toggle_achievement_display'),
+    
     # ==================== CLOUD IDE ROUTES (Paid Users Only) ====================
     
     # Main IDE interface

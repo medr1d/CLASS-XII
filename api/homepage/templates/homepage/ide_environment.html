@@ -954,6 +954,7 @@
             <div class="top-bar-actions">
                 <button class="btn btn-primary" onclick="runCode()">RUN CODE</button>
                 <button class="btn" onclick="saveCurrentFile()">SAVE FILE</button>
+                <button class="btn" onclick="formatCode()">FORMAT</button>
                 <button class="btn" onclick="showSearchModal()">SEARCH</button>
                 <button class="btn" onclick="showTemplateModal()">TEMPLATES</button>
                 <button class="btn" onclick="showPackageModal()">PACKAGES</button>
@@ -1580,6 +1581,42 @@
                 lineNumbers: 'on',
                 renderWhitespace: 'selection',
                 tabSize: 4,
+                // Code Intelligence Features
+                suggest: {
+                    snippetsPreventQuickSuggestions: false,
+                    showWords: true,
+                    showKeywords: true,
+                    showSnippets: true,
+                },
+                quickSuggestions: {
+                    other: true,
+                    comments: false,
+                    strings: true
+                },
+                acceptSuggestionOnCommitCharacter: true,
+                acceptSuggestionOnEnter: 'on',
+                parameterHints: {
+                    enabled: true,
+                    cycle: true
+                },
+                formatOnPaste: true,
+                formatOnType: true,
+                autoClosingBrackets: 'always',
+                autoClosingQuotes: 'always',
+                autoIndent: 'full',
+                bracketPairColorization: {
+                    enabled: true
+                },
+                // Error Detection
+                renderValidationDecorations: 'on',
+            });
+            
+            // Configure Python language features
+            monaco.languages.registerCompletionItemProvider('python', {
+                provideCompletionItems: (model, position) => {
+                    const suggestions = getPythonSuggestions(model, position);
+                    return { suggestions };
+                }
             });
             
             // Load initial file tree
@@ -2310,6 +2347,66 @@
             // Simulate package installation
             showNotification(`Package "${packageName}" is available in the cloud environment`, 'success');
             document.getElementById('packageName').value = '';
+        }
+
+        // Python Code Intelligence
+        function getPythonSuggestions(model, position) {
+            const word = model.getWordUntilPosition(position);
+            const range = {
+                startLineNumber: position.lineNumber,
+                endLineNumber: position.lineNumber,
+                startColumn: word.startColumn,
+                endColumn: word.endColumn
+            };
+
+            // Python built-in functions and keywords
+            const pythonKeywords = [
+                { label: 'print', kind: monaco.languages.CompletionItemKind.Function, insertText: 'print(${1:value})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Print to console' },
+                { label: 'input', kind: monaco.languages.CompletionItemKind.Function, insertText: 'input(${1:prompt})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Get user input' },
+                { label: 'len', kind: monaco.languages.CompletionItemKind.Function, insertText: 'len(${1:obj})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Return length of object' },
+                { label: 'range', kind: monaco.languages.CompletionItemKind.Function, insertText: 'range(${1:stop})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Create range object' },
+                { label: 'str', kind: monaco.languages.CompletionItemKind.Class, insertText: 'str(${1:obj})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Convert to string' },
+                { label: 'int', kind: monaco.languages.CompletionItemKind.Class, insertText: 'int(${1:value})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Convert to integer' },
+                { label: 'float', kind: monaco.languages.CompletionItemKind.Class, insertText: 'float(${1:value})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Convert to float' },
+                { label: 'list', kind: monaco.languages.CompletionItemKind.Class, insertText: 'list(${1:iterable})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Create list' },
+                { label: 'dict', kind: monaco.languages.CompletionItemKind.Class, insertText: 'dict()', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Create dictionary' },
+                { label: 'set', kind: monaco.languages.CompletionItemKind.Class, insertText: 'set()', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Create set' },
+                { label: 'tuple', kind: monaco.languages.CompletionItemKind.Class, insertText: 'tuple(${1:iterable})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Create tuple' },
+                { label: 'open', kind: monaco.languages.CompletionItemKind.Function, insertText: 'open(${1:file}, ${2:mode})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Open file' },
+                { label: 'isinstance', kind: monaco.languages.CompletionItemKind.Function, insertText: 'isinstance(${1:obj}, ${2:type})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Check instance type' },
+                { label: 'enumerate', kind: monaco.languages.CompletionItemKind.Function, insertText: 'enumerate(${1:iterable})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Enumerate items' },
+                { label: 'zip', kind: monaco.languages.CompletionItemKind.Function, insertText: 'zip(${1:iter1}, ${2:iter2})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Zip iterables' },
+                { label: 'sum', kind: monaco.languages.CompletionItemKind.Function, insertText: 'sum(${1:iterable})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Sum of items' },
+                { label: 'max', kind: monaco.languages.CompletionItemKind.Function, insertText: 'max(${1:iterable})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Maximum value' },
+                { label: 'min', kind: monaco.languages.CompletionItemKind.Function, insertText: 'min(${1:iterable})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Minimum value' },
+                
+                // Code snippets
+                { label: 'def', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'def ${1:function_name}(${2:params}):\n    ${3:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Function definition' },
+                { label: 'class', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'class ${1:ClassName}:\n    def __init__(self${2:, params}):\n        ${3:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Class definition' },
+                { label: 'if', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'if ${1:condition}:\n    ${2:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'If statement' },
+                { label: 'for', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'for ${1:item} in ${2:iterable}:\n    ${3:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'For loop' },
+                { label: 'while', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'while ${1:condition}:\n    ${2:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'While loop' },
+                { label: 'try', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'try:\n    ${1:pass}\nexcept ${2:Exception} as ${3:e}:\n    ${4:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Try-except block' },
+                { label: 'with', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'with ${1:expression} as ${2:variable}:\n    ${3:pass}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'With statement' },
+                { label: 'lambda', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'lambda ${1:x}: ${2:x}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Lambda function' },
+                { label: 'main', kind: monaco.languages.CompletionItemKind.Snippet, insertText: 'if __name__ == "__main__":\n    ${1:main()}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Main guard' },
+            ];
+
+            return pythonKeywords.map(item => ({
+                ...item,
+                range: range
+            }));
+        }
+
+        function formatCode() {
+            if (!editor.getModel()) {
+                showNotification('No file open', 'error');
+                return;
+            }
+            
+            // Trigger Monaco's built-in formatter
+            editor.getAction('editor.action.formatDocument').run();
+            showNotification('Code formatted', 'success');
         }
 
         // File Upload/Download Functions

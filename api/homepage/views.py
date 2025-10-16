@@ -1114,6 +1114,7 @@ def end_session(request, session_id):
 def community(request):
     """Community page with friends and DMs"""
     from .models import Friendship, UserStatus
+    from .achievements import get_user_achievements
     
     user = request.user
     
@@ -1126,12 +1127,21 @@ def community(request):
     friends_data = []
     for friend in friends:
         friend_status, _ = UserStatus.objects.get_or_create(user=friend)
+        # Get friend's displayed achievements (max 3)
+        friend_achievements = get_user_achievements(friend, displayed_only=True, limit=3)
         friends_data.append({
             'id': friend.id,
             'username': friend.username,
             'is_online': friend_status.is_online,
             'last_seen': friend_status.last_seen.isoformat() if friend_status.last_seen else '',
             'status_message': friend_status.status_message,
+            'achievements': [
+                {
+                    'name': ach['achievement__name'],
+                    'badge_icon': ach['achievement__badge_icon'],
+                    'description': ach['achievement__description']
+                } for ach in friend_achievements
+            ]
         })
     
     # Get pending friend requests
@@ -1155,12 +1165,16 @@ def community(request):
     except UserProfile.DoesNotExist:
         pass
     
+    # Get current user's achievements for display
+    user_achievements = get_user_achievements(user)
+    
     context = {
         'user': user,
         'friends_json': json.dumps(friends_data),
         'pending_requests': pending_requests,
         'sent_requests': sent_requests,
         'user_theme': user_theme,
+        'achievements': user_achievements,
     }
     
     return render(request, 'homepage/community.html', context)
@@ -1455,6 +1469,10 @@ def get_user_profile(request, user_id):
         from .models import SharedCode
         shared_codes_count = SharedCode.objects.filter(user=user).count()
         
+        # Get user's displayed achievements (max 3 for mini-profile)
+        from .achievements import get_user_achievements
+        achievements = get_user_achievements(user, displayed_only=True, limit=3)
+        
         profile_data = {
             'user_id': user.id,
             'username': user.username,
@@ -1470,6 +1488,13 @@ def get_user_profile(request, user_id):
             'joined_date': user.date_joined.strftime('%B %Y'),
             'is_friend': is_friend,
             'is_own_profile': user == request.user,
+            'achievements': [
+                {
+                    'name': ach['achievement__name'],
+                    'badge_icon': ach['achievement__badge_icon'],
+                    'description': ach['achievement__description']
+                } for ach in achievements
+            ],
             'stats': {
                 'shared_codes': shared_codes_count,
                 'friends_count': Friendship.objects.filter(
@@ -1669,3 +1694,41 @@ def update_community_settings(request):
         error_details = traceback.format_exc()
         print(f"Settings update error: {error_details}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def toggle_achievement_display(request):
+    """Toggle whether an achievement is displayed on the user's profile"""
+    try:
+        data = json.loads(request.body)
+        achievement_id = data.get('achievement_id')
+        is_displayed = data.get('is_displayed', False)
+        
+        from .models import UserAchievement
+        
+        # Get the user's achievement
+        user_achievement = UserAchievement.objects.get(
+            id=achievement_id,
+            user=request.user
+        )
+        
+        # Update display status
+        user_achievement.is_displayed = is_displayed
+        user_achievement.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Achievement display updated'
+        })
+        
+    except UserAchievement.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Achievement not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)

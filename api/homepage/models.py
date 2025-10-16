@@ -495,4 +495,51 @@ class IDETerminalSession(models.Model):
         self.save(update_fields=['history', 'last_active'])
 
 
+# ==================== ACHIEVEMENT SYSTEM ====================
+
+class Achievement(models.Model):
+    """Defines available achievements"""
+    ACHIEVEMENT_TYPES = [
+        ('og_user', 'OG User'),
+        ('paid_user', 'Paid User'),
+        ('beginner', 'Beginner'),
+        ('creator', 'Creator'),
+        ('prolific', 'Prolific'),
+        ('speedrunner', 'Speedrunner'),
+    ]
+    
+    achievement_type = models.CharField(max_length=50, choices=ACHIEVEMENT_TYPES, unique=True)
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    badge_icon = models.CharField(max_length=100)  # e.g., 'og_user.png'
+    points = models.IntegerField(default=10)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['achievement_type']
+    
+    def __str__(self):
+        return self.name
+
+
+class UserAchievement(models.Model):
+    """Tracks which achievements users have earned"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements')
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)
+    earned_at = models.DateTimeField(auto_now_add=True)
+    is_displayed = models.BooleanField(default=True)  # Whether to show on profile
+    
+    class Meta:
+        unique_together = ['user', 'achievement']
+        ordering = ['-earned_at']
+        indexes = [
+            models.Index(fields=['user', 'is_displayed']),
+            models.Index(fields=['-earned_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.achievement.name}"
+
+
 

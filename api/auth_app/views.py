@@ -229,6 +229,7 @@ def login_view(request):
 @login_required
 def account_view(request):
     from .models import TwoFactorAuth
+    from homepage.achievements import get_user_achievements
     
     # Get or create 2FA object for template context
     try:
@@ -236,9 +237,13 @@ def account_view(request):
     except TwoFactorAuth.DoesNotExist:
         two_factor = TwoFactorAuth(user=request.user, is_enabled=False)
     
+    # Get user achievements
+    achievements = get_user_achievements(request.user)
+    
     return render(request, 'auth_app/account.html', {
         'user': request.user,
-        'two_factor': two_factor
+        'two_factor': two_factor,
+        'achievements': achievements
     })
 
 @login_required

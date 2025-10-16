@@ -382,6 +382,146 @@
             text-shadow: 1px 1px 0 #000000;
         }
 
+        /* Achievements Grid */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .achievement-card {
+            background: #000000;
+            border: 3px solid #666666;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.2s ease;
+            box-shadow: 2px 2px 0 #666666;
+            position: relative;
+        }
+
+        .achievement-card.achievement-displayed {
+            border-color: #ffffff;
+            box-shadow: 3px 3px 0 #ffffff;
+        }
+
+        .achievement-card:hover {
+            transform: translate(-1px, -1px);
+            border-color: #ffffff;
+            box-shadow: 3px 3px 0 #ffffff;
+        }
+
+        .achievement-icon {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .achievement-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: pixelated;
+        }
+
+        .achievement-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            background: #1a1a1a;
+            border: 2px solid #ffffff;
+        }
+
+        .achievement-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .achievement-name {
+            font-size: 0.75rem;
+            color: #ffffff;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 0 #000000;
+        }
+
+        .achievement-desc {
+            font-size: 0.6rem;
+            color: #cccccc;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .achievement-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.55rem;
+        }
+
+        .achievement-points {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .achievement-date {
+            color: #888888;
+        }
+
+        .achievement-toggle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .achievement-toggle input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .toggle-label {
+            font-size: 0.55rem;
+            color: #cccccc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .no-achievements {
+            text-align: center;
+            padding: 60px 20px;
+            border: 2px dashed #666666;
+            margin-top: 20px;
+        }
+
+        .no-achievements-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .no-achievements-text {
+            font-size: 0.8rem;
+            color: #ffffff;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .no-achievements-hint {
+            font-size: 0.6rem;
+            color: #888888;
+        }
+
         /* Theme Grid */
         .theme-grid {
             display: grid;
@@ -740,6 +880,54 @@
                         </div>
                         <div class="stat-label">2FA Status</div>
                     </div>
+                </div>
+
+                <!-- Achievements Section -->
+                <div class="setting-card">
+                    <div class="setting-header">
+                        <h3 class="setting-title">Achievements & Badges</h3>
+                    </div>
+                    <div class="setting-description">
+                        Your earned achievements and badges. These will appear on your profile in the community.
+                    </div>
+                    
+                    {% if achievements %}
+                        <div class="achievements-grid">
+                            {% for achievement in achievements %}
+                                <div class="achievement-card {% if achievement.is_displayed %}achievement-displayed{% endif %}">
+                                    <div class="achievement-icon">
+                                        {% load static %}
+                                        <img src="{% static 'homepage/badges/' %}{{ achievement.achievement__badge_icon }}" 
+                                             alt="{{ achievement.achievement__name }}"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="achievement-placeholder" style="display: none;">
+                                            <span>🏆</span>
+                                        </div>
+                                    </div>
+                                    <div class="achievement-info">
+                                        <div class="achievement-name">{{ achievement.achievement__name }}</div>
+                                        <div class="achievement-desc">{{ achievement.achievement__description }}</div>
+                                        <div class="achievement-meta">
+                                            <span class="achievement-points">+{{ achievement.achievement__points }} pts</span>
+                                            <span class="achievement-date">{{ achievement.earned_at|date:"M d, Y" }}</span>
+                                        </div>
+                                    </div>
+                                    <label class="achievement-toggle">
+                                        <input type="checkbox" 
+                                               {% if achievement.is_displayed %}checked{% endif %}
+                                               onchange="toggleAchievementDisplay({{ achievement.id }}, this.checked)">
+                                        <span class="toggle-label">Display</span>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="no-achievements">
+                            <div class="no-achievements-icon">🏆</div>
+                            <div class="no-achievements-text">No achievements yet!</div>
+                            <div class="no-achievements-hint">Start coding to unlock your first badges</div>
+                        </div>
+                    {% endif %}
                 </div>
 
                 <div class="setting-card">
@@ -1390,6 +1578,46 @@
             .catch(error => {
                 console.error('Error:', error);
                 showNotification('Failed to remove profile picture', 'error');
+            });
+        }
+
+        function toggleAchievementDisplay(achievementId, isDisplayed) {
+            fetch('/homepage/toggle-achievement-display/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content
+                },
+                body: JSON.stringify({
+                    achievement_id: achievementId,
+                    is_displayed: isDisplayed
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showNotification(
+                        isDisplayed ? 'Achievement will be displayed on your profile' : 'Achievement hidden from profile',
+                        'success'
+                    );
+                    // Update the card styling
+                    const card = event.target.closest('.achievement-card');
+                    if (isDisplayed) {
+                        card.classList.add('achievement-displayed');
+                    } else {
+                        card.classList.remove('achievement-displayed');
+                    }
+                } else {
+                    showNotification(data.message || 'Failed to update achievement display', 'error');
+                    // Revert checkbox
+                    event.target.checked = !isDisplayed;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to update achievement display', 'error');
+                // Revert checkbox
+                event.target.checked = !isDisplayed;
             });
         }
 
