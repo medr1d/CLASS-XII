@@ -2224,13 +2224,12 @@
                 return;
             }
             
-            // List of pre-installed packages
+            // List of pre-installed packages (limited due to Vercel 250MB size limit)
             const preInstalledPackages = [
-                'matplotlib', 'numpy', 'pandas', 'scipy', 'scikit-learn', 
-                'requests', 'beautifulsoup4', 'bs4', 'lxml', 'pillow', 
+                'matplotlib', 'beautifulsoup4', 'bs4', 'lxml', 'pillow', 'requests',
                 'django', 'psutil', 'json', 'csv', 'math', 'random', 
                 'datetime', 'os', 'sys', 're', 'time', 'itertools', 
-                'collections', 'functools', 'pathlib'
+                'collections', 'functools', 'pathlib', 'urllib', 'html'
             ];
             
             const packageLower = packageName.toLowerCase().trim();
@@ -2240,8 +2239,9 @@
                 document.getElementById('packageName').value = '';
             } else {
                 showNotification(
-                    `Package '${packageName}' is not available in this environment. ` +
-                    `Available: matplotlib, numpy, pandas, scipy, scikit-learn, requests, beautifulsoup4, lxml`,
+                    `Package '${packageName}' is not available. ` +
+                    `Available packages: matplotlib, beautifulsoup4, lxml, requests, pillow, and standard library modules. ` +
+                    `Note: Heavy packages like numpy, pandas, scipy are not available due to Vercel's 250MB size limit.`,
                     'error'
                 );
             }
