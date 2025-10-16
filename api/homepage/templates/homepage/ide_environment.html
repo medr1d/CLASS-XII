@@ -956,7 +956,7 @@
                 <button class="btn" onclick="saveCurrentFile()">SAVE FILE</button>
                 <button class="btn" onclick="formatCode()">FORMAT</button>
                 <button class="btn" onclick="showSearchModal()">SEARCH</button>
-                <button class="btn" onclick="showTemplateModal()">TEMPLATES</button>
+                <!-- <button class="btn" onclick="showTemplateModal()">TEMPLATES</button> -->
                 <button class="btn" onclick="showPackageModal()">PACKAGES</button>
                 <button class="btn" onclick="showProjectModal()">PROJECTS</button>
                 <button class="btn" onclick="showShortcutsModal()">HELP</button>
@@ -1061,7 +1061,7 @@
                 </div>
             </div>
             <div class="modal-actions" style="margin-top: 20px;">
-                <button class="btn btn-primary" onclick="closeModal('projectModal'); showTemplateModal();">New Project from Template</button>
+                <!-- <button class="btn btn-primary" onclick="closeModal('projectModal'); showTemplateModal();">New Project from Template</button> -->
                 <button class="btn" onclick="closeModal('projectModal')">Close</button>
             </div>
         </div>
@@ -1945,9 +1945,8 @@
                 
                 const data = await response.json();
                 
-                if (!response.ok) {
-                    console.warn('Auto-save failed:', data.message);
-                    // Don't show error notification for auto-save failures
+                if (!response.ok || data.status !== 'success') {
+                    // Silently fail - don't spam console for auto-save failures
                     return;
                 }
                 
@@ -1957,7 +1956,6 @@
                     timestamp: Date.now()
                 });
             } catch (error) {
-                console.warn('Auto-save error:', error.message);
                 // Silently fail auto-save to avoid interrupting user
             }
         }
@@ -2041,6 +2039,22 @@
                 
                 if (data.error) {
                     appendToTerminal(data.error, true);
+                }
+                
+                // Display plots if any
+                if (data.plots && data.plots.length > 0) {
+                    appendToTerminal(`\n📊 Generated ${data.plots.length} plot(s):\n`);
+                    data.plots.forEach((plot, idx) => {
+                        // Create image element in terminal
+                        const img = document.createElement('img');
+                        img.src = `data:image/png;base64,${plot.data}`;
+                        img.style.maxWidth = '100%';
+                        img.style.margin = '10px 0';
+                        img.style.border = '2px solid var(--border-color)';
+                        img.style.borderRadius = '4px';
+                        const terminalOutput = document.querySelector(`#${activeTerminal} .terminal-output`);
+                        terminalOutput.appendChild(img);
+                    });
                 }
                 
                 appendToTerminal(`\nExecution time: ${data.execution_time.toFixed(2)}ms`, false);
@@ -2986,17 +3000,23 @@
                     })
                 });
                 
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server returned non-JSON response');
+                }
+                
                 const data = await response.json();
                 
-                if (data.success) {
+                if (data.status === 'success' || data.success) {
                     showNotification('Folder created successfully!', 'success');
                     await loadFileTree();
                 } else {
-                    showNotification(data.error || 'Failed to create folder', 'error');
+                    showNotification(data.message || data.error || 'Failed to create folder', 'error');
                 }
             } catch (error) {
                 console.error('Error creating folder:', error);
-                showNotification('Error creating folder', 'error');
+                showNotification(`Error creating folder: ${error.message}`, 'error');
             }
         }
 

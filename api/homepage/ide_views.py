@@ -1039,9 +1039,62 @@ def execute_code(request, project_id):
         
         project = get_object_or_404(IDEProject, project_id=project_id, user=request.user)
         
+        # Wrap code to handle matplotlib plots
+        wrapped_code = f"""
+import sys
+import io
+import base64
+
+# Configure matplotlib to use Agg backend (non-GUI)
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+# Store original stdout
+_original_stdout = sys.stdout
+_captured_output = io.StringIO()
+sys.stdout = _captured_output
+
+# Store plots
+_plot_images = []
+
+# Override plt.show() to capture plots
+_original_show = plt.show
+def _custom_show():
+    try:
+        import io
+        import base64
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', bbox_inches='tight', dpi=100)
+        buf.seek(0)
+        img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+        _plot_images.append(img_base64)
+        plt.clf()  # Clear figure for next plot
+    except Exception as e:
+        print(f"[PLOT ERROR]: {{e}}", file=sys.stderr)
+    _original_show()
+
+plt.show = _custom_show
+
+try:
+    # User code starts here
+{chr(10).join('    ' + line for line in code.split(chr(10)))}
+    # User code ends here
+finally:
+    # Restore stdout
+    sys.stdout = _original_stdout
+    
+    # Print captured output
+    print(_captured_output.getvalue(), end='')
+    
+    # Print plot markers
+    for idx, img_data in enumerate(_plot_images):
+        print(f"[PLOT_START_{{idx}}]{{img_data}}[PLOT_END_{{idx}}]")
+"""
+        
         # Create temporary file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
-            temp_file.write(code)
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as temp_file:
+            temp_file.write(wrapped_code)
             temp_file_path = temp_file.name
         
         try:
@@ -1071,12 +1124,28 @@ def execute_code(request, project_id):
                 stdout, stderr = process.communicate(input=stdin_input, timeout=timeout)
                 execution_time = (time.time() - start_time) * 1000  # Convert to ms
                 
+                # Extract plots from output
+                plots = []
+                output_text = stdout
+                import re
+                plot_pattern = r'\[PLOT_START_(\d+)\](.*?)\[PLOT_END_\1\]'
+                matches = re.findall(plot_pattern, output_text, re.DOTALL)
+                
+                for idx, img_data in matches:
+                    plots.append({
+                        'index': int(idx),
+                        'data': img_data.strip()
+                    })
+                
+                # Remove plot markers from output
+                output_text = re.sub(plot_pattern, '', output_text, flags=re.DOTALL)
+                
                 # Log execution
                 IDEExecutionLog.objects.create(
                     project=project,
                     file=IDEFile.objects.filter(project=project, path=file_path).first(),
                     code_snippet=code[:1000],  # Store first 1000 chars
-                    output=stdout[:5000],  # Store first 5000 chars
+                    output=output_text[:5000],  # Store first 5000 chars
                     error=stderr[:5000],
                     execution_time=execution_time,
                     was_successful=process.returncode == 0
@@ -1084,8 +1153,9 @@ def execute_code(request, project_id):
                 
                 return JsonResponse({
                     'status': 'success',
-                    'output': stdout,
+                    'output': output_text,
                     'error': stderr,
+                    'plots': plots,
                     'return_code': process.returncode,
                     'execution_time': execution_time
                 })
@@ -1106,6 +1176,8 @@ def execute_code(request, project_id):
                 pass
                 
     except Exception as e:
+        import traceback
+        print(f"Execute code error: {traceback.format_exc()}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 

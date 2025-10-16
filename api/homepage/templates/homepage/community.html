@@ -1535,7 +1535,7 @@
     </div>
 
     <!-- Main Container -->
-    <div class="community-container">
+    <div class="community-container" id="mainContent" style="opacity: 0; transition: opacity 0.5s ease;">
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-tabs">
@@ -1656,6 +1656,7 @@
         let currentTab = 'friends';
         let currentChatUser = null;
         let friendsData = {{ friends_json|safe }};
+        let dmPollingInterval = null; // For auto-refreshing DMs
 
         // Switch between tabs
         function switchTab(tab) {
@@ -1672,6 +1673,12 @@
                 loadDMsList();
             } else if (tab === 'servers') {
                 loadServers();
+            } else {
+                // Clear DM polling when leaving DMs tab
+                if (dmPollingInterval) {
+                    clearInterval(dmPollingInterval);
+                    dmPollingInterval = null;
+                }
             }
         }
 
@@ -1847,10 +1854,22 @@
             document.getElementById('contentTitle').textContent = `>>> DM: ${username}`;
             document.getElementById('messageInputContainer').style.display = 'block';
             loadMessages(userId);
+            
+            // Clear existing polling interval
+            if (dmPollingInterval) {
+                clearInterval(dmPollingInterval);
+            }
+            
+            // Poll for new messages every 2 seconds
+            dmPollingInterval = setInterval(() => {
+                if (currentChatUser === userId && currentTab === 'dms') {
+                    loadMessages(userId, true); // Silent reload
+                }
+            }, 2000);
         }
 
         // Load messages
-        function loadMessages(userId) {
+        function loadMessages(userId, silent = false) {
             fetch(`/community/messages/${userId}/`, {
                 headers: {
                     'X-CSRFToken': csrfToken
@@ -1859,13 +1878,24 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    displayMessages(data.messages);
+                    displayMessages(data.messages, silent);
                 }
             });
         }
 
-        function displayMessages(messages) {
+        function displayMessages(messages, silent = false) {
             const container = document.getElementById('messagesContainer');
+            const previousScrollHeight = container.scrollHeight;
+            const previousScrollTop = container.scrollTop;
+            const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+            
+            container.innerHTML = '';
+
+            const container = document.getElementById('messagesContainer');
+            const previousScrollHeight = container.scrollHeight;
+            const previousScrollTop = container.scrollTop;
+            const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+            
             container.innerHTML = '';
 
             if (messages.length === 0) {
@@ -1896,7 +1926,16 @@
                 container.appendChild(messageDiv);
             });
 
-            container.scrollTop = container.scrollHeight;
+            // Smart scrolling: only auto-scroll if user was at bottom or it's not a silent reload
+            if (!silent || wasAtBottom) {
+                container.scrollTop = container.scrollHeight;
+            } else {
+                // Maintain scroll position during silent updates
+                const newScrollHeight = container.scrollHeight;
+                if (newScrollHeight !== previousScrollHeight) {
+                    container.scrollTop = previousScrollTop + (newScrollHeight - previousScrollHeight);
+                }
+            }
         }
 
         // Send message
@@ -2964,9 +3003,17 @@
         window.addEventListener('load', () => {
             setTimeout(() => {
                 const loadingOverlay = document.getElementById('loadingOverlay');
+                const mainContent = document.getElementById('mainContent');
+                
                 if (loadingOverlay) {
                     loadingOverlay.classList.add('fade-out');
-                    setTimeout(() => loadingOverlay.remove(), 500);
+                    setTimeout(() => {
+                        loadingOverlay.remove();
+                        // Show main content after loading overlay is gone
+                        if (mainContent) {
+                            mainContent.style.opacity = '1';
+                        }
+                    }, 500);
                 }
             }, 800);
         });
