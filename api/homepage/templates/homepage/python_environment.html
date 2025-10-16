@@ -8183,64 +8183,6 @@ print('Package ${packageName} installed successfully!')
             });
         }
 
-        // Share Modal Functions
-        function shareCode() {
-            document.getElementById('share-modal').style.display = 'flex';
-            document.getElementById('share-result').style.display = 'none';
-        }
-
-        function closeShareModal() {
-            document.getElementById('share-modal').style.display = 'none';
-        }
-
-        async function createShareLink() {
-            const title = document.getElementById('share-title').value.trim() || 'Untitled';
-            const description = document.getElementById('share-description').value.trim();
-            const expires = document.getElementById('share-expires').value;
-            const isPublic = document.getElementById('share-public').checked;
-            const code = aceEditor ? aceEditor.getValue() : '';
-            
-            if (!code) {
-                alert('Cannot share empty code!');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/python/share/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({
-                        title: title,
-                        code: code,
-                        description: description,
-                        is_public: isPublic,
-                        expires_days: expires || null
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    document.getElementById('share-url').value = data.share_url;
-                    document.getElementById('share-result').style.display = 'block';
-                } else {
-                    alert('Error creating share link: ' + data.message);
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-
-        function copyShareLink() {
-            const url = document.getElementById('share-url').value;
-            navigator.clipboard.writeText(url).then(() => {
-                updateStatus('Share link copied!', 'success');
-            });
-        }
-
         // Settings Modal Functions
         function toggleSettings() {
             const modal = document.getElementById('settings-modal');

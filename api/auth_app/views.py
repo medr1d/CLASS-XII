@@ -615,12 +615,12 @@ def update_paid_status(request):
                 'error': 'Missing paid_status parameter'
             }, status=400)
         
-        # Validate paid_status is boolean
-        if not isinstance(paid_status, bool):
-            return JsonResponse({
-                'success': False,
-                'error': 'paid_status must be a boolean value'
-            }, status=400)
+        # Convert paid_status to boolean if it's a string
+        if isinstance(paid_status, str):
+            paid_status = paid_status.lower() in ('true', '1', 'yes')
+        elif not isinstance(paid_status, bool):
+            # Try to convert to bool
+            paid_status = bool(paid_status)
         
         # Get user
         try:

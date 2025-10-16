@@ -843,7 +843,12 @@ def save_file(request, project_id):
             }
         })
         
+    except IDEProject.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Project not found'}, status=404)
     except Exception as e:
+        import traceback
+        print(f"Error in save_file: {str(e)}")
+        print(traceback.format_exc())
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
