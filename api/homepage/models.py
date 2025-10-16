@@ -315,4 +315,184 @@ class UserStatus(models.Model):
         self.save()
 
 
+# ==================== IDE MODELS FOR PAID USERS ====================
+
+class IDEProject(models.Model):
+    """Projects in the cloud IDE for paid users"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ide_projects')
+    project_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, db_index=True)
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, default='')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_accessed = models.DateTimeField(default=timezone.now)
+    
+    class Meta:
+        ordering = ['-last_accessed', '-updated_at']
+        unique_together = ['user', 'name']
+        indexes = [
+            models.Index(fields=['user', '-last_accessed']),
+            models.Index(fields=['user', 'is_active']),
+            models.Index(fields=['project_id']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.name}"
+    
+    def update_access_time(self):
+        """Update last accessed timestamp"""
+        self.last_accessed = timezone.now()
+        self.save(update_fields=['last_accessed'])
+
+
+class IDEDirectory(models.Model):
+    """Directories within IDE projects"""
+    project = models.ForeignKey(IDEProject, on_delete=models.CASCADE, related_name='directories')
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='subdirectories')
+    name = models.CharField(max_length=100)
+    path = models.CharField(max_length=500)  # Full path from project root
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['path', 'name']
+        unique_together = ['project', 'path']
+        indexes = [
+            models.Index(fields=['project', 'parent']),
+            models.Index(fields=['project', 'path']),
+        ]
+        verbose_name_plural = 'IDE directories'
+    
+    def __str__(self):
+        return f"{self.project.name}/{self.path}"
+    
+    def get_full_path(self):
+        """Get full directory path"""
+        if self.parent:
+            return f"{self.parent.get_full_path()}/{self.name}"
+        return self.name
+
+
+class IDEFile(models.Model):
+    """Files within IDE projects"""
+    FILE_TYPE_CHOICES = [
+        ('python', 'Python'),
+        ('text', 'Text'),
+        ('json', 'JSON'),
+        ('csv', 'CSV'),
+        ('markdown', 'Markdown'),
+        ('html', 'HTML'),
+        ('css', 'CSS'),
+        ('javascript', 'JavaScript'),
+        ('other', 'Other'),
+    ]
+    
+    project = models.ForeignKey(IDEProject, on_delete=models.CASCADE, related_name='files')
+    directory = models.ForeignKey(IDEDirectory, null=True, blank=True, on_delete=models.CASCADE, related_name='files')
+    name = models.CharField(max_length=100)
+    path = models.CharField(max_length=500)  # Full path from project root
+    content = models.TextField(default='')
+    file_type = models.CharField(max_length=20, choices=FILE_TYPE_CHOICES, default='python')
+    size = models.IntegerField(default=0)  # Size in bytes
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['path', 'name']
+        unique_together = ['project', 'path']
+        indexes = [
+            models.Index(fields=['project', 'directory']),
+            models.Index(fields=['project', 'file_type']),
+            models.Index(fields=['project', 'path']),
+            models.Index(fields=['-updated_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.project.name}/{self.path}"
+    
+    def save(self, *args, **kwargs):
+        # Update file size
+        self.size = len(self.content.encode('utf-8'))
+        
+        # Determine file type from extension
+        if '.' in self.name:
+            ext = self.name.split('.')[-1].lower()
+            type_mapping = {
+                'py': 'python',
+                'txt': 'text',
+                'json': 'json',
+                'csv': 'csv',
+                'md': 'markdown',
+                'html': 'html',
+                'css': 'css',
+                'js': 'javascript',
+            }
+            self.file_type = type_mapping.get(ext, 'other')
+        
+        super().save(*args, **kwargs)
+    
+    def get_full_path(self):
+        """Get full file path"""
+        if self.directory:
+            return f"{self.directory.get_full_path()}/{self.name}"
+        return self.name
+
+
+class IDEExecutionLog(models.Model):
+    """Execution logs for IDE code runs"""
+    project = models.ForeignKey(IDEProject, on_delete=models.CASCADE, related_name='execution_logs')
+    file = models.ForeignKey(IDEFile, null=True, blank=True, on_delete=models.SET_NULL, related_name='executions')
+    code_snippet = models.TextField()
+    output = models.TextField(blank=True)
+    error = models.TextField(blank=True)
+    execution_time = models.FloatField(default=0)  # milliseconds
+    was_successful = models.BooleanField(default=True)
+    executed_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-executed_at']
+        indexes = [
+            models.Index(fields=['project', '-executed_at']),
+            models.Index(fields=['project', 'was_successful']),
+        ]
+    
+    def __str__(self):
+        return f"{self.project.name} - {self.executed_at.strftime('%Y-%m-%d %H:%M:%S')}"
+
+
+class IDETerminalSession(models.Model):
+    """Terminal sessions for IDE"""
+    project = models.ForeignKey(IDEProject, on_delete=models.CASCADE, related_name='terminal_sessions')
+    session_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    is_active = models.BooleanField(default=True)
+    history = models.JSONField(default=list)  # List of command/output pairs
+    environment_vars = models.JSONField(default=dict)  # Custom environment variables
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_active = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-last_active']
+        indexes = [
+            models.Index(fields=['project', 'is_active']),
+            models.Index(fields=['session_id']),
+        ]
+    
+    def __str__(self):
+        return f"{self.project.name} - Terminal {self.session_id}"
+    
+    def add_to_history(self, command, output, error=''):
+        """Add command and output to history"""
+        self.history.append({
+            'command': command,
+            'output': output,
+            'error': error,
+            'timestamp': timezone.now().isoformat()
+        })
+        # Keep only last 100 entries
+        if len(self.history) > 100:
+            self.history = self.history[-100:]
+        self.save(update_fields=['history', 'last_active'])
+
+
 

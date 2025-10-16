@@ -1,0 +1,1157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud IDE - Python Assembly</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
+    
+    <!-- Monaco Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4GQ8NQ38P5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-4GQ8NQ38P5');
+    </script>
+    
+    <style>
+        :root {
+            --primary-color: #00aa00;
+            --secondary-color: #008800;
+            --tertiary-color: #006600;
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0a;
+            --bg-tertiary: #1a1a1a;
+            --border-color: #008800;
+            --text-color: #00cc00;
+            --text-bright: #00ff00;
+            --shadow-color: rgba(0, 136, 0, 0.4);
+            --glow-color: rgba(0, 136, 0, 0.15);
+            --grid-color: rgba(0, 136, 0, 0.03);
+        }
+
+        body.theme-greydom {
+            --primary-color: #ff4444;
+            --secondary-color: #cc3333;
+            --tertiary-color: #aa2222;
+            --bg-primary: #1a1d2e;
+            --bg-secondary: #16192a;
+            --bg-tertiary: #212435;
+            --border-color: #ff4444;
+            --text-color: #ff6666;
+            --text-bright: #ff4444;
+            --shadow-color: rgba(255, 68, 68, 0.4);
+            --glow-color: rgba(255, 68, 68, 0.15);
+            --grid-color: rgba(100, 120, 150, 0.05);
+        }
+
+        body.theme-cloud {
+            --primary-color: #000000;
+            --secondary-color: #1a1a1a;
+            --tertiary-color: #2d2d2d;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --bg-tertiary: #e8e8e8;
+            --border-color: #cccccc;
+            --text-color: #000000;
+            --text-bright: #000000;
+            --shadow-color: rgba(0, 0, 0, 0.15);
+            --glow-color: rgba(0, 0, 0, 0.05);
+            --grid-color: rgba(0, 0, 0, 0.03);
+        }
+
+        body.theme-chaos {
+            --primary-color: #808080;
+            --secondary-color: #666666;
+            --tertiary-color: #4d4d4d;
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0a;
+            --bg-tertiary: #141414;
+            --border-color: #808080;
+            --text-color: #b0b0b0;
+            --text-bright: #d0d0d0;
+            --shadow-color: rgba(128, 128, 128, 0.3);
+            --glow-color: rgba(128, 128, 128, 0.1);
+            --grid-color: rgba(128, 128, 128, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--bg-primary);
+            color: var(--text-color);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                var(--grid-color) 2px,
+                var(--grid-color) 4px
+            ),
+            repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 2px,
+                var(--grid-color) 2px,
+                var(--grid-color) 4px
+            );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Main Layout */
+        .ide-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: 50px 1fr 250px 30px;
+            height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            grid-column: 1 / 3;
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 20px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+        }
+
+        .logo {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-bright);
+            text-shadow: 0 0 10px var(--text-bright);
+            letter-spacing: 2px;
+        }
+
+        .project-selector {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .project-name {
+            color: var(--text-color);
+            font-size: 14px;
+            padding: 8px 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            background: var(--secondary-color);
+            color: var(--text-bright);
+            box-shadow: 0 0 15px var(--shadow-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: var(--secondary-color);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-color);
+        }
+
+        /* Sidebar / File Explorer */
+        .sidebar {
+            grid-row: 2 / 4;
+            background: var(--bg-secondary);
+            border-right: 2px solid var(--border-color);
+            overflow-y: auto;
+            box-shadow: inset 0 0 20px var(--glow-color);
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-title {
+            font-size: 13px;
+            color: var(--text-bright);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .file-tree {
+            padding: 10px;
+        }
+
+        .tree-node {
+            padding: 8px 10px;
+            margin: 2px 0;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--text-color);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tree-node:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-bright);
+            transform: translateX(5px);
+        }
+
+        .tree-node.selected {
+            background: var(--secondary-color);
+            color: var(--text-bright);
+            box-shadow: 0 0 10px var(--shadow-color);
+        }
+
+        .tree-node-icon {
+            font-size: 14px;
+        }
+
+        /* Editor Area */
+        .editor-area {
+            grid-row: 2 / 3;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-tabs {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 5px;
+            min-height: 40px;
+        }
+
+        .editor-tab {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text-color);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .editor-tab.active {
+            background: var(--bg-primary);
+            color: var(--text-bright);
+            border-color: var(--secondary-color);
+        }
+
+        .editor-tab:hover {
+            background: var(--secondary-color);
+            color: var(--text-bright);
+        }
+
+        .tab-close {
+            font-size: 16px;
+            padding: 0 4px;
+        }
+
+        #monaco-editor {
+            flex: 1;
+            position: relative;
+        }
+
+        /* Terminal Area */
+        .terminal-area {
+            grid-row: 3 / 4;
+            grid-column: 2 / 3;
+            background: var(--bg-primary);
+            border-top: 2px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-header {
+            background: var(--bg-secondary);
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terminal-title {
+            font-size: 12px;
+            color: var(--text-bright);
+            text-transform: uppercase;
+        }
+
+        .terminal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .terminal-output {
+            flex: 1;
+            background: var(--bg-primary);
+            color: var(--text-color);
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            text-shadow: 0 0 1px var(--text-color);
+        }
+
+        .terminal-output::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .terminal-output::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .terminal-output::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 5px;
+        }
+
+        .terminal-output.error {
+            color: #ff4444;
+            text-shadow: 0 0 5px #ff4444;
+        }
+
+        .terminal-prompt {
+            color: var(--text-bright);
+            font-weight: bold;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            grid-row: 4 / 5;
+            grid-column: 1 / 3;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-color);
+        }
+
+        .status-left, .status-right {
+            display: flex;
+            gap: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        /* Loading Spinner */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            background: var(--bg-secondary);
+            padding: 30px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 0 30px var(--shadow-color);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--bg-tertiary);
+            border-top: 4px solid var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 5px 0;
+            box-shadow: 0 4px 20px var(--shadow-color);
+            z-index: 10000;
+            min-width: 150px;
+        }
+
+        .context-menu-item {
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text-color);
+            transition: all 0.2s;
+        }
+
+        .context-menu-item:hover {
+            background: var(--secondary-color);
+            color: var(--text-bright);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 30px var(--shadow-color);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            color: var(--text-bright);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--text-color);
+            text-transform: uppercase;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 13px;
+            border-radius: 4px;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 10px var(--glow-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            padding: 15px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 20px var(--shadow-color);
+            z-index: 10001;
+            animation: slideIn 0.3s ease-out;
+            min-width: 300px;
+        }
+
+        .notification.success {
+            border-color: var(--primary-color);
+        }
+
+        .notification.error {
+            border-color: #ff4444;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .ide-container {
+                grid-template-columns: 220px 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .ide-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 50px 1fr 200px 30px;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .sidebar.mobile-active {
+                display: block;
+                position: fixed;
+                top: 50px;
+                left: 0;
+                bottom: 230px;
+                width: 280px;
+                z-index: 100;
+            }
+        }
+    </style>
+</head>
+<body class="theme-{{ user_theme }}">
+    <div class="ide-container">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="logo">☰ CLOUD IDE</div>
+            <div class="project-selector">
+                <span class="project-name">{{ current_project.name }}</span>
+            </div>
+            <div class="top-bar-actions">
+                <button class="btn btn-primary" onclick="runCode()">▶ RUN</button>
+                <button class="btn" onclick="saveCurrentFile()">💾 SAVE</button>
+                <button class="btn" onclick="showNewFileModal()">+ NEW FILE</button>
+                <button class="btn" onclick="showProjectModal()">📁 PROJECT</button>
+                <a href="/python/" class="btn">← BACK</a>
+            </div>
+        </div>
+
+        <!-- File Explorer Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-title">FILES</span>
+                <button class="btn" onclick="refreshFileTree()" style="padding: 4px 8px; font-size: 11px;">↻</button>
+            </div>
+            <div class="file-tree" id="fileTree">
+                <!-- Files will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Editor Area -->
+        <div class="editor-area">
+            <div class="editor-tabs" id="editorTabs">
+                <!-- Tabs will be populated by JavaScript -->
+            </div>
+            <div id="monaco-editor"></div>
+        </div>
+
+        <!-- Terminal Area -->
+        <div class="terminal-area">
+            <div class="terminal-header">
+                <span class="terminal-title">TERMINAL OUTPUT</span>
+                <div class="terminal-actions">
+                    <button class="btn" onclick="clearTerminal()" style="padding: 4px 10px; font-size: 11px;">CLEAR</button>
+                </div>
+            </div>
+            <div class="terminal-output" id="terminalOutput">
+                <div class="terminal-prompt">$ Cloud IDE Terminal</div>
+                <div>Ready to execute code...</div>
+                <div style="opacity: 0.6; margin-top: 10px;">Press "RUN" to execute your Python code.</div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <div class="status-item">
+                    <span>👤</span>
+                    <span>{{ user.username }}</span>
+                </div>
+                <div class="status-item" id="statusFile">
+                    <span>📄</span>
+                    <span>main.py</span>
+                </div>
+                <div class="status-item" id="statusEncoding">
+                    <span>UTF-8</span>
+                </div>
+            </div>
+            <div class="status-right">
+                <div class="status-item" id="statusLines">
+                    <span>Lines: 0</span>
+                </div>
+                <div class="status-item" id="statusLanguage">
+                    <span>Python</span>
+                </div>
+                <div class="status-item">
+                    <span>🟢 ONLINE</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New File Modal -->
+    <div class="modal" id="newFileModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Create New File</h2>
+            <div class="input-group">
+                <label class="input-label">File Name</label>
+                <input type="text" class="input-field" id="newFileName" placeholder="example.py">
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeModal('newFileModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="createNewFile()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div class="modal" id="projectModal">
+        <div class="modal-content">
+            <h2 class="modal-title">Project Management</h2>
+            <div class="input-group">
+                <label class="input-label">Current Project</label>
+                <div style="padding: 10px; background: var(--bg-tertiary); border-radius: 4px;">
+                    {{ current_project.name }}
+                </div>
+            </div>
+            <div style="margin-top: 20px; font-size: 12px; opacity: 0.7;">
+                Multi-project support coming soon!
+            </div>
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button class="btn" onclick="closeModal('projectModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const PROJECT_ID = "{{ project_id }}";
+        const CSRF_TOKEN = "{{ csrf_token }}";
+        
+        let editor = null;
+        let currentFile = null;
+        let openTabs = [];
+        let fileTree = [];
+        
+        // Initialize Monaco Editor
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+        
+        require(['vs/editor/editor.main'], function() {
+            // Set theme based on user preference
+            const userTheme = "{{ user_theme }}";
+            let monacoTheme = 'vs-dark';
+            
+            if (userTheme === 'cloud') {
+                monacoTheme = 'vs';
+            }
+            
+            editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                value: '# Welcome to Cloud IDE\n\nprint("Hello, World!")\n',
+                language: 'python',
+                theme: monacoTheme,
+                fontSize: 14,
+                minimap: { enabled: true },
+                automaticLayout: true,
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                lineNumbers: 'on',
+                renderWhitespace: 'selection',
+                tabSize: 4,
+            });
+            
+            // Load initial file tree
+            loadFileTree();
+            
+            // Auto-save on change (debounced)
+            let saveTimeout;
+            editor.onDidChangeModelContent(() => {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    autoSaveCurrentFile();
+                }, 2000); // Auto-save after 2 seconds of no typing
+                
+                updateStatusBar();
+            });
+        });
+        
+        // API Functions
+        async function apiRequest(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN
+                }
+            };
+            
+            const response = await fetch(url, { ...defaultOptions, ...options });
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Request failed');
+            }
+            
+            return data;
+        }
+        
+        // File Tree Management
+        async function loadFileTree() {
+            try {
+                const data = await apiRequest(`/api/ide/projects/${PROJECT_ID}/files/`);
+                fileTree = data.file_tree;
+                renderFileTree();
+                
+                // Open first Python file if available
+                if (fileTree.length > 0) {
+                    const firstPythonFile = findFirstPythonFile(fileTree);
+                    if (firstPythonFile) {
+                        openFile(firstPythonFile.path);
+                    }
+                }
+            } catch (error) {
+                showNotification('Error loading files: ' + error.message, 'error');
+            }
+        }
+        
+        function findFirstPythonFile(tree) {
+            for (const node of tree) {
+                if (node.type === 'file' && node.file_type === 'python') {
+                    return node;
+                }
+                if (node.type === 'directory' && node.children) {
+                    const found = findFirstPythonFile(node.children);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+        
+        function renderFileTree() {
+            const container = document.getElementById('fileTree');
+            container.innerHTML = '';
+            renderTreeNodes(fileTree, container, 0);
+        }
+        
+        function renderTreeNodes(nodes, container, level) {
+            nodes.forEach(node => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'tree-node';
+                nodeElement.style.paddingLeft = (level * 20 + 10) + 'px';
+                
+                const icon = node.type === 'directory' ? '📁' : getFileIcon(node.file_type);
+                nodeElement.innerHTML = `
+                    <span class="tree-node-icon">${icon}</span>
+                    <span>${node.name}</span>
+                `;
+                
+                if (currentFile === node.path) {
+                    nodeElement.classList.add('selected');
+                }
+                
+                if (node.type === 'file') {
+                    nodeElement.onclick = () => openFile(node.path);
+                }
+                
+                container.appendChild(nodeElement);
+                
+                if (node.type === 'directory' && node.children) {
+                    renderTreeNodes(node.children, container, level + 1);
+                }
+            });
+        }
+        
+        function getFileIcon(fileType) {
+            const icons = {
+                'python': '🐍',
+                'text': '📄',
+                'json': '📋',
+                'csv': '📊',
+                'markdown': '📝',
+                'html': '🌐',
+                'css': '🎨',
+                'javascript': '⚡'
+            };
+            return icons[fileType] || '📄';
+        }
+        
+        // File Operations
+        async function openFile(filePath) {
+            try {
+                const data = await apiRequest(`/api/ide/projects/${PROJECT_ID}/files/${encodeURIComponent(filePath)}/`);
+                
+                currentFile = filePath;
+                editor.setValue(data.file.content);
+                
+                // Add to tabs if not already open
+                if (!openTabs.find(tab => tab.path === filePath)) {
+                    openTabs.push({
+                        name: data.file.name,
+                        path: filePath,
+                        type: data.file.file_type
+                    });
+                    renderTabs();
+                }
+                
+                updateStatusBar();
+                renderFileTree(); // Refresh to update selected state
+                
+                // Set language mode
+                const languageMap = {
+                    'python': 'python',
+                    'javascript': 'javascript',
+                    'html': 'html',
+                    'css': 'css',
+                    'json': 'json',
+                    'markdown': 'markdown'
+                };
+                const language = languageMap[data.file.file_type] || 'plaintext';
+                monaco.editor.setModelLanguage(editor.getModel(), language);
+                
+            } catch (error) {
+                showNotification('Error opening file: ' + error.message, 'error');
+            }
+        }
+        
+        function renderTabs() {
+            const container = document.getElementById('editorTabs');
+            container.innerHTML = '';
+            
+            openTabs.forEach(tab => {
+                const tabElement = document.createElement('div');
+                tabElement.className = 'editor-tab';
+                if (tab.path === currentFile) {
+                    tabElement.classList.add('active');
+                }
+                
+                tabElement.innerHTML = `
+                    <span>${getFileIcon(tab.type)}</span>
+                    <span>${tab.name}</span>
+                    <span class="tab-close" onclick="closeTab('${tab.path}', event)">×</span>
+                `;
+                
+                tabElement.onclick = (e) => {
+                    if (!e.target.classList.contains('tab-close')) {
+                        openFile(tab.path);
+                    }
+                };
+                
+                container.appendChild(tabElement);
+            });
+        }
+        
+        function closeTab(filePath, event) {
+            event.stopPropagation();
+            
+            openTabs = openTabs.filter(tab => tab.path !== filePath);
+            renderTabs();
+            
+            if (currentFile === filePath) {
+                if (openTabs.length > 0) {
+                    openFile(openTabs[0].path);
+                } else {
+                    currentFile = null;
+                    editor.setValue('');
+                }
+            }
+        }
+        
+        async function saveCurrentFile() {
+            if (!currentFile) {
+                showNotification('No file open', 'error');
+                return;
+            }
+            
+            try {
+                await apiRequest(`/api/ide/projects/${PROJECT_ID}/files/save/`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        path: currentFile,
+                        content: editor.getValue()
+                    })
+                });
+                
+                showNotification('File saved successfully', 'success');
+            } catch (error) {
+                showNotification('Error saving file: ' + error.message, 'error');
+            }
+        }
+        
+        async function autoSaveCurrentFile() {
+            if (!currentFile) return;
+            
+            try {
+                await apiRequest(`/api/ide/projects/${PROJECT_ID}/files/save/`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        path: currentFile,
+                        content: editor.getValue()
+                    })
+                });
+            } catch (error) {
+                console.error('Auto-save error:', error);
+            }
+        }
+        
+        function showNewFileModal() {
+            document.getElementById('newFileModal').classList.add('active');
+            document.getElementById('newFileName').focus();
+        }
+        
+        async function createNewFile() {
+            const fileName = document.getElementById('newFileName').value.trim();
+            
+            if (!fileName) {
+                showNotification('Please enter a file name', 'error');
+                return;
+            }
+            
+            try {
+                await apiRequest(`/api/ide/projects/${PROJECT_ID}/files/save/`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        path: fileName,
+                        content: ''
+                    })
+                });
+                
+                closeModal('newFileModal');
+                document.getElementById('newFileName').value = '';
+                await loadFileTree();
+                await openFile(fileName);
+                showNotification('File created successfully', 'success');
+            } catch (error) {
+                showNotification('Error creating file: ' + error.message, 'error');
+            }
+        }
+        
+        // Code Execution
+        async function runCode() {
+            const code = editor.getValue();
+            
+            if (!code.trim()) {
+                showNotification('No code to run', 'error');
+                return;
+            }
+            
+            const terminal = document.getElementById('terminalOutput');
+            terminal.innerHTML = '<div class="terminal-prompt">$ Running code...</div>';
+            
+            try {
+                const data = await apiRequest(`/api/ide/projects/${PROJECT_ID}/execute/`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        code: code,
+                        file_path: currentFile || 'untitled.py',
+                        timeout: 10
+                    })
+                });
+                
+                let output = '<div class="terminal-prompt">$ Execution completed</div>\n';
+                
+                if (data.output) {
+                    output += '<div>' + escapeHtml(data.output) + '</div>\n';
+                }
+                
+                if (data.error) {
+                    output += '<div class="error">' + escapeHtml(data.error) + '</div>\n';
+                }
+                
+                output += `<div style="opacity: 0.6; margin-top: 10px;">Execution time: ${data.execution_time.toFixed(2)}ms</div>`;
+                
+                terminal.innerHTML = output;
+                
+                if (data.return_code === 0 && !data.error) {
+                    showNotification('Code executed successfully', 'success');
+                } else {
+                    showNotification('Code execution completed with errors', 'error');
+                }
+                
+            } catch (error) {
+                terminal.innerHTML = '<div class="error">Error: ' + escapeHtml(error.message) + '</div>';
+                showNotification('Execution error: ' + error.message, 'error');
+            }
+        }
+        
+        function clearTerminal() {
+            const terminal = document.getElementById('terminalOutput');
+            terminal.innerHTML = `
+                <div class="terminal-prompt">$ Cloud IDE Terminal</div>
+                <div>Terminal cleared.</div>
+                <div style="opacity: 0.6; margin-top: 10px;">Ready for next execution.</div>
+            `;
+        }
+        
+        // UI Functions
+        function showProjectModal() {
+            document.getElementById('projectModal').classList.add('active');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        function refreshFileTree() {
+            loadFileTree();
+            showNotification('Files refreshed', 'success');
+        }
+        
+        function updateStatusBar() {
+            const model = editor.getModel();
+            document.getElementById('statusLines').innerHTML = `<span>Lines: ${model.getLineCount()}</span>`;
+            
+            if (currentFile) {
+                const fileName = currentFile.split('/').pop();
+                document.getElementById('statusFile').innerHTML = `<span>📄</span><span>${fileName}</span>`;
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + S = Save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveCurrentFile();
+            }
+            
+            // Ctrl/Cmd + R = Run
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                runCode();
+            }
+            
+            // Escape = Close modal
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            }
+        });
+        
+        // Modal backdrop click to close
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

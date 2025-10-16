@@ -10,7 +10,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-this')
 
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = [ 'www.themedium.in' ]
+ALLOWED_HOSTS = [ 'www.themedium.in', 'pycomp.tech', 'www.pycomp.tech' ]
 
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1')
 if allowed_hosts_env:
@@ -46,6 +46,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'homepage.ide_middleware.IDEAccessMiddleware',  # IDE access control
 ]
 
 ROOT_URLCONF = 'mywebsite.urls'
@@ -179,11 +180,12 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 CSRF_USE_SESSIONS = True
 
-CSRF_TRUSTED_ORIGINS = ['https://www.themedium.in']
+CSRF_TRUSTED_ORIGINS = ['https://www.themedium.in', 'https://pycomp.tech', 'https://www.pycomp.tech']
 if os.getenv('VERCEL'):
     CSRF_TRUSTED_ORIGINS.extend([
         'https://*.vercel.app',
-        'https://*.themedium.in'
+        'https://*.themedium.in',
+        'https://*.pycomp.tech'
     ])
 
 LOGGING = {

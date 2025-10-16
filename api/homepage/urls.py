@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import migrate_views
+from . import ide_views  # Import IDE views
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -45,4 +46,29 @@ urlpatterns = [
     path('profile/<int:user_id>/', views.get_user_profile, name='get_user_profile'),
     path('profile/update/', views.update_profile, name='update_profile'),
     path('profile/upload-picture/', views.upload_profile_picture, name='upload_profile_picture'),
+    
+    # ==================== CLOUD IDE ROUTES (Paid Users Only) ====================
+    
+    # Main IDE interface
+    path('ide/', ide_views.ide_environment, name='ide_environment'),
+    
+    # Project management
+    path('api/ide/projects/create/', ide_views.create_project, name='ide_create_project'),
+    path('api/ide/projects/<uuid:project_id>/', ide_views.get_project, name='ide_get_project'),
+    path('api/ide/projects/<uuid:project_id>/delete/', ide_views.delete_project, name='ide_delete_project'),
+    
+    # File management
+    path('api/ide/projects/<uuid:project_id>/files/', ide_views.get_project_files, name='ide_get_files'),
+    path('api/ide/projects/<uuid:project_id>/files/<path:file_path>/', ide_views.get_file_content, name='ide_get_file'),
+    path('api/ide/projects/<uuid:project_id>/files/save/', ide_views.save_file, name='ide_save_file'),
+    path('api/ide/projects/<uuid:project_id>/files/delete/', ide_views.delete_file, name='ide_delete_file'),
+    path('api/ide/projects/<uuid:project_id>/directories/create/', ide_views.create_directory, name='ide_create_directory'),
+    
+    # Code execution
+    path('api/ide/projects/<uuid:project_id>/execute/', ide_views.execute_code, name='ide_execute_code'),
+    path('api/ide/projects/<uuid:project_id>/history/', ide_views.get_execution_history, name='ide_execution_history'),
+    
+    # Terminal session
+    path('api/ide/projects/<uuid:project_id>/terminal/', ide_views.get_terminal_session, name='ide_get_terminal'),
+    path('api/ide/projects/<uuid:project_id>/terminal/clear/', ide_views.clear_terminal, name='ide_clear_terminal'),
 ]
