@@ -1367,7 +1367,7 @@
         // Current user data
         const currentUser = {
             username: '{{ user.username }}',
-            profile_picture_url: '{{ user.userprofile.profile_picture.url|default:"/static/images/default-avatar.png" }}',
+            profile_picture_url: '{{ user.userprofile.profile_picture_url|default:"/static/images/default-avatar.png" }}',
             status: '{{ user.userprofile.status_message|default:"" }}',
             bio: '{{ user.userprofile.bio|default:"" }}'
         };
@@ -2173,7 +2173,7 @@
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'X-CSRFToken': csrfToken
                 }
             })
             .then(response => response.json())
