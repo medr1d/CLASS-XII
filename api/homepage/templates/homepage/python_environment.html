@@ -2659,7 +2659,7 @@
     <div class="container" id="main-container">
         
         <div class="file-manager">
-            <h3>Client-Side Script Manager</h3>
+            <h3>Script Manager</h3>
             
             <div class="file-controls">
                 <input type="text" id="filename-input" class="file-input" placeholder="script_name" maxlength="50">
@@ -3805,7 +3805,7 @@ print(data.groupby('category').describe())`;
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
+                        'X-CSRFToken': '{{ csrf_token }}'
                     },
                     body: JSON.stringify(userData)
                 });
