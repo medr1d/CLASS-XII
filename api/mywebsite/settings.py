@@ -99,7 +99,7 @@ if DATABASE_URL and DATABASE_URL.startswith('postgresql://'):
             'HOST': os.getenv('DB_HOST', 'localhost'),
             'PORT': os.getenv('DB_PORT', '5432'),
             'OPTIONS': {
-                'sslmode': 'require',
+                'sslmode': 'disable',  # Changed from 'require' to 'disable' for local development
             },
         }
     }
