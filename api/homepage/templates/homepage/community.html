@@ -212,6 +212,35 @@
             transform: rotate(180deg);
         }
 
+        /* External toggle button for when sidebar is collapsed */
+        .sidebar-reopen-btn {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            padding: 16px 8px;
+            cursor: pointer;
+            z-index: 1001;
+            font-size: 18px;
+            transition: all 0.3s;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .sidebar.collapsed ~ .sidebar-reopen-btn {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .sidebar-reopen-btn:hover {
+            background: var(--accent-hover);
+            padding-right: 12px;
+        }
+
         @keyframes slideInLeft {
             from {
                 transform: translateX(-100%);
@@ -1795,6 +1824,9 @@
     
     <div class="background-grid"></div>
 
+    <!-- External sidebar reopen button (visible when sidebar is collapsed) -->
+    <button class="sidebar-reopen-btn" onclick="toggleSidebar()" title="Open Sidebar">►</button>
+
     <!-- Top Navigation -->
     <div class="top-nav">
         <div class="nav-logo">>>> COMMUNITY</div>
@@ -3017,7 +3049,7 @@
                                 <div style="position: relative;">
                                     <img src="${member.profile_picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(member.username) + '&background=5865F2&color=ffffff&size=32'}" 
                                          alt="${member.username}" 
-                                         style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-color);">
+                                         style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-color); object-fit: cover;">
                                     <div style="position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; background: ${member.is_online ? '#23a559' : '#80848e'}; border-radius: 50%; border: 2px solid var(--bg-secondary);"></div>
                                 </div>
                                 <div style="flex: 1; min-width: 0;">

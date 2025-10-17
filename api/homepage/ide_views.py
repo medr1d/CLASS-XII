@@ -1128,8 +1128,9 @@ def execute_code(request, project_id):
         
         # Create project-specific working directory for SQLite and other files
         import os
-        # Use a persistent directory instead of temp
-        base_data_dir = os.path.join(settings.BASE_DIR, 'ide_projects_data')
+        import tempfile
+        # Use /tmp directory for serverless environments (read-only filesystem)
+        base_data_dir = os.path.join(tempfile.gettempdir(), 'ide_projects_data')
         os.makedirs(base_data_dir, exist_ok=True)
         project_dir = os.path.join(base_data_dir, f'project_{project.project_id}')
         os.makedirs(project_dir, exist_ok=True)
@@ -1556,8 +1557,9 @@ def get_project_generated_files(request, project_id):
     try:
         project = get_object_or_404(IDEProject, project_id=project_id, user=request.user)
         
-        # Get project directory
-        base_data_dir = os.path.join(settings.BASE_DIR, 'ide_projects_data')
+        # Get project directory - use /tmp for serverless environments
+        import tempfile
+        base_data_dir = os.path.join(tempfile.gettempdir(), 'ide_projects_data')
         project_dir = os.path.join(base_data_dir, f'project_{project.project_id}')
         
         generated_files = []
