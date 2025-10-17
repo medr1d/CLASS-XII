@@ -80,9 +80,6 @@ urlpatterns = [
     path('api/ide/projects/<uuid:project_id>/execute/', ide_views.execute_code, name='ide_execute_code'),
     path('api/ide/projects/<uuid:project_id>/history/', ide_views.get_execution_history, name='ide_execution_history'),
     
-    # Package management
-    path('api/ide/projects/<uuid:project_id>/packages/install/', ide_views.install_package, name='ide_install_package'),
-    
     # Generated files (SQLite databases, etc.)
     path('api/ide/projects/<uuid:project_id>/generated-files/', ide_views.get_project_generated_files, name='ide_get_generated_files'),
     

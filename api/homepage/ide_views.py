@@ -1501,56 +1501,6 @@ def get_file_type_from_extension(filename):
 
 @login_required
 @require_POST
-def install_package(request, project_id):
-    """Install a Python package using pip"""
-    try:
-        project = get_object_or_404(IDEProject, project_id=project_id, user=request.user)
-        
-        data = json.loads(request.body)
-        package_name = data.get('package_name', '').strip()
-        
-        if not package_name:
-            return JsonResponse({'status': 'error', 'message': 'Package name required'}, status=400)
-        
-        # Validate package name (basic check)
-        import re
-        if not re.match(r'^[a-zA-Z0-9\-_.]+$', package_name):
-            return JsonResponse({'status': 'error', 'message': 'Invalid package name'}, status=400)
-        
-        # First, check if package is already installed
-        import sys
-        check_cmd = [sys.executable, '-m', 'pip', 'show', package_name]
-        check_result = subprocess.run(check_cmd, capture_output=True, text=True, timeout=10)
-        
-        if check_result.returncode == 0:
-            # Package already installed
-            return JsonResponse({
-                'status': 'success',
-                'message': f'{package_name} is already installed!',
-                'already_installed': True
-            })
-        
-        # Try to install the package
-        install_cmd = [sys.executable, '-m', 'pip', 'install', package_name, '--quiet']
-        result = subprocess.run(install_cmd, capture_output=True, text=True, timeout=120)
-        
-        if result.returncode == 0:
-            return JsonResponse({
-                'status': 'success',
-                'message': f'{package_name} installed successfully!',
-                'output': result.stdout
-            })
-        else:
-            return JsonResponse({
-                'status': 'error',
-                'message': f'Failed to install {package_name}. Package not found or installation failed.',
-                'error': result.stderr
-            }, status=400)
-            
-    except subprocess.TimeoutExpired:
-        return JsonResponse({'status': 'error', 'message': 'Installation timed out'}, status=408)
-
-
 @login_required
 def get_project_generated_files(request, project_id):
     """Get list of generated files (like SQLite databases) in the project directory"""

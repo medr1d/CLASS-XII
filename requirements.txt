@@ -12,4 +12,3 @@ vercel_blob==0.4.2
 psutil==6.1.1
 matplotlib
 numpy==2.2.1
-scipy==1.15.1
