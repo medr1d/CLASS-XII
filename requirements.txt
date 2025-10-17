@@ -10,6 +10,6 @@ channels-redis==4.2.1
 daphne==4.1.2
 vercel_blob==0.4.2
 psutil==6.1.1
-matplotlib==3.10.0
+matplotlib.pyplot==3.10.0
 numpy==2.2.1
 scipy==1.15.1
