@@ -898,3 +898,466 @@ def join_server_by_invite(request):
         import traceback
         print(f"Error joining server: {traceback.format_exc()}")
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def send_invite_to_friend(request):
+    """Send server invite link to a friend via DM"""
+    try:
+        data = json.loads(request.body)
+        server_id = data.get('server_id')
+        friend_id = data.get('friend_id')
+        
+        if not server_id or not friend_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Server ID and friend ID required'
+            }, status=400)
+        
+        server = get_object_or_404(Server, server_id=server_id)
+        friend = get_object_or_404(User, id=friend_id)
+        
+        # Check if user is member of server
+        if not ServerMember.objects.filter(server=server, user=request.user).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'You are not a member of this server'
+            }, status=403)
+        
+        # Check if they're friends
+        from .models import Friendship
+        if not Friendship.are_friends(request.user, friend):
+            return JsonResponse({
+                'success': False,
+                'error': 'You can only send invites to friends'
+            }, status=403)
+        
+        # Create invite message with embed data
+        invite_code = server.invite_code
+        invite_url = f"/api/servers/join/?code={invite_code}"
+        
+        # Send DM with special invite format
+        from .models import DirectMessage
+        message_content = f"[SERVER_INVITE:{server.server_id}:{invite_code}]"
+        
+        DirectMessage.objects.create(
+            sender=request.user,
+            recipient=friend,
+            message=message_content
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Invite sent to {friend.username}'
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Error sending invite: {traceback.format_exc()}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+def get_invite_embed_data(request, server_id):
+    """Get server data for invite embed"""
+    try:
+        server = get_object_or_404(Server, server_id=server_id)
+        
+        return JsonResponse({
+            'success': True,
+            'server': {
+                'server_id': str(server.server_id),
+                'name': server.name,
+                'description': server.description,
+                'icon_url': server.get_icon_url(),
+                'member_count': server.get_member_count(),
+                'invite_code': server.invite_code,
+                'is_public': server.is_public
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+def get_member_profile(request, server_id, user_id):
+    """Get mini profile data for a server member"""
+    try:
+        server = get_object_or_404(Server, server_id=server_id)
+        member = get_object_or_404(ServerMember, server=server, user_id=user_id)
+        user = member.user
+        
+        # Check if requesting user is a member
+        if not ServerMember.objects.filter(server=server, user=request.user).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'You must be a member to view profiles'
+            }, status=403)
+        
+        # Get user profile
+        profile_data = {
+            'user_id': user.id,
+            'username': user.username,
+            'display_name': member.display_name(),
+            'profile_picture': user.profile.get_profile_picture_url() if hasattr(user, 'profile') else None,
+            'role': member.role,
+            'joined_at': member.joined_at.isoformat(),
+            'is_online': hasattr(user, 'online_status') and user.online_status.is_online,
+        }
+        
+        # Add profile info if available
+        if hasattr(user, 'profile'):
+            profile_data.update({
+                'bio': user.profile.bio,
+                'location': user.profile.location,
+                'github_username': user.profile.github_username,
+                'twitter_username': user.profile.twitter_username,
+                'website': user.profile.website,
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'member': profile_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+@require_POST
+def send_invite_to_friend(request, server_id):
+    """Send server invite directly to a friend via DM"""
+    try:
+        data = json.loads(request.body)
+        friend_user_id = data.get('friend_user_id')
+        custom_message = data.get('message', '')
+        
+        if not friend_user_id:
+            return JsonResponse({'status': 'error', 'message': 'Friend ID required'}, status=400)
+        
+        server = get_object_or_404(Server, server_id=server_id)
+        
+        # Check if user is a member
+        membership = ServerMember.objects.filter(server=server, user=request.user).first()
+        if not membership:
+            return JsonResponse({'status': 'error', 'message': 'Not a member of this server'}, status=403)
+        
+        # Check if friend exists and is friends with user
+        friend = get_object_or_404(User, id=friend_user_id)
+        from .models import Friendship
+        if not Friendship.are_friends(request.user, friend):
+            return JsonResponse({'status': 'error', 'message': 'Can only send invites to friends'}, status=403)
+        
+        # Get or create invite for this server
+        invite = ServerInvite.objects.filter(
+            server=server,
+            created_by=request.user,
+            max_uses=0  # Unlimited
+        ).first()
+        
+        if not invite:
+            import random
+            import string
+            invite_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            invite = ServerInvite.objects.create(
+                server=server,
+                invite_code=invite_code,
+                created_by=request.user,
+                max_uses=0
+            )
+        
+        # Create DM with server invite embed
+        from .models import DirectMessage
+        invite_url = request.build_absolute_uri(f'/community/?invite={invite.invite_code}')
+        
+        # Format message with server invite embed marker
+        message_content = f"""[SERVER_INVITE:{invite.invite_code}]
+{custom_message if custom_message else f'{request.user.username} invited you to join {server.name}!'}"""
+        
+        DirectMessage.objects.create(
+            sender=request.user,
+            recipient=friend,
+            message=message_content
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Invite sent to {friend.username}',
+            'invite_code': invite.invite_code
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Error sending invite: {traceback.format_exc()}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+def get_invite_info(request, invite_code):
+    """Get server information from invite code for embed preview"""
+    try:
+        invite = ServerInvite.objects.filter(invite_code=invite_code).select_related('server').first()
+        
+        if not invite:
+            return JsonResponse({'status': 'error', 'message': 'Invalid invite'}, status=404)
+        
+        if not invite.is_valid():
+            return JsonResponse({'status': 'error', 'message': 'Invite expired'}, status=400)
+        
+        server = invite.server
+        member_count = ServerMember.objects.filter(server=server).count()
+        
+        # Check if user is already a member
+        is_member = ServerMember.objects.filter(server=server, user=request.user).exists()
+        
+        return JsonResponse({
+            'status': 'success',
+            'server': {
+                'server_id': str(server.server_id),
+                'name': server.name,
+                'description': server.description,
+                'icon_url': server.get_icon_url(),
+                'member_count': member_count,
+                'is_public': server.is_public,
+                'invite_code': invite_code,
+                'is_member': is_member
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def create_category(request, server_id):
+    """Create a new category for organizing channels"""
+    try:
+        from .models import ServerCategory
+        server = get_object_or_404(Server, server_id=server_id)
+        
+        # Check permissions
+        membership = get_object_or_404(ServerMember, server=server, user=request.user)
+        if not membership.can_manage_channels and membership.role not in ['owner', 'admin']:
+            return JsonResponse({'success': False, 'error': 'No permission'}, status=403)
+        
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        
+        if not name:
+            return JsonResponse({'success': False, 'error': 'Category name required'}, status=400)
+        
+        # Get max position
+        max_pos = ServerCategory.objects.filter(server=server).count()
+        
+        category = ServerCategory.objects.create(
+            server=server,
+            name=name,
+            position=max_pos
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'category': {
+                'category_id': str(category.category_id),
+                'name': category.name,
+                'position': category.position
+            }
+        })
+    except Exception as e:
+        import traceback
+        print(f"Error creating category: {traceback.format_exc()}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def create_role(request, server_id):
+    """Create a custom role in the server"""
+    try:
+        from .models import ServerRole
+        server = get_object_or_404(Server, server_id=server_id)
+        
+        # Check permissions (owner or admin only)
+        membership = get_object_or_404(ServerMember, server=server, user=request.user)
+        if membership.role not in ['owner', 'admin']:
+            return JsonResponse({'success': False, 'error': 'No permission'}, status=403)
+        
+        data = json.loads(request.body)
+        name = data.get('name', '').strip()
+        color = data.get('color', '#99AAB5')
+        
+        if not name:
+            return JsonResponse({'success': False, 'error': 'Role name required'}, status=400)
+        
+        # Check if role name exists
+        if ServerRole.objects.filter(server=server, name=name).exists():
+            return JsonResponse({'success': False, 'error': 'Role name already exists'}, status=400)
+        
+        role = ServerRole.objects.create(
+            server=server,
+            name=name,
+            color=color,
+            position=ServerRole.objects.filter(server=server).count()
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'role': {
+                'role_id': str(role.role_id),
+                'name': role.name,
+                'color': role.color,
+                'position': role.position
+            }
+        })
+    except Exception as e:
+        import traceback
+        print(f"Error creating role: {traceback.format_exc()}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+def get_server_categories(request, server_id):
+    """Get all categories in a server"""
+    try:
+        from .models import ServerCategory
+        server = get_object_or_404(Server, server_id=server_id)
+        
+        # Check membership
+        if not ServerMember.objects.filter(server=server, user=request.user).exists():
+            return JsonResponse({'success': False, 'error': 'Not a member'}, status=403)
+        
+        categories = ServerCategory.objects.filter(server=server).order_by('position')
+        
+        category_list = [{
+            'category_id': str(cat.category_id),
+            'name': cat.name,
+            'position': cat.position,
+            'is_collapsed': cat.is_collapsed
+        } for cat in categories]
+        
+        return JsonResponse({'success': True, 'categories': category_list})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+def get_server_roles(request, server_id):
+    """Get all roles in a server"""
+    try:
+        from .models import ServerRole
+        server = get_object_or_404(Server, server_id=server_id)
+        
+        # Check membership
+        if not ServerMember.objects.filter(server=server, user=request.user).exists():
+            return JsonResponse({'success': False, 'error': 'Not a member'}, status=403)
+        
+        roles = ServerRole.objects.filter(server=server).order_by('-position')
+        
+        role_list = [{
+            'role_id': str(role.role_id),
+            'name': role.name,
+            'color': role.color,
+            'position': role.position,
+            'permissions': {
+                'can_manage_channels': role.can_manage_channels,
+                'can_manage_roles': role.can_manage_roles,
+                'can_kick_members': role.can_kick_members,
+                'can_ban_members': role.can_ban_members,
+                'can_manage_messages': role.can_manage_messages,
+                'can_mention_everyone': role.can_mention_everyone
+            }
+        } for role in roles]
+        
+        return JsonResponse({'success': True, 'roles': role_list})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def join_voice_channel(request, channel_id):
+    """Join a voice channel"""
+    try:
+        channel = get_object_or_404(ServerChannel, channel_id=channel_id)
+        
+        if channel.channel_type != 'voice':
+            return JsonResponse({'success': False, 'error': 'Not a voice channel'}, status=400)
+        
+        # Check membership
+        membership = get_object_or_404(ServerMember, server=channel.server, user=request.user)
+        
+        # Check user limit
+        if channel.user_limit:
+            current_members = ServerMember.objects.filter(current_voice_channel=channel).count()
+            if current_members >= channel.user_limit:
+                return JsonResponse({'success': False, 'error': 'Channel is full'}, status=400)
+        
+        # Update user's voice channel
+        membership.current_voice_channel = channel
+        membership.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Joined voice channel: {channel.name}'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def leave_voice_channel(request):
+    """Leave current voice channel"""
+    try:
+        data = json.loads(request.body)
+        server_id = data.get('server_id')
+        
+        server = get_object_or_404(Server, server_id=server_id)
+        membership = get_object_or_404(ServerMember, server=server, user=request.user)
+        
+        if not membership.current_voice_channel:
+            return JsonResponse({'success': False, 'error': 'Not in a voice channel'}, status=400)
+        
+        membership.current_voice_channel = None
+        membership.save()
+        
+        return JsonResponse({'success': True, 'message': 'Left voice channel'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+def get_voice_channel_members(request, channel_id):
+    """Get all members currently in a voice channel"""
+    try:
+        channel = get_object_or_404(ServerChannel, channel_id=channel_id)
+        
+        # Check membership
+        if not ServerMember.objects.filter(server=channel.server, user=request.user).exists():
+            return JsonResponse({'success': False, 'error': 'Not a member'}, status=403)
+        
+        members = ServerMember.objects.filter(current_voice_channel=channel).select_related('user', 'user__profile')
+        
+        member_list = [{
+            'user_id': m.user.id,
+            'username': m.user.username,
+            'display_name': m.display_name(),
+            'profile_picture': m.user.profile.get_profile_picture_url() if hasattr(m.user, 'profile') else None
+        } for m in members]
+        
+        return JsonResponse({'success': True, 'members': member_list})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

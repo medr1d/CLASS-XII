@@ -22,4 +22,6 @@ urlpatterns = [
     path('api/check-username/', views.check_username_availability, name='check_username'),
     path('admin-panel/', views.admin_panel_view, name='admin_panel'),
     path('api/update-paid-status/', views.update_paid_status, name='update_paid_status'),
+    path('api/admin/file/<int:file_id>/', views.get_file_content, name='get_file_content'),
+    path('api/admin/file/<int:file_id>/delete/', views.delete_file_admin, name='delete_file_admin'),
 ]

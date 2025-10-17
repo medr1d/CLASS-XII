@@ -6,7 +6,7 @@
     <title>Admin Dashboard - PYTHON ASSEMBLY</title>
     {% load static %}
     
-    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <meta name="csrf-token" content="{{ csrf_token }}">
     
     <!-- Chart.js for analytics -->
@@ -1208,6 +1208,95 @@
                 .catch(error => {
                     console.error('Error:', error);
                     showNotification('Failed to delete user', 'error');
+                });
+            }
+        }
+
+        function viewFile(fileId) {
+            // Fetch file content and display in a modal
+            fetch(`/api/admin/file/${fileId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showFileModal(data.file);
+                    } else {
+                        showNotification(data.message || 'Failed to load file', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Failed to load file', 'error');
+                });
+        }
+
+        function showFileModal(file) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: #0a0a0a; border: 2px solid #ffffff; padding: 30px; max-width: 900px; width: 100%; max-height: 90vh; overflow: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="font-size: 16px; color: #ffffff;">${file.filename}</h2>
+                        <button onclick="this.closest('.file-modal').remove()" style="background: #ff4444; color: #fff; border: none; padding: 8px 16px; cursor: pointer; font-family: monospace;">Close</button>
+                    </div>
+                    <div style="margin-bottom: 15px; font-size: 12px; color: #888;">
+                        <div>Owner: ${file.owner}</div>
+                        <div>Created: ${file.created_at}</div>
+                        <div>Size: ${file.size}</div>
+                    </div>
+                    <pre style="background: #000; color: #00ff00; padding: 20px; border: 1px solid #333; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 11px; max-height: 500px;">${escapeHtml(file.content)}</pre>
+                </div>
+            `;
+            
+            modal.className = 'file-modal';
+            document.body.appendChild(modal);
+            
+            // Close on background click
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function deleteFile(fileId) {
+            if (confirm('Are you sure you want to delete this file? This action cannot be undone.')) {
+                fetch(`/api/admin/file/${fileId}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('File deleted successfully!', 'success');
+                        location.reload();
+                    } else {
+                        showNotification(data.message || 'Failed to delete file', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Failed to delete file', 'error');
                 });
             }
         }

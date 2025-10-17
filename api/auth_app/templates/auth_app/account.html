@@ -6,7 +6,7 @@
     <title>Account Dashboard - PYTHON ASSEMBLY</title>
     {% load static %}
     
-    <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <meta name="csrf-token" content="{{ csrf_token }}">
     
     <style>
@@ -895,29 +895,25 @@
                     
                     {% if achievements %}
                         <div class="achievements-grid">
-                            {% for achievement in achievements %}
-                                <div class="achievement-card {% if achievement.is_displayed %}achievement-displayed{% endif %}">
+                            {% for user_achievement in achievements %}
+                                <div class="achievement-card {% if user_achievement.is_displayed %}achievement-displayed{% endif %}">
                                     <div class="achievement-icon">
-                                        {% load static %}
-                                        <img src="{% static 'homepage/badges/' %}{{ achievement.achievement__badge_icon }}" 
-                                             alt="{{ achievement.achievement__name }}"
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                        <div class="achievement-placeholder" style="display: none;">
-                                            <span>🏆</span>
-                                        </div>
+                                        <img src="{{ user_achievement.achievement.get_icon_url }}" 
+                                             alt="{{ user_achievement.achievement.name }}"
+                                             style="width: 48px; height: 48px; image-rendering: pixelated;">
                                     </div>
                                     <div class="achievement-info">
-                                        <div class="achievement-name">{{ achievement.achievement__name }}</div>
-                                        <div class="achievement-desc">{{ achievement.achievement__description }}</div>
+                                        <div class="achievement-name">{{ user_achievement.achievement.name }}</div>
+                                        <div class="achievement-desc">{{ user_achievement.achievement.description }}</div>
                                         <div class="achievement-meta">
-                                            <span class="achievement-points">+{{ achievement.achievement__points }} pts</span>
-                                            <span class="achievement-date">{{ achievement.earned_at|date:"M d, Y" }}</span>
+                                            <span class="achievement-points">+{{ user_achievement.achievement.points }} pts</span>
+                                            <span class="achievement-date">{{ user_achievement.earned_at|date:"M d, Y" }}</span>
                                         </div>
                                     </div>
                                     <label class="achievement-toggle">
                                         <input type="checkbox" 
-                                               {% if achievement.is_displayed %}checked{% endif %}
-                                               onchange="toggleAchievementDisplay({{ achievement.id }}, this.checked)">
+                                               {% if user_achievement.is_displayed %}checked{% endif %}
+                                               onchange="toggleAchievementDisplay({{ user_achievement.id }}, this.checked)">
                                         <span class="toggle-label">Display</span>
                                     </label>
                                 </div>

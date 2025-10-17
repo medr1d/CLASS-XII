@@ -385,15 +385,27 @@ class ServerChannelConsumer(AsyncWebsocketConsumer):
                 }
             )
         
-        elif message_type == 'typing':
-            # Broadcast typing indicator
+        elif message_type == 'typing_start':
+            # User started typing
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     'type': 'typing_indicator',
                     'user_id': self.user.id,
                     'username': self.user.username,
-                    'is_typing': data.get('is_typing', True)
+                    'is_typing': True
+                }
+            )
+        
+        elif message_type == 'typing_end':
+            # User stopped typing
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'typing_indicator',
+                    'user_id': self.user.id,
+                    'username': self.user.username,
+                    'is_typing': False
                 }
             )
         

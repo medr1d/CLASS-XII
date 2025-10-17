@@ -65,6 +65,7 @@ urlpatterns = [
     # File management
     path('api/ide/projects/<uuid:project_id>/files/', ide_views.get_project_files, name='ide_get_files'),
     path('api/ide/projects/<uuid:project_id>/files/<path:file_path>/', ide_views.get_file_content, name='ide_get_file'),
+    path('api/ide/projects/<uuid:project_id>/files/create/', ide_views.create_file, name='ide_create_file'),
     path('api/ide/projects/<uuid:project_id>/files/save/', ide_views.save_file, name='ide_save_file'),
     path('api/ide/projects/<uuid:project_id>/files/delete/', ide_views.delete_file, name='ide_delete_file'),
     path('api/ide/projects/<uuid:project_id>/files/rename/', ide_views.rename_file, name='ide_rename_file'),
@@ -81,6 +82,9 @@ urlpatterns = [
     
     # Package management
     path('api/ide/projects/<uuid:project_id>/packages/install/', ide_views.install_package, name='ide_install_package'),
+    
+    # Generated files (SQLite databases, etc.)
+    path('api/ide/projects/<uuid:project_id>/generated-files/', ide_views.get_project_generated_files, name='ide_get_generated_files'),
     
     # Terminal session
     path('api/ide/projects/<uuid:project_id>/terminal/', ide_views.get_terminal_session, name='ide_get_terminal'),
@@ -101,9 +105,27 @@ urlpatterns = [
     # Server invites
     path('api/servers/<uuid:server_id>/invites/', server_views.get_server_invites, name='get_server_invites'),
     path('api/servers/<uuid:server_id>/invites/create/', server_views.create_invite, name='create_invite'),
+    path('api/servers/<uuid:server_id>/send-invite-to-friend/', server_views.send_invite_to_friend, name='send_invite_to_friend'),
+    path('api/servers/<uuid:server_id>/invite-embed/', server_views.get_invite_embed_data, name='get_invite_embed_data'),
+    path('api/servers/<uuid:server_id>/member/<int:user_id>/profile/', server_views.get_member_profile, name='get_member_profile'),
     path('api/servers/invites/join/', server_views.join_server_by_invite, name='join_server_by_invite'),
+    path('api/servers/invites/<str:invite_code>/info/', server_views.get_invite_info, name='get_invite_info'),
     
     # Channel management
     path('api/channels/<uuid:channel_id>/', server_views.get_channel_messages, name='get_channel_messages'),
     path('api/channels/<uuid:channel_id>/send/', server_views.send_message, name='send_server_message'),
+    path('api/servers/<uuid:server_id>/channels/create/', server_views.create_channel, name='create_channel'),
+    
+    # Category management
+    path('api/servers/<uuid:server_id>/categories/', server_views.get_server_categories, name='get_server_categories'),
+    path('api/servers/<uuid:server_id>/categories/create/', server_views.create_category, name='create_category'),
+    
+    # Role management
+    path('api/servers/<uuid:server_id>/roles/', server_views.get_server_roles, name='get_server_roles'),
+    path('api/servers/<uuid:server_id>/roles/create/', server_views.create_role, name='create_role'),
+    
+    # Voice channels
+    path('api/channels/<uuid:channel_id>/voice/join/', server_views.join_voice_channel, name='join_voice_channel'),
+    path('api/voice/leave/', server_views.leave_voice_channel, name='leave_voice_channel'),
+    path('api/channels/<uuid:channel_id>/voice/members/', server_views.get_voice_channel_members, name='get_voice_channel_members'),
 ]

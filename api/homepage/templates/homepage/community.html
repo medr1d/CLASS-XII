@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Community - PYTHON ASSEMBLY</title>
     
-    <link rel="icon" type="image/x-icon" href="{% static 'auth_app/favicon.ico' %}">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     
     <style>
@@ -179,6 +179,46 @@
             display: flex;
             flex-direction: column;
             box-shadow: 4px 0 20px var(--shadow-dark);
+            transition: transform 0.3s ease, width 0.3s ease;
+            position: relative;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-240px);
+            width: 40px;
+        }
+
+        .sidebar.collapsed + .content-area {
+            margin-left: 40px;
+        }
+
+        .sidebar-toggle-btn {
+            position: absolute;
+            right: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 60px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-left: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color);
+            z-index: 10;
+            transition: all 0.3s;
+            font-size: 18px;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: var(--hover-color);
+        }
+
+        .sidebar.collapsed .sidebar-toggle-btn {
+            right: -40px;
+            transform: translateY(-50%) rotate(180deg);
         }
 
         @keyframes slideInLeft {
@@ -282,6 +322,204 @@
                 transform: translateY(0);
             }
         }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Loading skeleton styles */
+        .skeleton {
+            background: linear-gradient(
+                90deg,
+                var(--bg-secondary) 0%,
+                var(--bg-tertiary) 50%,
+                var(--bg-secondary) 100%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        .skeleton-text {
+            height: 12px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .skeleton-box {
+            height: 100px;
+            margin-bottom: 16px;
+        }
+
+        /* Smooth transitions for all interactive elements */
+        .friend-card,
+        .server-item,
+        .channel-item,
+        .member-item,
+        .message,
+        .dm-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .friend-card:hover,
+        .server-item:hover,
+        .channel-item:hover,
+        .member-item:hover,
+        .dm-item:hover {
+            transform: translateX(4px);
+            background: var(--hover-color);
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Fade in animations for lists */
+        .friend-card {
+            animation: fadeInUp 0.4s ease backwards;
+        }
+
+        .friend-card:nth-child(1) { animation-delay: 0.05s; }
+        .friend-card:nth-child(2) { animation-delay: 0.1s; }
+        .friend-card:nth-child(3) { animation-delay: 0.15s; }
+        .friend-card:nth-child(4) { animation-delay: 0.2s; }
+        .friend-card:nth-child(5) { animation-delay: 0.25s; }
+
+        .server-item {
+            animation: slideInLeft 0.4s ease backwards;
+        }
+
+        .server-item:nth-child(1) { animation-delay: 0.05s; }
+        .server-item:nth-child(2) { animation-delay: 0.1s; }
+        .server-item:nth-child(3) { animation-delay: 0.15s; }
+        .server-item:nth-child(4) { animation-delay: 0.2s; }
+        .server-item:nth-child(5) { animation-delay: 0.25s; }
+
+        /* Enhanced message animations */
+        .message {
+            animation: slideInRight 0.3s ease;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal animations */
+        .modal {
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-content {
+            animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Button press effect */
+        button, .btn {
+            transition: all 0.15s ease;
+        }
+
+        button:active, .btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Glow effects for active states */
+        .server-item.active,
+        .channel-item.active {
+            box-shadow: 
+                0 0 0 2px var(--primary-color),
+                0 0 20px rgba(255, 255, 255, 0.3);
+            background: var(--hover-color);
+        }
+
+        /* Smooth scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        .add-friend-container {
             border: 2px solid var(--border-color);
             margin-bottom: 20px;
         }
@@ -395,6 +633,20 @@
         .friend-item:hover {
             background: rgba(255, 255, 255, 0.05);
             border-color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .member-item {
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+
+        .member-item:hover {
+            background: var(--hover-color);
+            transform: translateX(5px);
         }
 
         .friend-info {
@@ -1569,6 +1821,7 @@
     <div class="community-container" id="mainContent" style="opacity: 0; transition: opacity 0.5s ease;">
         <!-- Sidebar -->
         <div class="sidebar">
+            <button class="sidebar-toggle-btn" onclick="toggleSidebar()">←</button>
             <div class="sidebar-tabs">
                 <button class="sidebar-tab active" onclick="switchTab('friends')">FRIENDS</button>
                 <button class="sidebar-tab" onclick="switchTab('dms')">DMs</button>
@@ -1688,6 +1941,19 @@
         let currentChatUser = null;
         let friendsData = {{ friends_json|safe }};
         let dmPollingInterval = null; // For auto-refreshing DMs
+
+        // Toggle sidebar visibility
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const isCollapsed = sidebar.classList.toggle('collapsed');
+            localStorage.setItem('sidebar-collapsed', isCollapsed);
+            
+            // Update toggle button icon
+            const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+            if (toggleBtn) {
+                toggleBtn.innerHTML = isCollapsed ? '→' : '←';
+            }
+        }
 
         // Switch between tabs
         function switchTab(tab) {
@@ -2087,6 +2353,19 @@
 
         // Enter key to send message
         document.addEventListener('DOMContentLoaded', function() {
+            // Load sidebar state on page load
+            const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+            if (isCollapsed) {
+                const sidebar = document.querySelector('.sidebar');
+                const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+                if (sidebar) {
+                    sidebar.classList.add('collapsed');
+                }
+                if (toggleBtn) {
+                    toggleBtn.innerHTML = '→';
+                }
+            }
+
             // Generate pixel particles
             const particlesContainer = document.getElementById('pixelParticles');
             const particleCount = 20;
@@ -2187,9 +2466,7 @@
                             <div class="profile-achievements">
                                 ${profile.achievements.map(achievement => `
                                     <div class="profile-badge" title="${achievement.name}: ${achievement.description}">
-                                        <img src="/static/homepage/badges/${achievement.badge_icon}" 
-                                             alt="${achievement.name}"
-                                             onerror="this.style.display='none'">
+                                        <img src="${achievement.icon_url}" alt="${achievement.name}" style="width: 48px; height: 48px; image-rendering: pixelated;">
                                     </div>
                                 `).join('')}
                             </div>
@@ -2331,9 +2608,7 @@
                                 <div class="profile-achievements">
                                     ${profile.achievements.map(achievement => `
                                         <div class="profile-badge" title="${achievement.name}: ${achievement.description}">
-                                            <img src="/static/homepage/badges/${achievement.badge_icon}" 
-                                                 alt="${achievement.name}"
-                                                 onerror="this.style.display='none'">
+                                            <img src="${achievement.icon_url}" alt="${achievement.name}" style="width: 64px; height: 64px; image-rendering: pixelated;">
                                         </div>
                                     `).join('')}
                                 </div>
@@ -2606,6 +2881,11 @@
                     .catch(error => console.error('Error:', error));
             }
         }
+
+        function sendDMFromProfile(userId) {
+            // Alias for openChatFromProfile for compatibility
+            openChatFromProfile(userId);
+        }
         
         // ====== SERVER SYSTEM FUNCTIONS ======
         let currentServer = null;
@@ -2614,15 +2894,23 @@
 
         // Load user's servers
         function loadServers() {
+            const serversList = document.getElementById('serversList');
+            
+            // Show loading skeleton
+            serversList.innerHTML = `
+                <div class="skeleton skeleton-box"></div>
+                <div class="skeleton skeleton-box"></div>
+                <div class="skeleton skeleton-box"></div>
+            `;
+            
             fetch('/api/servers/', {
                 headers: {'X-CSRFToken': csrfToken}
             })
             .then(response => response.json())
             .then(data => {
-                const serversList = document.getElementById('serversList');
                 if (data.servers && data.servers.length > 0) {
-                    serversList.innerHTML = data.servers.map(server => `
-                        <div class="server-list-item" onclick="selectServer('${server.server_id}')">
+                    serversList.innerHTML = data.servers.map((server, index) => `
+                        <div class="server-list-item" onclick="selectServer('${server.server_id}')" style="animation-delay: ${index * 0.05}s;">
                             <div class="server-icon">
                                 <img src="${server.icon_url}" alt="${server.name}" 
                                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" 
@@ -2638,10 +2926,13 @@
                         </div>
                     `).join('');
                 } else {
-                    serversList.innerHTML = '<div style="font-size: 8px; color: var(--text-muted); padding: 10px;">No servers yet. Create or join one!</div>';
+                    serversList.innerHTML = '<div style="font-size: 8px; color: var(--text-muted); padding: 10px; animation: fadeIn 0.3s ease;">No servers yet. Create or join one!</div>';
                 }
             })
-            .catch(error => console.error('Error loading servers:', error));
+            .catch(error => {
+                console.error('Error loading servers:', error);
+                serversList.innerHTML = '<div style="font-size: 8px; color: var(--error-color); padding: 10px;">Failed to load servers. Click to retry.</div>';
+            });
         }
 
         // Select a server and load its details
@@ -2727,13 +3018,22 @@
                     </div>
                     
                     <!-- Members List -->
-                    <div style="width: 180px; border: 2px solid var(--border-color); padding: 10px; overflow-y: auto;">
-                        <div style="font-size: 10px; font-weight: bold; margin-bottom: 10px;">MEMBERS (${serverData.members.length})</div>
+                    <div style="width: 220px; border: 2px solid var(--border-color); padding: 12px; overflow-y: auto; background: var(--bg-secondary);">
+                        <div style="font-size: 11px; font-weight: bold; margin-bottom: 12px; color: var(--text-muted); text-transform: uppercase;">MEMBERS — ${serverData.members.length}</div>
                         ${serverData.members.map(member => `
-                            <div style="padding: 5px; font-size: 8px; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
-                                <div style="width: 8px; height: 8px; background: ${member.is_online ? '#00ff00' : '#888888'}; border-radius: 50%;"></div>
-                                <span style="color: ${member.role === 'owner' ? '#ffaa00' : (member.role === 'admin' ? '#ff5555' : 'var(--text-color)')};">${member.nickname || member.username}</span>
-                                ${member.role !== 'member' ? `<span style="font-size: 6px; color: var(--text-muted);">[${member.role}]</span>` : ''}
+                            <div class="member-item" onclick="showMiniProfile(${member.user_id}, event)" style="padding: 8px; font-size: 9px; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-radius: 6px; transition: background 0.2s; position: relative;">
+                                <div style="position: relative;">
+                                    <img src="${member.profile_picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(member.username) + '&background=5865F2&color=ffffff&size=32'}" 
+                                         alt="${member.username}" 
+                                         style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-color);">
+                                    <div style="position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; background: ${member.is_online ? '#23a559' : '#80848e'}; border-radius: 50%; border: 2px solid var(--bg-secondary);"></div>
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-weight: 600; color: ${member.role === 'owner' ? '#ffaa00' : (member.role === 'admin' ? '#ff5555' : 'var(--text-color)')}; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        ${member.display_name || member.username}
+                                    </div>
+                                    ${member.role !== 'member' ? `<div style="font-size: 8px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px;">${member.role}</div>` : ''}
+                                </div>
                             </div>
                         `).join('')}
                     </div>
@@ -2985,28 +3285,42 @@
 
         // Load public servers
         function loadDiscoverServers() {
+            const container = document.getElementById('discoverServersList');
+            
+            // Show loading skeletons
+            container.innerHTML = `
+                <div class="discover-server-item skeleton skeleton-box"></div>
+                <div class="discover-server-item skeleton skeleton-box"></div>
+                <div class="discover-server-item skeleton skeleton-box"></div>
+            `;
+            
             fetch('/api/servers/discover/', {
                 headers: {'X-CSRFToken': csrfToken}
             })
             .then(response => response.json())
             .then(data => {
-                const container = document.getElementById('discoverServersList');
-                if (data.servers && data.servers.length > 0) {
-                    container.innerHTML = data.servers.map(server => `
-                        <div class="discover-server-item">
+                if (data.success && data.servers && data.servers.length > 0) {
+                    container.innerHTML = data.servers.map((server, index) => `
+                        <div class="discover-server-item" style="animation: fadeInUp 0.4s ease backwards; animation-delay: ${index * 0.1}s;">
                             <div class="discover-server-info">
                                 <div class="discover-server-name">${server.name}</div>
                                 <div class="discover-server-desc">${server.description || 'No description'}</div>
-                                <div class="discover-server-meta">${server.member_count} members</div>
+                                <div class="discover-server-meta">
+                                    ${server.member_count} members • Created by ${server.owner_username}
+                                    ${server.is_public ? '<span style="color: var(--success-color); margin-left: 8px;">🌐 PUBLIC</span>' : ''}
+                                </div>
                             </div>
-                            <button class="modal-btn primary" onclick="joinServerByCode('${server.invite_code}')">JOIN</button>
+                            <button class="modal-btn primary" onclick="joinDiscoveredServer('${server.server_id}')">JOIN</button>
                         </div>
                     `).join('');
                 } else {
-                    container.innerHTML = '<div style="font-size: 8px; color: var(--text-muted); text-align: center; padding: 20px;">No public servers available</div>';
+                    container.innerHTML = '<div style="font-size: 10px; color: var(--text-muted); text-align: center; padding: 40px; animation: fadeIn 0.3s ease;">No public servers available. Create one to get started!</div>';
                 }
             })
-            .catch(error => console.error('Error loading servers:', error));
+            .catch(error => {
+                console.error('Error loading servers:', error);
+                container.innerHTML = '<div style="font-size: 10px; color: var(--error-color); text-align: center; padding: 20px;">Failed to load servers. Please try again.</div>';
+            });
         }
 
         // Join server by invite code
@@ -3021,18 +3335,87 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.status === 'success') {
+                if (data.status === 'success' || data.success) {
                     hideDiscoverServersModal();
                     loadServers();
-                    alert('Joined server successfully!');
+                    showNotification('Successfully joined server!', 'success');
                 } else {
-                    alert(data.message || 'Failed to join server');
+                    showNotification(data.message || data.error || 'Failed to join server', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error joining server');
+                showNotification('Error joining server', 'error');
             });
+        }
+
+        // Join discovered server by server ID
+        function joinDiscoveredServer(serverId) {
+            // First get the server's invite code
+            fetch(`/api/servers/${serverId}/`, {
+                headers: {'X-CSRFToken': csrfToken}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.server && data.server.invite_code) {
+                    joinServerByCode(data.server.invite_code);
+                } else {
+                    // If no invite code in response, try to join directly
+                    fetch('/api/servers/join/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({ server_id: serverId })
+                    })
+                    .then(response => response.json())
+                    .then(joinData => {
+                        if (joinData.success || joinData.status === 'success') {
+                            hideDiscoverServersModal();
+                            loadServers();
+                            showNotification('Successfully joined server!', 'success');
+                        } else {
+                            showNotification(joinData.message || 'Failed to join server', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotification('Error joining server', 'error');
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error joining server', 'error');
+            });
+        }
+
+        // Show notification toast
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: ${type === 'success' ? 'var(--success-color)' : type === 'error' ? 'var(--error-color)' : 'var(--bg-secondary)'};
+                color: var(--bg-primary);
+                border: 2px solid ${type === 'success' ? 'var(--success-color)' : type === 'error' ? 'var(--error-color)' : 'var(--border-color)'};
+                font-family: 'Courier New', monospace;
+                font-size: 10px;
+                font-weight: bold;
+                z-index: 10000;
+                animation: slideInRight 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
 
         // Show create channel modal
@@ -3177,6 +3560,71 @@
             
             // Load existing invites
             loadActiveInvites();
+            
+            // Load friends for invite
+            loadFriendsForInvite();
+        }
+
+        async function loadFriendsForInvite() {
+            try {
+                const response = await fetch('/community/friends/', {
+                    headers: { 'X-CSRFToken': csrfToken }
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const select = document.getElementById('friendSelect');
+                    select.innerHTML = '<option value="">Select a friend...</option>';
+                    
+                    data.friends.forEach(friend => {
+                        const option = document.createElement('option');
+                        option.value = friend.id;
+                        option.textContent = friend.username;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading friends:', error);
+            }
+        }
+
+        async function sendInviteToFriend() {
+            const friendId = document.getElementById('friendSelect').value;
+            
+            if (!friendId) {
+                showToast('Please select a friend', 'error');
+                return;
+            }
+            
+            if (!currentServer) {
+                showToast('No server selected', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/servers/${currentServer.server.server_id}/send-invite-to-friend/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        friend_user_id: parseInt(friendId),
+                        message: 'Join my server!'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showToast(data.message, 'success');
+                    document.getElementById('friendSelect').value = '';
+                } else {
+                    showToast(data.message || 'Failed to send invite', 'error');
+                }
+            } catch (error) {
+                showToast('Error sending invite', 'error');
+            }
         }
         
         function hideInviteModal() {
@@ -3566,6 +4014,14 @@
                     <button type="button" class="modal-btn primary" onclick="generateInvite()" style="width: 100%;">GENERATE INVITE LINK</button>
                 </div>
                 
+                <div style="margin-bottom: 20px; padding: 15px; background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 4px;">
+                    <label style="display: block; margin-bottom: 10px; color: var(--text-color); font-size: 12px;">Send to Friend</label>
+                    <select id="friendSelect" style="width: 100%; padding: 8px; background: var(--bg-primary); color: var(--text-color); border: 2px solid var(--border-color); font-family: 'Courier New', monospace; font-size: 10px; margin-bottom: 10px;">
+                        <option value="">Select a friend...</option>
+                    </select>
+                    <button type="button" class="modal-btn primary" onclick="sendInviteToFriend()" style="width: 100%;">SEND INVITE</button>
+                </div>
+                
                 <div id="inviteLinkContainer" style="display: none; margin-bottom: 20px; padding: 15px; background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: 4px;">
                     <label style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 5px;">INVITE LINK</label>
                     <div style="display: flex; gap: 10px; align-items: center;">
@@ -3588,6 +4044,585 @@
             </div>
         </div>
     </div>
+
+    <!-- Member Profile Modal -->
+    <div id="memberProfileModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px; animation: slideIn 0.3s;">
+            <div class="modal-header">
+                <h3 style="margin: 0; font-size: 14px;">MEMBER PROFILE</h3>
+                <button class="modal-close" onclick="hideMemberProfile()">&times;</button>
+            </div>
+            <div class="modal-body" id="memberProfileContent" style="padding: 20px;">
+                <div style="text-align: center;">
+                    <div class="profile-loader" style="font-size: 10px; color: var(--text-muted);">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Server Invite Embed Styles and Scripts -->
+    <style>
+        .server-invite-embed {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 8px 0;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .server-invite-embed:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .server-invite-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        
+        .server-invite-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .server-invite-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: var(--text-color);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .server-invite-description {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .server-invite-stats {
+            font-size: 10px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .server-invite-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .server-invite-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .server-invite-btn {
+            background: var(--primary-color);
+            color: var(--bg-primary);
+            border: 2px solid var(--primary-color);
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        
+        .server-invite-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+        }
+        
+        .server-invite-btn.secondary {
+            background: var(--success-color);
+            color: #ffffff;
+            border: 2px solid var(--success-color);
+            cursor: default;
+        }
+
+        .server-invite-btn.secondary:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Sidebar Toggle Styles */
+        .sidebar-toggle {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 0 8px 8px 0;
+            padding: 20px 8px;
+            cursor: pointer;
+            z-index: 1001;
+            font-size: 20px;
+            transition: all 0.3s;
+            display: none;
+        }
+        
+        .sidebar-toggle:hover {
+            background: var(--accent-hover);
+            padding-right: 12px;
+        }
+        
+        .sidebar-toggle.visible {
+            display: block;
+        }
+        
+        .community-sidebar.minimized {
+            transform: translateX(-100%);
+        }
+        
+        @media (max-width: 768px) {
+            .server-invite-embed {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .server-invite-actions {
+                width: 100%;
+            }
+            
+            .server-invite-btn {
+                width: 100%;
+            }
+        }
+        
+        /* Typing Indicator */
+        .typing-indicator-container {
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.02);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            display: none;
+            min-height: 40px;
+            align-items: center;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .typing-text {
+            font-style: italic;
+        }
+        
+        .typing-dots {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: #666;
+            border-radius: 50%;
+            display: inline-block;
+            animation: typing-bounce 1.4s infinite ease-in-out both;
+        }
+        
+        .typing-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        
+        .typing-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+        
+        @keyframes typing-bounce {
+            0%, 80%, 100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+            40% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <script>
+        // ============ SERVER INVITE EMBED HANDLING ============
+        
+        function renderServerInviteEmbed(message) {
+            const match = message.match(/\[SERVER_INVITE:([^:]+):([^\]]+)\]/);
+            if (!match) return message;
+            
+            const [, serverId, inviteCode] = match;
+            
+            // Fetch server data and render embed
+            fetch(`/api/servers/${serverId}/invite-embed/`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const server = data.server;
+                        return `
+                            <div class="server-invite-embed" data-server-id="${server.server_id}">
+                                <img src="${server.icon_url || '/static/images/default-server.png'}" class="server-invite-icon" alt="${server.name}">
+                                <div class="server-invite-info">
+                                    <div class="server-invite-name">${server.name}</div>
+                                    <div class="server-invite-description">${server.description || 'No description'}</div>
+                                    <div class="server-invite-stats">
+                                        <span class="server-invite-stat">👥 ${server.member_count} members</span>
+                                        ${server.is_public ? '<span class="server-invite-stat">🌐 Public</span>' : '<span class="server-invite-stat">🔒 Private</span>'}
+                                    </div>
+                                </div>
+                                <div class="server-invite-actions">
+                                    <button class="server-invite-btn" onclick="joinServerFromEmbed('${inviteCode}')">
+                                        ➜ JOIN SERVER
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    return message;
+                })
+                .catch(err => {
+                    console.error('Error fetching server embed:', err);
+                    return message;
+                });
+            
+            return '<div class="server-invite-embed"><div style="padding: 20px; text-align: center;">Loading server invite...</div></div>';
+        }
+        
+        function joinServerFromEmbed(inviteCode) {
+            if (!confirm('Join this server?')) return;
+            
+            fetch('/api/servers/join/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ invite_code: inviteCode })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Joined server successfully!', 'success');
+                    loadUserServers();
+                } else {
+                    showNotification(data.error || 'Failed to join server', 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Error joining server:', err);
+                showNotification('Failed to join server', 'error');
+            });
+        }
+        
+        function sendInviteToFriend(serverId) {
+            const friendsList = document.getElementById('friendsList');
+            if (!friendsList) return;
+            
+            // Show friend selection modal
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px;">
+                    <div class="modal-header">
+                        <h3>SEND INVITE TO FRIEND</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="friendSelectionList" style="max-height: 300px; overflow-y: auto;">
+                            <div style="text-align: center; padding: 20px;">Loading friends...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Load friends list
+            fetch('/api/community/friends/')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.friends.length > 0) {
+                        const listHtml = data.friends.map(friend => `
+                            <div style="padding: 12px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.2s;" 
+                                 onmouseover="this.style.background='var(--bg-tertiary)'" 
+                                 onmouseout="this.style.background=''"
+                                 onclick="confirmSendInvite('${serverId}', ${friend.id}, '${friend.username}', this.closest('.modal'))">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <img src="${friend.profile_picture}" style="width: 40px; height: 40px; border-radius: 50%;" alt="${friend.username}">
+                                    <div>
+                                        <div style="font-weight: bold;">${friend.username}</div>
+                                        <div style="font-size: 10px; color: var(--text-muted);">${friend.is_online ? '🟢 Online' : '⚫ Offline'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                        document.getElementById('friendSelectionList').innerHTML = listHtml;
+                    } else {
+                        document.getElementById('friendSelectionList').innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">No friends found</div>';
+                    }
+                });
+        }
+        
+        function confirmSendInvite(serverId, friendId, friendName, modal) {
+            fetch(`/api/servers/${serverId}/send-invite-to-friend/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ friend_id: friendId })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(`Invite sent to ${friendName}!`, 'success');
+                    modal.remove();
+                } else {
+                    showNotification(data.error || 'Failed to send invite', 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Error sending invite:', err);
+                showNotification('Failed to send invite', 'error');
+            });
+        }
+        
+        // ============ MEMBER PROFILE MODAL ============
+        
+        function showMemberProfile(serverId, userId) {
+            const modal = document.getElementById('memberProfileModal');
+            const content = document.getElementById('memberProfileContent');
+            
+            modal.style.display = 'flex';
+            content.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="profile-loader">Loading...</div></div>';
+            
+            fetch(`/api/servers/${serverId}/member/${userId}/profile/`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const member = data.member;
+                        content.innerHTML = `
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <img src="${member.profile_picture || '/static/images/default-avatar.png'}" 
+                                     style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent-color);"
+                                     alt="${member.username}">
+                                <h3 style="margin: 12px 0 4px; font-size: 18px;">${member.username}</h3>
+                                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">
+                                    ${member.role}
+                                </div>
+                                ${member.is_online ? '<div style="color: #43b581; font-size: 10px; margin-top: 4px;">🟢 Online</div>' : '<div style="color: #747f8d; font-size: 10px; margin-top: 4px;">⚫ Offline</div>'}
+                            </div>
+                            
+                            ${member.bio ? `<div style="background: var(--bg-tertiary); padding: 12px; border-radius: 4px; margin-bottom: 12px; font-size: 12px; line-height: 1.6;">${member.bio}</div>` : ''}
+                            
+                            <div style="display: grid; gap: 8px; font-size: 11px;">
+                                ${member.location ? `<div>📍 ${member.location}</div>` : ''}
+                                ${member.github_username ? `<div>💻 <a href="https://github.com/${member.github_username}" target="_blank" style="color: var(--accent-color);">@${member.github_username}</a></div>` : ''}
+                                ${member.twitter_username ? `<div>🐦 <a href="https://twitter.com/${member.twitter_username}" target="_blank" style="color: var(--accent-color);">@${member.twitter_username}</a></div>` : ''}
+                                ${member.website ? `<div>🌐 <a href="${member.website}" target="_blank" style="color: var(--accent-color);">${member.website}</a></div>` : ''}
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); font-size: 10px; color: var(--text-muted);">
+                                Joined ${new Date(member.joined_at).toLocaleDateString()}
+                            </div>
+                            
+                            <div style="margin-top: 20px; display: flex; gap: 8px;">
+                                <button class="modal-btn primary" style="flex: 1;" onclick="sendDirectMessage(${member.user_id})">Send Message</button>
+                                <button class="modal-btn" onclick="hideMemberProfile()">Close</button>
+                            </div>
+                        `;
+                    } else {
+                        content.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-danger);">Failed to load profile</div>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading member profile:', err);
+                    content.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-danger);">Error loading profile</div>';
+                });
+        }
+        
+        function hideMemberProfile() {
+            document.getElementById('memberProfileModal').style.display = 'none';
+        }
+        
+        // ============ SIDEBAR TOGGLE ============
+        
+        function initSidebarToggle() {
+            const sidebar = document.querySelector('.community-sidebar');
+            if (!sidebar) return;
+            
+            // Create toggle button
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'sidebar-toggle';
+            toggleBtn.innerHTML = '☰';
+            toggleBtn.onclick = toggleSidebar;
+            document.body.appendChild(toggleBtn);
+            
+            // Check if sidebar should be minimized on load (mobile)
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('minimized');
+                toggleBtn.classList.add('visible');
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth <= 768) {
+                    if (!sidebar.classList.contains('minimized')) {
+                        sidebar.classList.add('minimized');
+                    }
+                    toggleBtn.classList.add('visible');
+                } else {
+                    sidebar.classList.remove('minimized');
+                    toggleBtn.classList.remove('visible');
+                }
+            });
+        }
+        
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.community-sidebar');
+            const toggle = document.querySelector('.sidebar-toggle');
+            
+            if (sidebar.classList.contains('minimized')) {
+                sidebar.classList.remove('minimized');
+                toggle.innerHTML = '✕';
+            } else {
+                sidebar.classList.add('minimized');
+                toggle.innerHTML = '☰';
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initSidebarToggle();
+        });
+        
+        // ============ ENHANCED MESSAGE RENDERING ============
+        
+        // Detect and render server invite embeds in messages
+        function detectAndRenderInvites() {
+            const messageElements = document.querySelectorAll('.message-text, .server-message-content');
+            
+            messageElements.forEach(async (el) => {
+                const text = el.textContent;
+                const inviteMatch = text.match(/\[SERVER_INVITE:([A-Z0-9]+)\]/);
+                
+                if (inviteMatch && !el.querySelector('.server-invite-embed')) {
+                    const inviteCode = inviteMatch[1];
+                    const inviteData = await fetchInviteInfo(inviteCode);
+                    
+                    if (inviteData.status === 'success') {
+                        const embed = createServerInviteEmbed(inviteData.server, inviteCode);
+                        el.innerHTML = text.replace(inviteMatch[0], '') + embed;
+                    }
+                }
+            });
+        }
+
+        async function fetchInviteInfo(inviteCode) {
+            try {
+                const response = await fetch(`/api/servers/invites/${inviteCode}/info/`, {
+                    headers: { 'X-CSRFToken': csrfToken }
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching invite info:', error);
+                return { status: 'error' };
+            }
+        }
+
+        function createServerInviteEmbed(server, inviteCode) {
+            return `
+                <div class="server-invite-embed" onclick="joinViaEmbed('${inviteCode}')">
+                    <img src="${server.icon_url}" alt="${server.name}" class="server-invite-icon">
+                    <div class="server-invite-info">
+                        <div class="server-invite-name">${server.name}</div>
+                        <div class="server-invite-description">${server.description || 'No description'}</div>
+                        <div class="server-invite-stats">
+                            <span>👥 ${server.member_count} members</span>
+                            <span>${server.is_public ? '🌐 Public' : '🔒 Private'}</span>
+                        </div>
+                    </div>
+                    <button class="server-invite-btn ${server.is_member ? 'secondary' : ''}" onclick="event.stopPropagation()">
+                        ${server.is_member ? '✓ JOINED' : 'JOIN SERVER'}
+                    </button>
+                </div>
+            `;
+        }
+
+        async function joinViaEmbed(inviteCode) {
+            try {
+                const response = await fetch('/api/servers/invites/join/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ invite_code: inviteCode })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    // Refresh server list
+                    loadServers();
+                    // Update button state
+                    detectAndRenderInvites();
+                } else {
+                    showToast(data.message || 'Failed to join server', 'error');
+                }
+            } catch (error) {
+                showToast('Error joining server', 'error');
+            }
+        }
+
+        // Initialize invite detection on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Detect invite embeds in messages
+            detectAndRenderInvites();
+            
+            // Re-detect when new messages are loaded
+            const messagesContainer = document.getElementById('messagesContainer');
+            if (messagesContainer) {
+                const observer = new MutationObserver(() => {
+                    detectAndRenderInvites();
+                });
+                
+                observer.observe(messagesContainer, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+        });
+    </script>
 
 </body>
 </html>

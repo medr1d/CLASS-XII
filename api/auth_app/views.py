@@ -570,6 +570,60 @@ def admin_panel_view(request):
 
 @login_required
 @require_http_methods(["POST"])
+def get_file_content(request, file_id):
+    """Get file content for admin viewing"""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
+    
+    try:
+        from homepage.models import PythonCodeSession
+        file = get_object_or_404(PythonCodeSession, id=file_id)
+        
+        return JsonResponse({
+            'success': True,
+            'file': {
+                'id': file.id,
+                'filename': file.filename,
+                'owner': file.user.username,
+                'content': file.code_content,
+                'size': f'{len(file.code_content)} characters',
+                'created_at': file.created_at.strftime('%B %d, %Y at %I:%M %p'),
+                'updated_at': file.updated_at.strftime('%B %d, %Y at %I:%M %p'),
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+
+def delete_file_admin(request, file_id):
+    """Delete a file from admin panel"""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'POST required'}, status=400)
+    
+    try:
+        from homepage.models import PythonCodeSession
+        file = get_object_or_404(PythonCodeSession, id=file_id)
+        filename = file.filename
+        owner = file.user.username
+        file.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'File "{filename}" by {owner} deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+
 def update_paid_status(request):
     """Update the paid status of a user. Only accessible by superusers."""
     
@@ -592,6 +646,7 @@ def update_paid_status(request):
         
         # Get and validate parameters
         user_id = data.get('user_id')
+        action = data.get('action')
         paid_status = data.get('paid_status')
         
         if user_id is None:
@@ -609,20 +664,7 @@ def update_paid_status(request):
                 'error': 'user_id must be a valid integer'
             }, status=400)
         
-        if paid_status is None:
-            return JsonResponse({
-                'success': False,
-                'error': 'Missing paid_status parameter'
-            }, status=400)
-        
-        # Convert paid_status to boolean if it's a string
-        if isinstance(paid_status, str):
-            paid_status = paid_status.lower() in ('true', '1', 'yes')
-        elif not isinstance(paid_status, bool):
-            # Try to convert to bool
-            paid_status = bool(paid_status)
-        
-        # Get user
+        # Get user first to check if we need to toggle
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
@@ -633,6 +675,22 @@ def update_paid_status(request):
         
         # Get or create user profile
         profile, created = UserProfile.objects.get_or_create(user=user)
+        
+        # Handle toggle action
+        if action == 'toggle':
+            paid_status = not profile.paidUser
+        elif paid_status is None:
+            return JsonResponse({
+                'success': False,
+                'error': 'Missing paid_status parameter'
+            }, status=400)
+        else:
+            # Convert paid_status to boolean if it's a string
+            if isinstance(paid_status, str):
+                paid_status = paid_status.lower() in ('true', '1', 'yes')
+            elif not isinstance(paid_status, bool):
+                # Try to convert to bool
+                paid_status = bool(paid_status)
         
         # Log the change
         old_status = profile.paidUser

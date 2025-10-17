@@ -1490,9 +1490,10 @@ def get_user_profile(request, user_id):
             'is_own_profile': user == request.user,
             'achievements': [
                 {
-                    'name': ach['achievement__name'],
-                    'badge_icon': ach['achievement__badge_icon'],
-                    'description': ach['achievement__description']
+                    'name': ach.achievement.name,
+                    'badge_icon': ach.achievement.badge_icon,
+                    'icon_url': ach.achievement.get_icon_url(),
+                    'description': ach.achievement.description
                 } for ach in achievements
             ],
             'stats': {

@@ -503,9 +503,6 @@ class Achievement(models.Model):
         ('og_user', 'OG User'),
         ('paid_user', 'Paid User'),
         ('beginner', 'Beginner'),
-        ('creator', 'Creator'),
-        ('prolific', 'Prolific'),
-        ('speedrunner', 'Speedrunner'),
     ]
     
     achievement_type = models.CharField(max_length=50, choices=ACHIEVEMENT_TYPES, unique=True)
@@ -521,6 +518,21 @@ class Achievement(models.Model):
     
     def __str__(self):
         return self.name
+    
+    def get_icon_url(self):
+        """Get the icon URL for the achievement badge"""
+        from django.templatetags.static import static
+        
+        # Map achievement types to their badge image files
+        badge_map = {
+            'og_user': 'homepage/badges/og.png',
+            'paid_user': 'homepage/badges/paid.png',
+            'beginner': 'homepage/badges/beginner.png',
+        }
+        
+        # Return the static URL for the badge image
+        badge_path = badge_map.get(self.achievement_type, 'homepage/badges/beginner.png')
+        return static(badge_path)
 
 
 class UserAchievement(models.Model):
@@ -606,6 +618,7 @@ class ServerMember(models.Model):
     server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='members')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='server_memberships')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
+    custom_roles = models.ManyToManyField('ServerRole', blank=True, related_name='members')
     nickname = models.CharField(max_length=50, blank=True, default='')  # Server-specific nickname
     
     # Permissions
@@ -614,6 +627,9 @@ class ServerMember(models.Model):
     can_ban_members = models.BooleanField(default=False)
     can_manage_messages = models.BooleanField(default=False)
     is_muted = models.BooleanField(default=False)
+    
+    # Voice state
+    current_voice_channel = models.ForeignKey('ServerChannel', null=True, blank=True, on_delete=models.SET_NULL, related_name='voice_members')
     
     joined_at = models.DateTimeField(auto_now_add=True)
     
@@ -633,22 +649,79 @@ class ServerMember(models.Model):
         return self.nickname if self.nickname else self.user.username
 
 
+class ServerCategory(models.Model):
+    """Categories to organize channels (like Discord)"""
+    category_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='categories')
+    name = models.CharField(max_length=100)
+    position = models.IntegerField(default=0)
+    is_collapsed = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['position', 'created_at']
+        indexes = [
+            models.Index(fields=['server', 'position']),
+        ]
+        verbose_name_plural = 'Server Categories'
+    
+    def __str__(self):
+        return f"{self.name} ({self.server.name})"
+
+
+class ServerRole(models.Model):
+    """Custom roles for server members (like Discord)"""
+    role_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='custom_roles')
+    name = models.CharField(max_length=50)
+    color = models.CharField(max_length=7, default='#99AAB5')  # Hex color
+    position = models.IntegerField(default=0)  # Higher = more authority
+    
+    # Permissions
+    can_manage_channels = models.BooleanField(default=False)
+    can_manage_roles = models.BooleanField(default=False)
+    can_kick_members = models.BooleanField(default=False)
+    can_ban_members = models.BooleanField(default=False)
+    can_manage_messages = models.BooleanField(default=False)
+    can_mention_everyone = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-position', 'name']
+        unique_together = ['server', 'name']
+        indexes = [
+            models.Index(fields=['server', 'position']),
+        ]
+    
+    def __str__(self):
+        return f"{self.name} ({self.server.name})"
+
+
 class ServerChannel(models.Model):
-    """Text channels within servers"""
+    """Text and voice channels within servers"""
     CHANNEL_TYPE_CHOICES = [
         ('text', 'Text Channel'),
+        ('voice', 'Voice Channel'),
         ('announcements', 'Announcements'),
     ]
     
     channel_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     server = models.ForeignKey(Server, on_delete=models.CASCADE, related_name='channels')
+    category = models.ForeignKey(ServerCategory, null=True, blank=True, on_delete=models.SET_NULL, related_name='channels')
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=200, blank=True, default='')
     channel_type = models.CharField(max_length=20, choices=CHANNEL_TYPE_CHOICES, default='text')
     position = models.IntegerField(default=0)  # For ordering channels
     
+    # Voice channel specific
+    user_limit = models.IntegerField(null=True, blank=True)  # Max users in voice channel (null = unlimited)
+    bitrate = models.IntegerField(default=64)  # Voice quality in kbps
+    
     # Permissions
     is_private = models.BooleanField(default=False)  # Only certain roles can see
+    allowed_roles = models.ManyToManyField(ServerRole, blank=True, related_name='accessible_channels')
     
     created_at = models.DateTimeField(auto_now_add=True)
     

@@ -97,16 +97,8 @@ def get_user_achievements(user, displayed_only=False, limit=None):
     if limit:
         query = query[:limit]
     
-    # Return values with achievement fields for easy template access
-    return query.values(
-        'id',
-        'earned_at',
-        'is_displayed',
-        'achievement__name',
-        'achievement__description',
-        'achievement__badge_icon',
-        'achievement__points'
-    )
+    # Return the full objects so templates can access achievement.get_icon_url()
+    return query
 
 
 def get_user_achievement_count(user):
@@ -121,14 +113,14 @@ def create_default_achievements():
             'achievement_type': 'og_user',
             'name': 'OG User',
             'description': 'One of the first 100 users to join the platform',
-            'badge_icon': 'og_user.png',
+            'badge_icon': 'og.png',
             'points': 50
         },
         {
             'achievement_type': 'paid_user',
             'name': 'Paid User',
             'description': 'Unlocked premium features with paid access',
-            'badge_icon': 'paid_user.png',
+            'badge_icon': 'paid.png',
             'points': 25
         },
         {

@@ -8,6 +8,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.db.models import Q
 from django.utils import timezone
+from django.conf import settings
 from auth_app.rate_limiting import rate_limit_per_user
 import json
 import subprocess
@@ -793,6 +794,7 @@ def get_file_content(request, project_id, file_path):
 
 
 @login_required
+@ensure_csrf_cookie
 @require_POST
 @rate_limit_per_user(max_requests=100, window=60)
 def save_file(request, project_id):
@@ -870,6 +872,74 @@ def save_file(request, project_id):
 
 
 @login_required
+@ensure_csrf_cookie
+@require_POST
+@rate_limit_per_user(max_requests=50, window=60)
+def create_file(request, project_id):
+    """Create a new file explicitly"""
+    try:
+        data = json.loads(request.body)
+        file_path = data.get('path', '').strip()
+        content = data.get('content', '')
+        file_type = data.get('file_type', 'python')
+        
+        if not file_path:
+            return JsonResponse({'status': 'error', 'message': 'File path required'}, status=400)
+        
+        project = get_object_or_404(IDEProject, project_id=project_id, user=request.user)
+        
+        # Check if file already exists
+        if IDEFile.objects.filter(project=project, path=file_path).exists():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'File already exists. Use save to update it.'
+            }, status=400)
+        
+        # Extract filename and directory path
+        path_parts = file_path.split('/')
+        filename = path_parts[-1]
+        
+        # Find or create directory if nested
+        directory = None
+        if len(path_parts) > 1:
+            dir_path = '/'.join(path_parts[:-1])
+            directory, _ = IDEDirectory.objects.get_or_create(
+                project=project,
+                path=dir_path,
+                defaults={'name': path_parts[-2] if len(path_parts) > 1 else dir_path}
+            )
+        
+        # Create file
+        file = IDEFile.objects.create(
+            project=project,
+            path=file_path,
+            name=filename,
+            content=content,
+            directory=directory
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'File "{filename}" created successfully',
+            'file': {
+                'name': file.name,
+                'path': file.path,
+                'file_type': file.file_type,
+                'size': file.size,
+                'created_at': file.created_at.isoformat(),
+                'updated_at': file.updated_at.isoformat()
+            }
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Error in create_file: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({'status': 'error', 'message': f'Server error: {str(e)}'}, status=500)
+
+
+@login_required
+@ensure_csrf_cookie
 @require_POST
 def delete_file(request, project_id):
     """Delete a file"""
@@ -1056,13 +1126,25 @@ def execute_code(request, project_id):
         
         project = get_object_or_404(IDEProject, project_id=project_id, user=request.user)
         
-        # Wrap code to handle matplotlib plots
+        # Create project-specific working directory for SQLite and other files
+        import os
+        # Use a persistent directory instead of temp
+        base_data_dir = os.path.join(settings.BASE_DIR, 'ide_projects_data')
+        os.makedirs(base_data_dir, exist_ok=True)
+        project_dir = os.path.join(base_data_dir, f'project_{project.project_id}')
+        os.makedirs(project_dir, exist_ok=True)
+        
+        # Wrap code to handle matplotlib plots and SQLite databases
         wrapped_code = f"""
 import sys
 import io
 import base64
 import os
 import tempfile
+
+# Set working directory to project-specific folder (for SQLite databases)
+project_dir = r'{project_dir}'
+os.chdir(project_dir)
 
 # Set matplotlib config directory to temp to avoid read-only filesystem errors
 os.environ['MPLCONFIGDIR'] = tempfile.gettempdir()
@@ -1466,6 +1548,42 @@ def install_package(request, project_id):
             
     except subprocess.TimeoutExpired:
         return JsonResponse({'status': 'error', 'message': 'Installation timed out'}, status=408)
+
+
+@login_required
+def get_project_generated_files(request, project_id):
+    """Get list of generated files (like SQLite databases) in the project directory"""
+    try:
+        project = get_object_or_404(IDEProject, project_id=project_id, user=request.user)
+        
+        # Get project directory
+        base_data_dir = os.path.join(settings.BASE_DIR, 'ide_projects_data')
+        project_dir = os.path.join(base_data_dir, f'project_{project.project_id}')
+        
+        generated_files = []
+        
+        if os.path.exists(project_dir):
+            for filename in os.listdir(project_dir):
+                file_path = os.path.join(project_dir, filename)
+                if os.path.isfile(file_path):
+                    file_size = os.path.getsize(file_path)
+                    file_modified = os.path.getmtime(file_path)
+                    
+                    generated_files.append({
+                        'name': filename,
+                        'size': file_size,
+                        'modified': file_modified,
+                        'type': 'database' if filename.endswith('.db') or filename.endswith('.sqlite') or filename.endswith('.sqlite3') else 'file'
+                    })
+        
+        return JsonResponse({
+            'status': 'success',
+            'files': generated_files,
+            'project_dir': project_dir
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     except Exception as e:
         print(f"Package installation error: {e}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
