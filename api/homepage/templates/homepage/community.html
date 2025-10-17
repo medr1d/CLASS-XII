@@ -193,32 +193,23 @@
         }
 
         .sidebar-toggle-btn {
-            position: absolute;
-            right: -40px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 40px;
-            height: 60px;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            border-left: none;
+            background: none;
+            border: none;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-color);
-            z-index: 10;
+            color: var(--text-muted);
+            font-size: 16px;
+            padding: 8px 12px;
             transition: all 0.3s;
-            font-size: 18px;
+            margin-left: auto;
         }
 
         .sidebar-toggle-btn:hover {
+            color: var(--text-color);
             background: var(--hover-color);
         }
 
         .sidebar.collapsed .sidebar-toggle-btn {
-            right: -40px;
-            transform: translateY(-50%) rotate(180deg);
+            transform: rotate(180deg);
         }
 
         @keyframes slideInLeft {
@@ -234,12 +225,13 @@
 
         .sidebar-tabs {
             display: flex;
+            align-items: center;
             border-bottom: 2px solid var(--border-color);
             background: var(--primary-bg);
         }
 
         .sidebar-tab {
-            flex: 1;
+            flex: 0 1 auto;
             padding: 18px 10px;
             background: transparent;
             border: none;
@@ -1821,11 +1813,11 @@
     <div class="community-container" id="mainContent" style="opacity: 0; transition: opacity 0.5s ease;">
         <!-- Sidebar -->
         <div class="sidebar">
-            <button class="sidebar-toggle-btn" onclick="toggleSidebar()">←</button>
             <div class="sidebar-tabs">
                 <button class="sidebar-tab active" onclick="switchTab('friends')">FRIENDS</button>
                 <button class="sidebar-tab" onclick="switchTab('dms')">DMs</button>
                 <button class="sidebar-tab" onclick="switchTab('servers')">SERVERS</button>
+                <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Sidebar">◄</button>
             </div>
             <div class="sidebar-content">
                 <!-- Friends Tab Content -->
@@ -1951,7 +1943,7 @@
             // Update toggle button icon
             const toggleBtn = document.querySelector('.sidebar-toggle-btn');
             if (toggleBtn) {
-                toggleBtn.innerHTML = isCollapsed ? '→' : '←';
+                toggleBtn.innerHTML = isCollapsed ? '►' : '◄';
             }
         }
 
@@ -3429,6 +3421,12 @@
             const modal = document.getElementById('createChannelModal');
             modal.classList.remove('active');
             document.getElementById('createChannelForm').reset();
+            document.getElementById('voiceChannelOptions').style.display = 'none';
+        }
+
+        function toggleVoiceOptions(channelType) {
+            const voiceOptions = document.getElementById('voiceChannelOptions');
+            voiceOptions.style.display = channelType === 'voice' ? 'block' : 'none';
         }
 
         // Create channel
@@ -3439,6 +3437,11 @@
                 description: form.channel_description.value.trim(),
                 channel_type: form.channel_type.value
             };
+            
+            // Add user limit for voice channels
+            if (formData.channel_type === 'voice' && form.user_limit.value) {
+                formData.user_limit = parseInt(form.user_limit.value);
+            }
             
             if (!formData.name) {
                 alert('Channel name is required');
@@ -3630,6 +3633,147 @@
         function hideInviteModal() {
             const modal = document.getElementById('inviteModal');
             modal.style.display = 'none';
+        }
+        
+        // Settings Tab Switching
+        function switchSettingsTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.settings-tab').forEach(t => {
+                t.classList.remove('active');
+                t.style.color = 'var(--text-muted)';
+            });
+            event.target.classList.add('active');
+            event.target.style.color = 'var(--text-color)';
+            
+            // Update tab content
+            document.getElementById('generalSettingsTab').style.display = tab === 'general' ? 'block' : 'none';
+            document.getElementById('rolesSettingsTab').style.display = tab === 'roles' ? 'block' : 'none';
+            
+            if (tab === 'roles') {
+                loadRoles();
+            }
+        }
+        
+        // Role Management
+        function loadRoles() {
+            if (!currentServer) return;
+            
+            fetch(`/api/servers/${currentServer.server.server_id}/roles/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayRoles(data.roles);
+                    } else {
+                        document.getElementById('rolesList').innerHTML = '<p style="color: var(--error-color); text-align: center;">Failed to load roles</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading roles:', error);
+                    document.getElementById('rolesList').innerHTML = '<p style="color: var(--error-color); text-align: center;">Error loading roles</p>';
+                });
+        }
+        
+        function displayRoles(roles) {
+            const rolesList = document.getElementById('rolesList');
+            if (roles.length === 0) {
+                rolesList.innerHTML = '<p style="color: var(--text-muted); font-size: 10px; text-align: center; padding: 20px;">No custom roles yet. Create one!</p>';
+                return;
+            }
+            
+            rolesList.innerHTML = roles.map(role => `
+                <div style="background: var(--bg-tertiary); border: 2px solid var(--border-color); padding: 15px; margin-bottom: 10px; border-radius: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 12px; font-weight: bold; color: ${role.color}; margin-bottom: 5px;">${role.name}</div>
+                            <div style="font-size: 8px; color: var(--text-muted);">
+                                Position: ${role.position} • 
+                                ${Object.values(role.permissions).filter(Boolean).length} permissions
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="action-btn" onclick="editRole('${role.role_id}')" style="font-size: 8px; padding: 5px 10px;">Edit</button>
+                            <button class="action-btn danger" onclick="deleteRole('${role.role_id}')" style="font-size: 8px; padding: 5px 10px;">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function showCreateRoleModal() {
+            document.getElementById('createRoleModal').classList.add('active');
+        }
+        
+        function hideCreateRoleModal() {
+            document.getElementById('createRoleModal').classList.remove('active');
+            document.getElementById('createRoleForm').reset();
+        }
+        
+        function createRole() {
+            if (!currentServer) return;
+            
+            const form = document.getElementById('createRoleForm');
+            const roleData = {
+                name: form.role_name.value.trim(),
+                color: form.role_color.value,
+                can_manage_channels: form.can_manage_channels.checked,
+                can_manage_roles: form.can_manage_roles.checked,
+                can_kick_members: form.can_kick_members.checked,
+                can_ban_members: form.can_ban_members.checked,
+                can_manage_messages: form.can_manage_messages.checked,
+                can_mention_everyone: form.can_mention_everyone.checked
+            };
+            
+            if (!roleData.name) {
+                alert('Role name is required');
+                return;
+            }
+            
+            fetch(`/api/servers/${currentServer.server.server_id}/roles/create/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(roleData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideCreateRoleModal();
+                    loadRoles();
+                    alert('Role created successfully!');
+                } else {
+                    alert(data.error || 'Failed to create role');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating role');
+            });
+        }
+        
+        function deleteRole(roleId) {
+            if (!confirm('Are you sure you want to delete this role?')) return;
+            
+            fetch(`/api/servers/roles/${roleId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadRoles();
+                    alert('Role deleted successfully!');
+                } else {
+                    alert(data.error || 'Failed to delete role');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting role');
+            });
         }
         
         function generateInvite() {
@@ -3915,10 +4059,18 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">CHANNEL TYPE</label>
-                        <select name="channel_type" class="form-input">
-                            <option value="text">Text Channel</option>
-                            <option value="announcements">Announcements</option>
+                        <select name="channel_type" class="form-input" onchange="toggleVoiceOptions(this.value)">
+                            <option value="text">📝 Text Channel</option>
+                            <option value="voice">🔊 Voice Channel</option>
+                            <option value="announcements">📢 Announcements</option>
                         </select>
+                    </div>
+                    <div id="voiceChannelOptions" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">USER LIMIT (Optional)</label>
+                            <input type="number" name="user_limit" class="form-input" min="1" max="99" placeholder="No limit">
+                            <small style="color: var(--text-muted); font-size: 8px;">Leave empty for unlimited users</small>
+                        </div>
                     </div>
                     <div style="margin-top: 20px;">
                         <button type="button" class="modal-btn primary" onclick="createChannel()">CREATE</button>
@@ -3936,7 +4088,13 @@
                 <span>SERVER SETTINGS</span>
                 <button class="modal-close" onclick="hideServerSettingsModal()">×</button>
             </div>
+            <div style="display: flex; border-bottom: 2px solid var(--border-color); background: var(--bg-secondary);">
+                <button class="settings-tab active" onclick="switchSettingsTab('general')" style="flex: 1; padding: 12px; background: none; border: none; color: var(--text-color); cursor: pointer; font-family: 'Courier New', monospace; font-size: 10px; border-right: 2px solid var(--border-color);">GENERAL</button>
+                <button class="settings-tab" onclick="switchSettingsTab('roles')" style="flex: 1; padding: 12px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-family: 'Courier New', monospace; font-size: 10px;">ROLES</button>
+            </div>
             <div class="modal-body">
+                <!-- General Settings Tab -->
+                <div id="generalSettingsTab" class="settings-tab-content">
                 <form id="serverSettingsForm">
                     <div class="form-group">
                         <label class="form-label">SERVER NAME *</label>
@@ -3970,6 +4128,73 @@
                     <div style="margin-top: 20px;">
                         <button type="button" class="modal-btn primary" onclick="updateServerSettings()">SAVE CHANGES</button>
                         <button type="button" class="modal-btn" onclick="hideServerSettingsModal()">CANCEL</button>
+                    </div>
+                </form>
+                </div>
+                
+                <!-- Roles Tab -->
+                <div id="rolesSettingsTab" class="settings-tab-content" style="display: none;">
+                    <div style="margin-bottom: 20px;">
+                        <button type="button" class="modal-btn primary" onclick="showCreateRoleModal()" style="width: 100%;">+ CREATE NEW ROLE</button>
+                    </div>
+                    
+                    <div id="rolesList" style="max-height: 400px; overflow-y: auto;">
+                        <p style="color: var(--text-muted); font-size: 10px; text-align: center; padding: 20px;">Loading roles...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Role Modal -->
+    <div id="createRoleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>CREATE ROLE</span>
+                <button class="modal-close" onclick="hideCreateRoleModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="createRoleForm">
+                    <div class="form-group">
+                        <label class="form-label">ROLE NAME *</label>
+                        <input type="text" name="role_name" class="form-input" required maxlength="50" placeholder="Moderator">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ROLE COLOR</label>
+                        <input type="color" name="role_color" class="form-input" value="#99AAB5" style="height: 50px; padding: 5px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">PERMISSIONS</label>
+                        <div style="background: var(--bg-tertiary); padding: 15px; border: 2px solid var(--border-color); border-radius: 4px;">
+                            <label style="display: block; margin-bottom: 10px; font-size: 10px;">
+                                <input type="checkbox" name="can_manage_channels" style="margin-right: 8px;">
+                                Manage Channels
+                            </label>
+                            <label style="display: block; margin-bottom: 10px; font-size: 10px;">
+                                <input type="checkbox" name="can_manage_roles" style="margin-right: 8px;">
+                                Manage Roles
+                            </label>
+                            <label style="display: block; margin-bottom: 10px; font-size: 10px;">
+                                <input type="checkbox" name="can_kick_members" style="margin-right: 8px;">
+                                Kick Members
+                            </label>
+                            <label style="display: block; margin-bottom: 10px; font-size: 10px;">
+                                <input type="checkbox" name="can_ban_members" style="margin-right: 8px;">
+                                Ban Members
+                            </label>
+                            <label style="display: block; margin-bottom: 10px; font-size: 10px;">
+                                <input type="checkbox" name="can_manage_messages" style="margin-right: 8px;">
+                                Manage Messages
+                            </label>
+                            <label style="display: block; font-size: 10px;">
+                                <input type="checkbox" name="can_mention_everyone" style="margin-right: 8px;">
+                                Mention @everyone
+                            </label>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button type="button" class="modal-btn primary" onclick="createRole()">CREATE ROLE</button>
+                        <button type="button" class="modal-btn" onclick="hideCreateRoleModal()">CANCEL</button>
                     </div>
                 </form>
             </div>
@@ -4506,22 +4731,15 @@
             });
         }
         
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.community-sidebar');
-            const toggle = document.querySelector('.sidebar-toggle');
-            
-            if (sidebar.classList.contains('minimized')) {
-                sidebar.classList.remove('minimized');
-                toggle.innerHTML = '✕';
-            } else {
-                sidebar.classList.add('minimized');
-                toggle.innerHTML = '☰';
-            }
-        }
-        
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            initSidebarToggle();
+            // Restore sidebar state
+            const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+            if (isCollapsed) {
+                document.querySelector('.sidebar')?.classList.add('collapsed');
+                const toggleBtn = document.querySelector('.sidebar-toggle-btn');
+                if (toggleBtn) toggleBtn.innerHTML = '►';
+            }
         });
         
         // ============ ENHANCED MESSAGE RENDERING ============
