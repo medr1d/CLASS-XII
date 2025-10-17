@@ -229,11 +229,13 @@
             transition: all 0.3s;
             opacity: 0;
             pointer-events: none;
+            display: none;
         }
 
-        .sidebar.collapsed ~ .sidebar-reopen-btn {
+        .sidebar-reopen-btn.visible {
             opacity: 1;
             pointer-events: all;
+            display: block;
         }
 
         .sidebar-reopen-btn:hover {
@@ -1969,6 +1971,7 @@
         // Toggle sidebar visibility
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
+            const reopenBtn = document.querySelector('.sidebar-reopen-btn');
             const isCollapsed = sidebar.classList.toggle('collapsed');
             localStorage.setItem('sidebar-collapsed', isCollapsed);
             
@@ -1976,6 +1979,15 @@
             const toggleBtn = document.querySelector('.sidebar-toggle-btn');
             if (toggleBtn) {
                 toggleBtn.innerHTML = isCollapsed ? '►' : '◄';
+            }
+            
+            // Show/hide reopen button
+            if (reopenBtn) {
+                if (isCollapsed) {
+                    reopenBtn.classList.add('visible');
+                } else {
+                    reopenBtn.classList.remove('visible');
+                }
             }
         }
 
@@ -4767,10 +4779,18 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Restore sidebar state
             const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
-            if (isCollapsed) {
-                document.querySelector('.sidebar')?.classList.add('collapsed');
+            const sidebar = document.querySelector('.sidebar');
+            const reopenBtn = document.querySelector('.sidebar-reopen-btn');
+            
+            if (isCollapsed && sidebar) {
+                sidebar.classList.add('collapsed');
                 const toggleBtn = document.querySelector('.sidebar-toggle-btn');
                 if (toggleBtn) toggleBtn.innerHTML = '►';
+                
+                // Show reopen button
+                if (reopenBtn) {
+                    reopenBtn.classList.add('visible');
+                }
             }
         });
         

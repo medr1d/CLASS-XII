@@ -577,7 +577,15 @@ def get_file_content(request, file_id):
     
     try:
         from homepage.models import PythonCodeSession
-        file = get_object_or_404(PythonCodeSession, id=file_id)
+        from django.shortcuts import get_object_or_404
+        
+        try:
+            file = PythonCodeSession.objects.get(id=file_id)
+        except PythonCodeSession.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': f'File with ID {file_id} not found'
+            }, status=404)
         
         return JsonResponse({
             'success': True,
