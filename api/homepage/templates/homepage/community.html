@@ -1155,6 +1155,168 @@
             display: none;
         }
 
+        /* Link Styles and Embeds */
+        .message-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            background: rgba(138, 180, 248, 0.1);
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--primary-color);
+        }
+
+        .message-link:hover {
+            background: rgba(138, 180, 248, 0.2);
+            border-bottom-width: 2px;
+        }
+
+        .link-embed {
+            margin-top: 8px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 6px;
+            font-size: 9px;
+        }
+
+        .link-embed-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .link-embed-description {
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .link-embed-url {
+            font-family: 'Courier New', monospace;
+            color: var(--text-muted);
+            font-size: 8px;
+            word-break: break-all;
+        }
+
+        /* External Link Warning Modal */
+        .link-warning-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(4px);
+        }
+
+        .link-warning-overlay.active {
+            display: flex;
+        }
+
+        .link-warning-modal {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .link-warning-icon {
+            text-align: center;
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ff9800;
+        }
+
+        .link-warning-title {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .link-warning-message {
+            font-size: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .link-warning-url-box {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            word-break: break-all;
+            color: var(--primary-color);
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .link-warning-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .link-warning-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .link-warning-btn-cancel {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .link-warning-btn-cancel:hover {
+            background: var(--bg-secondary);
+            transform: translateY(-1px);
+        }
+
+        .link-warning-btn-continue {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+        }
+
+        .link-warning-btn-continue:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+        }
+
         .message-header {
             display: flex;
             align-items: center;
@@ -1965,6 +2127,96 @@
             status: '{{ user.userprofile.status_message|default:"" }}',
             bio: '{{ user.userprofile.bio|default:"" }}'
         };
+
+        // URL Detection and Link Warning System
+        let pendingLinkUrl = null;
+
+        // URL regex pattern
+        const urlPattern = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+
+        // Detect and format URLs in message content
+        function formatMessageContent(content) {
+            if (!content) return content;
+            
+            // Replace URLs with clickable links
+            return content.replace(urlPattern, (url) => {
+                // Escape single quotes and backslashes for onclick attribute
+                const escapedUrl = url.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                return `<a href="#" class="message-link" onclick="showLinkWarning('${escapedUrl}'); return false;">${url}</a>`;
+            });
+        }
+
+        // Extract URLs from message content for embeds
+        function extractUrls(content) {
+            if (!content) return [];
+            const urls = content.match(urlPattern);
+            return urls || [];
+        }
+
+        // Create link embed preview
+        function createLinkEmbed(url) {
+            // Parse URL to get domain and protocol
+            let domain = '';
+            let protocol = '';
+            let isSecure = false;
+            
+            try {
+                const urlObj = new URL(url);
+                domain = urlObj.hostname.replace('www.', '');
+                protocol = urlObj.protocol;
+                isSecure = protocol === 'https:';
+            } catch (e) {
+                domain = url;
+            }
+
+            const lockIcon = isSecure ? '🔒' : '🔓';
+            const securityText = isSecure ? 'Secure connection' : 'Unsecure connection';
+
+            return `
+                <div class="link-embed">
+                    <div class="link-embed-title">🔗 External Link</div>
+                    <div class="link-embed-description">
+                        ${lockIcon} ${securityText} • Click link above to visit
+                    </div>
+                    <div class="link-embed-url">${domain}</div>
+                </div>
+            `;
+        }
+
+        // Show link warning modal
+        function showLinkWarning(url) {
+            pendingLinkUrl = url;
+            document.getElementById('linkWarningUrl').textContent = url;
+            document.getElementById('linkWarningOverlay').classList.add('active');
+        }
+
+        // Close link warning modal
+        function closeLinkWarning() {
+            document.getElementById('linkWarningOverlay').classList.remove('active');
+            pendingLinkUrl = null;
+        }
+
+        // Continue to external link
+        function continueLinkWarning() {
+            if (pendingLinkUrl) {
+                window.open(pendingLinkUrl, '_blank', 'noopener,noreferrer');
+            }
+            closeLinkWarning();
+        }
+
+        // Close modal when clicking overlay
+        document.getElementById('linkWarningOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLinkWarning();
+            }
+        });
+
+        // Close modal with ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('linkWarningOverlay').classList.contains('active')) {
+                closeLinkWarning();
+            }
+        });
         
         let currentTab = 'friends';
         let currentChatUser = null;
@@ -2240,13 +2492,19 @@
                 const avatarUrl = msg.sender_profile_picture || 
                     `https://ui-avatars.com/api/?name=${msg.sender_username}&background=ffffff&color=000000&size=200`;
                 
+                // Format message content with URLs
+                const formattedMessage = formatMessageContent(escapeHtml(msg.message));
+                const urls = extractUrls(msg.message);
+                const linkEmbeds = urls.map(url => createLinkEmbed(url)).join('');
+
                 messageDiv.innerHTML = `
                     <div class="message-bubble">
                         <div class="message-header">
                             <img src="${avatarUrl}" alt="${msg.sender_username}" class="message-avatar" onclick="showMiniProfile(${msg.sender_id}, event)">
                             <span class="message-sender" onclick="showMiniProfile(${msg.sender_id}, event)">${msg.sender_username}</span>
                         </div>
-                        <div class="message-text">${escapeHtml(msg.message)}</div>
+                        <div class="message-text">${formattedMessage}</div>
+                        ${linkEmbeds}
                         <div class="message-footer">
                             <span class="message-time">${formatTime(msg.created_at)}</span>
                         </div>
@@ -3175,6 +3433,11 @@
             
             messagesContainer.innerHTML = messages.map(msg => {
                 const isCurrentUser = msg.sender.id === {{ request.user.id }};
+                // Format message content with clickable URLs
+                const formattedContent = formatMessageContent(msg.content);
+                const urls = extractUrls(msg.content);
+                const linkEmbeds = urls.map(url => createLinkEmbed(url)).join('');
+                
                 return `
                 <div class="message-item ${isCurrentUser ? 'mine' : ''}" style="margin-bottom: 16px; display: flex; flex-direction: column; ${isCurrentUser ? 'align-items: flex-end;' : 'align-items: flex-start;'}">
                     <div class="message-bubble" style="max-width: 70%; padding: 12px 16px; border-radius: 12px; background: ${isCurrentUser ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)' : 'var(--bg-secondary)'}; border: 1px solid ${isCurrentUser ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.08)'}; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);">
@@ -3198,7 +3461,8 @@
                             <div style="opacity: 0.8;">${msg.reply_to.content}</div>
                         </div>
                         ` : ''}
-                        <div style="font-size: 10px; line-height: 1.5; word-wrap: break-word;">${msg.content}</div>
+                        <div style="font-size: 10px; line-height: 1.5; word-wrap: break-word;">${formattedContent}</div>
+                        ${linkEmbeds}
                         ${msg.reactions && msg.reactions.length > 0 ? `
                         <div style="margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
                             ${msg.reactions.map(reaction => `
@@ -3211,12 +3475,6 @@
                     </div>
                 </div>
             `}).join('');
-                        <div style="margin-top: 5px; display: flex; gap: 5px;">
-                            ${msg.reactions.map(r => `<span style="font-size: 8px; background: var(--bg-secondary); padding: 2px 6px; border: 1px solid var(--border-color);">${r.emoji} ${r.count}</span>`).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            `).join('');
             
             // Scroll to bottom
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -4969,6 +5227,22 @@
             }
         });
     </script>
+
+    <!-- External Link Warning Modal -->
+    <div id="linkWarningOverlay" class="link-warning-overlay">
+        <div class="link-warning-modal">
+            <div class="link-warning-icon">⚠️</div>
+            <div class="link-warning-title">External Link Warning</div>
+            <div class="link-warning-message">
+                This link will take you outside of Python Assembly. Make sure you trust the source before proceeding.
+            </div>
+            <div class="link-warning-url-box" id="linkWarningUrl"></div>
+            <div class="link-warning-buttons">
+                <button class="link-warning-btn link-warning-btn-cancel" onclick="closeLinkWarning()">Cancel</button>
+                <button class="link-warning-btn link-warning-btn-continue" onclick="continueLinkWarning()">Continue →</button>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
