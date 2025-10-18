@@ -1210,6 +1210,19 @@
     </style>
 
     <script>
+        // Suppress browser extension errors
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
+            // Suppress "message port closed" errors from browser extensions
+            const originalLog = console.error;
+            console.error = function(...args) {
+                const msg = args.join(' ');
+                if (msg.includes('message port closed') || msg.includes('runtime.lastError')) {
+                    return; // Suppress these specific errors
+                }
+                originalLog.apply(console, args);
+            };
+        }
+
         // Configuration
         const PROJECT_ID = "{{ project_id }}";
         const CSRF_TOKEN = "{{ csrf_token }}";
@@ -2498,7 +2511,11 @@
         }
 
         async function downloadFile(filePath) {
-            if (!filePath) return;
+            // If no filePath provided, use contextMenuTarget
+            const targetPath = filePath || contextMenuTarget;
+            if (!targetPath) return;
+
+            closeContextMenu();
 
             try {
                 const response = await fetch(`/api/ide/projects/${PROJECT_ID}/file/download/`, {
@@ -2507,7 +2524,7 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': CSRF_TOKEN
                     },
-                    body: JSON.stringify({ file_path: filePath })
+                    body: JSON.stringify({ file_path: targetPath })
                 });
 
                 if (response.ok) {
@@ -2515,7 +2532,7 @@
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = filePath.split('/').pop();
+                    a.download = targetPath.split('/').pop();
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -2528,7 +2545,6 @@
             } catch (error) {
                 showNotification('Download error: ' + error.message, 'error');
             }
-            closeContextMenu();
         }
 
         // Context Menu Functions
@@ -2892,35 +2908,6 @@
             } catch (error) {
                 console.error('Error creating folder:', error);
                 showNotification(`Error creating folder: ${error.message}`, 'error');
-            }
-        }
-
-        async function downloadFile() {
-            closeContextMenu();
-            if (!contextMenuTarget) return;
-            
-            try {
-                const response = await fetch(`/api/ide/file/${PROJECT_ID}/?path=${encodeURIComponent(contextMenuTarget)}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    const blob = new Blob([data.content], { type: 'text/plain' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = contextMenuTarget.split('/').pop();
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                    
-                    showNotification('File downloaded!', 'success');
-                } else {
-                    showNotification('Failed to download file', 'error');
-                }
-            } catch (error) {
-                console.error('Error downloading file:', error);
-                showNotification('Error downloading file', 'error');
             }
         }
 
