@@ -952,7 +952,7 @@
                 <span class="project-name">{{ current_project.name }}</span>
             </div>
             <div class="top-bar-actions">
-                <button class="btn btn-primary" onclick="runCode()">RUN CODE</button>
+                <button class="btn btn-primary" onclick="runCode()" title="Run your code (loops limited to 50 iterations)">RUN CODE</button>
                 <button class="btn" onclick="saveCurrentFile()">SAVE FILE</button>
                 <button class="btn" onclick="formatCode()">FORMAT</button>
                 <button class="btn" onclick="showSearchModal()">SEARCH</button>
@@ -1964,6 +1964,13 @@
                 }
                 
                 if (data.error) {
+                    // Check for infinite loop warning
+                    if (data.error.includes('Loop exceeded maximum iterations') || 
+                        data.error.includes('Possible infinite loop detected')) {
+                        appendToTerminal('\n⚠️  INFINITE LOOP PROTECTION TRIGGERED ⚠️\n', true);
+                        appendToTerminal('Your code has a loop that tried to run more than 50 times.\n', true);
+                        appendToTerminal('This might be an infinite loop. Please check your loop conditions.\n\n', true);
+                    }
                     appendToTerminal(data.error, true);
                 }
                 
@@ -1995,7 +2002,13 @@
                 if (data.return_code === 0 && !data.error) {
                     showNotification('Code executed successfully', 'success');
                 } else {
-                    showNotification('Code execution completed with errors', 'error');
+                    // Check for infinite loop error
+                    if (data.error && (data.error.includes('Loop exceeded maximum iterations') || 
+                        data.error.includes('Possible infinite loop detected'))) {
+                        showNotification('⚠️ Infinite loop detected! Code stopped after 50 iterations', 'error');
+                    } else {
+                        showNotification('Code execution completed with errors', 'error');
+                    }
                 }
                 
             } catch (error) {

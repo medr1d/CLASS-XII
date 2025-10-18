@@ -2205,11 +2205,14 @@
         }
 
         // Close modal when clicking overlay
-        document.getElementById('linkWarningOverlay').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeLinkWarning();
-            }
-        });
+        var linkWarningEl = document.getElementById('linkWarningOverlay');
+        if (linkWarningEl) {
+            linkWarningEl.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeLinkWarning();
+                }
+            });
+        }
 
         // Close modal with ESC key
         document.addEventListener('keydown', function(e) {

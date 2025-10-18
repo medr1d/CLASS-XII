@@ -1103,6 +1103,174 @@ def create_directory(request, project_id):
 
 # ==================== CODE EXECUTION ====================
 
+def inject_loop_protection(code, max_iterations=50):
+    """
+    Inject loop counters into Python code to prevent infinite loops.
+    Limits all loops (for, while) to a maximum number of iterations.
+    
+    This function transforms Python code by adding iteration counters to all
+    for and while loops. If any loop exceeds max_iterations, a RuntimeError
+    is raised with a message indicating a possible infinite loop.
+    
+    Example transformation:
+        Original:
+            while True:
+                print("Hello")
+        
+        Transformed:
+            _loop_counter_0 = 0
+            while True:
+                if _loop_counter_0 >= 50:
+                    raise RuntimeError('Loop exceeded maximum iterations (50). Possible infinite loop detected!')
+                _loop_counter_0 += 1
+                print("Hello")
+    
+    Args:
+        code (str): Python source code to protect
+        max_iterations (int): Maximum number of loop iterations allowed (default: 50)
+    
+    Returns:
+        str: Protected Python code with loop counters injected
+    """
+    import ast
+    
+    class LoopProtector(ast.NodeTransformer):
+        def __init__(self, max_iter):
+            self.max_iter = max_iter
+            self.loop_counter = 0
+            
+        def visit_For(self, node):
+            # Generate unique counter name
+            counter_name = f'_loop_counter_{self.loop_counter}'
+            self.loop_counter += 1
+            
+            # Create counter initialization
+            counter_init = ast.Assign(
+                targets=[ast.Name(id=counter_name, ctx=ast.Store())],
+                value=ast.Constant(value=0)
+            )
+            
+            # Create counter increment and check
+            counter_check = ast.If(
+                test=ast.Compare(
+                    left=ast.Name(id=counter_name, ctx=ast.Load()),
+                    ops=[ast.GtE()],
+                    comparators=[ast.Constant(value=self.max_iter)]
+                ),
+                body=[
+                    ast.Raise(
+                        exc=ast.Call(
+                            func=ast.Name(id='RuntimeError', ctx=ast.Load()),
+                            args=[ast.Constant(value=f'Loop exceeded maximum iterations ({self.max_iter}). Possible infinite loop detected!')],
+                            keywords=[]
+                        ),
+                        cause=None
+                    )
+                ],
+                orelse=[]
+            )
+            
+            counter_increment = ast.AugAssign(
+                target=ast.Name(id=counter_name, ctx=ast.Store()),
+                op=ast.Add(),
+                value=ast.Constant(value=1)
+            )
+            
+            # Insert counter check and increment at the beginning of loop body
+            new_body = [counter_check, counter_increment] + node.body
+            
+            # Recursively visit child nodes
+            new_body = [self.visit(child) for child in new_body]
+            
+            # Return sequence of counter init + modified loop
+            return [counter_init, ast.For(
+                target=node.target,
+                iter=node.iter,
+                body=new_body,
+                orelse=node.orelse
+            )]
+        
+        def visit_While(self, node):
+            # Generate unique counter name
+            counter_name = f'_loop_counter_{self.loop_counter}'
+            self.loop_counter += 1
+            
+            # Create counter initialization
+            counter_init = ast.Assign(
+                targets=[ast.Name(id=counter_name, ctx=ast.Store())],
+                value=ast.Constant(value=0)
+            )
+            
+            # Create counter increment and check
+            counter_check = ast.If(
+                test=ast.Compare(
+                    left=ast.Name(id=counter_name, ctx=ast.Load()),
+                    ops=[ast.GtE()],
+                    comparators=[ast.Constant(value=self.max_iter)]
+                ),
+                body=[
+                    ast.Raise(
+                        exc=ast.Call(
+                            func=ast.Name(id='RuntimeError', ctx=ast.Load()),
+                            args=[ast.Constant(value=f'Loop exceeded maximum iterations ({self.max_iter}). Possible infinite loop detected!')],
+                            keywords=[]
+                        ),
+                        cause=None
+                    )
+                ],
+                orelse=[]
+            )
+            
+            counter_increment = ast.AugAssign(
+                target=ast.Name(id=counter_name, ctx=ast.Store()),
+                op=ast.Add(),
+                value=ast.Constant(value=1)
+            )
+            
+            # Insert counter check and increment at the beginning of loop body
+            new_body = [counter_check, counter_increment] + node.body
+            
+            # Recursively visit child nodes
+            new_body = [self.visit(child) for child in new_body]
+            
+            # Return sequence of counter init + modified loop
+            return [counter_init, ast.While(
+                test=node.test,
+                body=new_body,
+                orelse=node.orelse
+            )]
+    
+    try:
+        # Parse the code into an AST
+        tree = ast.parse(code)
+        
+        # Transform the AST to add loop protection
+        protector = LoopProtector(max_iterations)
+        new_tree = protector.visit(tree)
+        
+        # Fix missing locations in the AST
+        ast.fix_missing_locations(new_tree)
+        
+        # Convert back to source code
+        # Try ast.unparse (Python 3.9+), fallback to astor
+        try:
+            protected_code = ast.unparse(new_tree)
+        except AttributeError:
+            # Python < 3.9, use astor
+            import astor
+            protected_code = astor.to_source(new_tree)
+        
+        return protected_code
+    except SyntaxError:
+        # If code has syntax errors, return original code
+        # The syntax error will be caught during execution
+        return code
+    except Exception as e:
+        # If transformation fails for any reason, return original code
+        print(f"Loop protection failed: {e}")
+        return code
+
+
 @login_required
 @require_POST
 @rate_limit_per_user(max_requests=50, window=60)
@@ -1125,6 +1293,9 @@ def execute_code(request, project_id):
             }, status=400)
         
         project = get_object_or_404(IDEProject, project_id=project_id, user=request.user)
+        
+        # Apply loop protection to prevent infinite loops
+        code = inject_loop_protection(code, max_iterations=50)
         
         # Create project-specific working directory for SQLite and other files
         import os
