@@ -179,17 +179,27 @@
             display: flex;
             flex-direction: column;
             box-shadow: 4px 0 20px var(--shadow-dark);
-            transition: transform 0.3s ease, width 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            z-index: 50;
         }
 
         .sidebar.collapsed {
-            transform: translateX(-240px);
-            width: 40px;
+            width: 80px;
         }
 
-        .sidebar.collapsed + .content-area {
-            margin-left: 40px;
+        /* Content area expands when sidebar is minimized */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--primary-bg);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .sidebar.collapsed ~ .main-content {
+            /* Content expands to use more space */
+            margin-left: 0;
         }
 
         .sidebar-toggle-btn {
@@ -1086,16 +1096,16 @@
             flex-direction: column;
         }
 
-        /* Polished Chat Bubbles */
+        /* Modern, Clean Chat Bubbles */
         .message-item {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             padding: 0;
             background: transparent;
             border: none;
-            max-width: 65%;
+            max-width: 70%;
             display: flex;
             flex-direction: column;
-            animation: fadeInUp 0.3s ease;
+            animation: fadeInUp 0.2s ease;
         }
 
         .message-item.mine {
@@ -1103,53 +1113,46 @@
         }
 
         .message-bubble {
-            padding: 14px 18px;
-            border-radius: 18px;
+            padding: 12px 16px;
+            border-radius: 12px;
             background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
             position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
+            word-wrap: break-word;
+            line-height: 1.5;
         }
 
         .message-item.mine .message-bubble {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%);
+            border-color: rgba(255, 255, 255, 0.15);
             color: var(--text-primary);
-            box-shadow: 0 2px 15px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.08);
         }
 
         .message-bubble:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.12);
         }
 
         .message-item.mine .message-bubble:hover {
-            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 12px rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
-        /* Chat bubble tail */
+        /* Subtle chat bubble tail - removed for cleaner look */
         .message-bubble::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            width: 0;
-            height: 0;
-            border: 8px solid transparent;
+            display: none;
         }
 
         .message-item:not(.mine) .message-bubble::before {
-            left: -8px;
-            border-right-color: var(--bg-secondary);
-            border-bottom-color: var(--bg-secondary);
-            border-left: 0;
+            display: none;
         }
 
         .message-item.mine .message-bubble::before {
-            right: -8px;
-            border-left-color: rgba(255, 255, 255, 0.1);
-            border-bottom-color: rgba(255, 255, 255, 0.1);
-            border-right: 0;
+            display: none;
         }
 
         .message-header {
@@ -3026,49 +3029,77 @@
             messagesContainer.innerHTML = `
                 <div style="display: flex; gap: 20px; height: 100%; padding: 20px;">
                     <!-- Channels List -->
-                    <div style="width: 200px; border: 2px solid var(--border-color); padding: 10px; overflow-y: auto;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <div style="font-size: 10px; font-weight: bold;">CHANNELS</div>
-                            ${serverData.user_permissions.can_manage_channels ? '<button onclick="showCreateChannelModal()" style="padding: 2px 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); cursor: pointer; font-size: 8px;">+</button>' : ''}
+                    <div style="width: 240px; min-width: 200px; border: 2px solid var(--border-color); padding: 15px; overflow-y: auto; background: var(--bg-secondary); border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); letter-spacing: 1px;">CHANNELS</div>
+                            ${serverData.user_permissions.can_manage_channels ? '<button onclick="showCreateChannelModal()" style="padding: 4px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); cursor: pointer; font-size: 9px; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.background=\'var(--hover-color)\'" onmouseout="this.style.background=\'var(--bg-primary)\'">+ NEW</button>' : ''}
                         </div>
                         <div id="channelsList">
                             ${serverData.channels.map(ch => `
-                                <div class="channel-item" id="channel-${ch.channel_id}" onclick="selectChannel('${ch.channel_id}')" style="padding: 8px; margin-bottom: 5px; cursor: pointer; font-size: 9px; border: 1px solid var(--border-color); background: var(--bg-tertiary);">
-                                    ${ch.channel_type === 'announcements' ? '📢' : '#'} ${ch.name}
+                                <div class="channel-item" id="channel-${ch.channel_id}" onclick="selectChannel('${ch.channel_id}')" 
+                                    style="padding: 10px 12px; margin-bottom: 6px; cursor: pointer; font-size: 10px; border: 1px solid var(--border-color); background: var(--bg-tertiary); border-radius: 6px; transition: all 0.2s; display: flex; align-items: center; gap: 8px;"
+                                    onmouseover="this.style.background='var(--hover-color)'; this.style.borderColor='var(--primary-color)'" 
+                                    onmouseout="if(!this.classList.contains('active')) { this.style.background='var(--bg-tertiary)'; this.style.borderColor='var(--border-color)' }">
+                                    <span style="font-size: 14px;">${ch.channel_type === 'announcements' ? '📢' : ch.channel_type === 'voice' ? '🔊' : '#'}</span>
+                                    <span style="flex: 1;">${ch.name}</span>
+                                    ${ch.channel_type === 'announcements' ? '<span style="font-size: 8px; color: var(--text-muted); text-transform: uppercase;">Read-only</span>' : ''}
                                 </div>
                             `).join('')}
                         </div>
                     </div>
                     
                     <!-- Messages Area -->
-                    <div style="flex: 1; display: flex; flex-direction: column; border: 2px solid var(--border-color);">
-                        <div style="padding: 10px; border-bottom: 2px solid var(--border-color); font-size: 10px; font-weight: bold; background: var(--bg-secondary);" id="currentChannelName">
-                            Select a channel
+                    <div style="flex: 1; display: flex; flex-direction: column; border: 2px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary);">
+                        <div style="padding: 15px 20px; border-bottom: 2px solid var(--border-color); font-size: 12px; font-weight: bold; background: var(--bg-tertiary); display: flex; align-items: center; gap: 10px; border-radius: 8px 8px 0 0;" id="currentChannelName">
+                            <span style="font-size: 16px;">💬</span>
+                            <span>Select a channel</span>
                         </div>
-                        <div id="serverMessages" style="flex: 1; overflow-y: auto; padding: 10px; background: var(--bg-primary);"></div>
-                        <div style="padding: 10px; border-top: 2px solid var(--border-color); background: var(--bg-secondary);">
-                            <input type="text" id="serverMessageInput" placeholder="Send message..." 
-                                style="width: 100%; padding: 8px; background: var(--bg-primary); color: var(--text-color); border: 2px solid var(--border-color); font-family: 'Courier New', monospace; font-size: 9px;"
-                                onkeypress="if(event.key === 'Enter') sendServerMessage()">
+                        <div id="serverMessages" style="flex: 1; overflow-y: auto; padding: 20px; background: var(--bg-primary);"></div>
+                        <div style="display: flex; gap: 12px; padding: 16px 20px; background: var(--bg-tertiary); border-top: 2px solid var(--border-color); align-items: center; border-radius: 0 0 8px 8px;">
+                            <textarea id="serverMessageInput" 
+                                      placeholder="Type your message here..." 
+                                      style="flex: 1; padding: 12px 16px; font-size: 10px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 8px; resize: none; max-height: 100px; transition: all 0.2s ease; font-family: inherit;"
+                                      rows="1"
+                                      onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendServerMessage(); }"
+                                      oninput="this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 100) + 'px';"
+                                      onfocus="this.style.borderColor = 'var(--primary-color)'; this.style.boxShadow = '0 0 0 3px rgba(138, 180, 248, 0.15)';"
+                                      onblur="this.style.borderColor = 'var(--border-color)'; this.style.boxShadow = 'none';"></textarea>
+                            <button onclick="sendServerMessage()" 
+                                    style="padding: 12px 24px; font-size: 10px; background: linear-gradient(135deg, var(--primary-color) 0%, rgba(138, 180, 248, 0.8) 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(138, 180, 248, 0.3); white-space: nowrap;"
+                                    onmouseover="this.style.transform = 'translateY(-1px)'; this.style.boxShadow = '0 4px 12px rgba(138, 180, 248, 0.4)';"
+                                    onmouseout="this.style.transform = 'translateY(0)'; this.style.boxShadow = '0 2px 8px rgba(138, 180, 248, 0.3)';"
+                                    onmousedown="this.style.transform = 'scale(0.98)';"
+                                    onmouseup="this.style.transform = 'scale(1)';">
+                                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    Send
+                                </span>
+                            </button>
                         </div>
                     </div>
                     
                     <!-- Members List -->
-                    <div style="width: 220px; border: 2px solid var(--border-color); padding: 12px; overflow-y: auto; background: var(--bg-secondary);">
-                        <div style="font-size: 11px; font-weight: bold; margin-bottom: 12px; color: var(--text-muted); text-transform: uppercase;">MEMBERS — ${serverData.members.length}</div>
+                    <div style="width: 260px; min-width: 220px; border: 2px solid var(--border-color); padding: 15px; overflow-y: auto; background: var(--bg-secondary); border-radius: 8px;">
+                        <div style="font-size: 11px; font-weight: bold; margin-bottom: 15px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">MEMBERS — ${serverData.members.length}</div>
                         ${serverData.members.map(member => `
-                            <div class="member-item" onclick="showMiniProfile(${member.user_id}, event)" style="padding: 8px; font-size: 9px; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-radius: 6px; transition: background 0.2s; position: relative;">
+                            <div class="member-item" onclick="showMiniProfile(${member.user_id}, event)" 
+                                style="padding: 10px; font-size: 10px; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-radius: 8px; transition: all 0.2s; position: relative; background: var(--bg-tertiary);"
+                                onmouseover="this.style.background='var(--hover-color)'; this.style.transform='translateX(4px)'" 
+                                onmouseout="this.style.background='var(--bg-tertiary)'; this.style.transform='translateX(0)'">
                                 <div style="position: relative;">
-                                    <img src="${member.profile_picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(member.username) + '&background=5865F2&color=ffffff&size=32'}" 
+                                    <img src="${member.profile_picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(member.username) + '&background=5865F2&color=ffffff&size=40'}" 
                                          alt="${member.username}" 
-                                         style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-color); object-fit: cover;">
-                                    <div style="position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; background: ${member.is_online ? '#23a559' : '#80848e'}; border-radius: 50%; border: 2px solid var(--bg-secondary);"></div>
+                                         style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border-color); object-fit: cover;">
+                                    <div style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: ${member.is_online ? '#23a559' : '#80848e'}; border-radius: 50%; border: 2px solid var(--bg-secondary);"></div>
                                 </div>
                                 <div style="flex: 1; min-width: 0;">
-                                    <div style="font-weight: 600; color: ${member.role === 'owner' ? '#ffaa00' : (member.role === 'admin' ? '#ff5555' : 'var(--text-color)')}; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    <div style="font-weight: 600; color: ${member.role === 'owner' ? '#ffa500' : (member.role === 'admin' ? '#ff5555' : 'var(--text-color)')}; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                         ${member.display_name || member.username}
                                     </div>
-                                    ${member.role !== 'member' ? `<div style="font-size: 8px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px;">${member.role}</div>` : ''}
+                                    ${member.role !== 'member' ? `<div style="font-size: 8px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; letter-spacing: 0.5px;">${member.role}</div>` : ''}
                                 </div>
                             </div>
                         `).join('')}
@@ -3089,12 +3120,26 @@
         function selectChannel(channelId) {
             currentChannel = channelId;
             
-            // Update active channel UI
-            document.querySelectorAll('.channel-item').forEach(item => item.classList.remove('active'));
+            // Update active channel UI with better styling
+            document.querySelectorAll('.channel-item').forEach(item => {
+                item.classList.remove('active');
+                item.style.background = 'var(--bg-tertiary)';
+                item.style.borderColor = 'var(--border-color)';
+            });
+            
             const channelEl = document.getElementById(`channel-${channelId}`);
             if (channelEl) {
                 channelEl.classList.add('active');
-                document.getElementById('currentChannelName').textContent = channelEl.textContent.trim();
+                channelEl.style.background = 'var(--hover-color)';
+                channelEl.style.borderColor = 'var(--primary-color)';
+                
+                // Update channel name display with icon
+                const channelName = channelEl.textContent.trim();
+                const channelIcon = channelEl.querySelector('span').textContent;
+                document.getElementById('currentChannelName').innerHTML = `
+                    <span style="font-size: 16px;">${channelIcon}</span>
+                    <span>${channelName}</span>
+                `;
             }
             
             // Load messages
@@ -3120,21 +3165,52 @@
             .catch(error => console.error('Error loading messages:', error));
         }
 
-        // Display server messages
+        // Display server messages with modern chat bubble design
         function displayServerMessages(messages) {
             const messagesContainer = document.getElementById('serverMessages');
-            messagesContainer.innerHTML = messages.map(msg => `
-                <div style="margin-bottom: 15px; padding: 8px; background: var(--bg-tertiary); border: 1px solid var(--border-color);">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
-                        <span style="font-size: 9px; font-weight: bold;">${msg.sender.username}</span>
-                        <span style="font-size: 7px; color: var(--text-muted);">${new Date(msg.timestamp).toLocaleString()}</span>
-                        ${msg.is_edited ? '<span style="font-size: 6px; color: var(--text-muted);">(edited)</span>' : ''}
+            if (!messages || messages.length === 0) {
+                messagesContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 40px; font-size: 10px;">No messages yet. Start the conversation!</div>';
+                return;
+            }
+            
+            messagesContainer.innerHTML = messages.map(msg => {
+                const isCurrentUser = msg.sender.id === {{ request.user.id }};
+                return `
+                <div class="message-item ${isCurrentUser ? 'mine' : ''}" style="margin-bottom: 16px; display: flex; flex-direction: column; ${isCurrentUser ? 'align-items: flex-end;' : 'align-items: flex-start;'}">
+                    <div class="message-bubble" style="max-width: 70%; padding: 12px 16px; border-radius: 12px; background: ${isCurrentUser ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)' : 'var(--bg-secondary)'}; border: 1px solid ${isCurrentUser ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.08)'}; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);">
+                        ${!isCurrentUser ? `
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <img src="${msg.sender.profile_picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(msg.sender.username) + '&background=random&size=24'}" 
+                                 style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border-color);">
+                            <span style="font-size: 10px; font-weight: 600; color: var(--text-secondary);">${msg.sender.username}</span>
+                            <span style="font-size: 8px; color: var(--text-muted);">${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            ${msg.is_edited ? '<span style="font-size: 7px; color: var(--text-muted); font-style: italic;">(edited)</span>' : ''}
+                        </div>
+                        ` : `
+                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; justify-content: flex-end;">
+                            ${msg.is_edited ? '<span style="font-size: 7px; color: var(--text-muted); font-style: italic;">(edited)</span>' : ''}
+                            <span style="font-size: 8px; color: var(--text-muted);">${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                        `}
+                        ${msg.reply_to ? `
+                        <div style="font-size: 8px; color: var(--text-secondary); margin-bottom: 6px; padding: 6px 10px; background: rgba(0, 0, 0, 0.2); border-left: 3px solid var(--primary-color); border-radius: 4px;">
+                            <div style="font-weight: 600; margin-bottom: 2px;">↩ ${msg.reply_to.sender_username}</div>
+                            <div style="opacity: 0.8;">${msg.reply_to.content}</div>
+                        </div>
+                        ` : ''}
+                        <div style="font-size: 10px; line-height: 1.5; word-wrap: break-word;">${msg.content}</div>
+                        ${msg.reactions && msg.reactions.length > 0 ? `
+                        <div style="margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
+                            ${msg.reactions.map(reaction => `
+                                <span style="font-size: 9px; padding: 2px 6px; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border-color); border-radius: 12px;">
+                                    ${reaction.emoji} ${reaction.count}
+                                </span>
+                            `).join('')}
+                        </div>
+                        ` : ''}
                     </div>
-                    ${msg.reply_to ? `<div style="font-size: 7px; color: var(--text-secondary); margin-bottom: 3px; padding-left: 8px; border-left: 2px solid var(--border-color);">
-                        Replying to ${msg.reply_to.sender_username}: ${msg.reply_to.content}
-                    </div>` : ''}
-                    <div style="font-size: 9px;">${msg.content}</div>
-                    ${msg.reactions && msg.reactions.length > 0 ? `
+                </div>
+            `}).join('');
                         <div style="margin-top: 5px; display: flex; gap: 5px;">
                             ${msg.reactions.map(r => `<span style="font-size: 8px; background: var(--bg-secondary); padding: 2px 6px; border: 1px solid var(--border-color);">${r.emoji} ${r.count}</span>`).join('')}
                         </div>

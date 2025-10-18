@@ -299,13 +299,21 @@ def create_channel(request, server_id):
             max_pos=Count('position')
         )['max_pos'] or 0
         
-        # Create channel
+        # Get additional voice channel settings if applicable
+        user_limit = data.get('user_limit')
+        if channel_type == 'voice' and user_limit:
+            user_limit = int(user_limit) if user_limit else None
+        else:
+            user_limit = None
+        
+        # Create channel with proper channel_type
         channel = ServerChannel.objects.create(
             server=server,
             name=name,
             description=description,
-            channel_type=channel_type,
-            position=max_position + 1
+            channel_type=channel_type,  # This will now correctly be 'voice' or 'text' or 'announcements'
+            position=max_position + 1,
+            user_limit=user_limit if channel_type == 'voice' else None
         )
         
         return JsonResponse({
@@ -427,6 +435,15 @@ def send_message(request, channel_id):
                 'success': False,
                 'error': 'You are muted in this server'
             }, status=403)
+        
+        # Check permissions for announcements channel
+        if channel.channel_type == 'announcements':
+            # Only owners and admins can post in announcements
+            if membership.role not in ['owner', 'admin']:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Only server owners and administrators can post in announcements'
+                }, status=403)
         
         data = json.loads(request.body)
         content = data.get('content', '').strip()
